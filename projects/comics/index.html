@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  comics/index.html — проект «комикс». Самодостаточен: все файлы внутри comics/.
+  Данные комикса — data/state.json (кадры + история). Картинки кадров — scenes/.
+  Контейнер #tab-comic — туда рендерит comic.js.
+
+  Пути к картинкам — ТОЛЬКО относительные внутри этой папки (scenes/имя.png).
+  Никаких ../../generated/ — иначе комикс развалится при публикации.
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Мой комикс</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="proj-head">
+    <a class="back" href="../site/">← назад</a>
+    <h1 class="proj-title"><span class="pin">Комикс</span>Мой комикс</h1>
+    <button class="theme-btn" id="themeBtn" title="Сменить тему">🌙</button>
+  </header>
+
+  <!-- сюда comic.js рендерит .comic-page > .comic-grid из data/state.json -->
+  <div id="tab-comic"></div>
+
+</div>
+
+<script>
+  // Переключатель темы (дефолт — тёмная), как на визитке
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const light = document.documentElement.classList.toggle('light');
+    btn.textContent = light ? '☀️' : '🌙';
+  });
+</script>
+
+<!-- state.json этого проекта лежит в data/ -->
+<script>window.STATE_BASE = "data/";</script>
+<script src="state.js"></script>
+<script src="comic.js"></script>
+</body>
+</html>

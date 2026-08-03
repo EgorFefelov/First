@@ -1,0 +1,20 @@
+# Python-зависимости курса «make it, teens»
+# Установка: pip install -r requirements.txt
+#
+# Используется скриптами:
+#   course/tools/remove_bg.py     — вырезка спрайтов/наград (Уровень 2)
+#   reference-demo/crop_frames.py — нарезка кадров демо
+#   scripts/webp_convert.py       — конвертация финальных медиа в WebP (projects/media/, Уровень 4)
+#
+# ВНИМАНИЕ: это НЕ полный список окружения курса. Помимо Python нужны:
+#   - VS Code + расширения (.vscode/extensions.json)
+#   - AI-клиент: Codex (AGENTS.md + .codex/config.toml) или Claude Code (.claude/CLAUDE.md + .mcp.json)
+#   - MCP nano-banana — генерация картинок, через прокси (NANO_BANANA_CAMP_KEY в окружении; токен на сервере)
+# Полный манифест окружения и онбординг родителей — см. make-kid/internal/docs/program/parent_onboarding.md
+#
+# ОДНОЙ КОМАНДОЙ (Node + Python + nano-banana-mcp + этот файл) — скрипт установки:
+#   Windows:  powershell -ExecutionPolicy Bypass -File scripts/setup_env.ps1
+#   macOS:    bash scripts/setup_env.sh
+# git скриптом НЕ ставится — он нужен раньше, чтобы склонировать репозиторий.
+
+Pillow>=10.0

@@ -1,0 +1,21 @@
+{
+  "hero": {
+    "stage": "bubble",
+    "name": "Бабл",
+    "say": "Привет! Я Бабл. Покажу, как мы сделали свою игру — от первых картинок до готового комикса. А потом дам поиграть."
+  },
+  "scene": {
+    "background": "#f5f1ea",
+    "accent": "#ffd86b"
+  },
+  "comic": {
+    "frames": [
+      { "image": "comic/scene_1.png" },
+      { "image": "comic/scene_2.png" },
+      { "image": "comic/scene_3.png" },
+      { "image": "comic/scene_4.png" },
+      { "image": "comic/scene_5.png" },
+      { "image": "comic/scene_6.png" }
+    ]
+  }
+}

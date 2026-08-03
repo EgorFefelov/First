@@ -1,0 +1,15 @@
+{
+  "_comment": "Демо-контент проекта comics: путешествие Бабла, 6 кадров. comic.frames[].image — пути относительно comics/index.html (картинки в comics/scenes/).",
+  "hero": {},
+  "scene": {},
+  "comic": {
+    "frames": [
+      { "image": "scenes/scene_1.png" },
+      { "image": "scenes/scene_2.png" },
+      { "image": "scenes/scene_3.png" },
+      { "image": "scenes/scene_4.png" },
+      { "image": "scenes/scene_5.png" },
+      { "image": "scenes/scene_6.png" }
+    ]
+  }
+}

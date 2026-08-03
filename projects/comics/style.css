@@ -1,0 +1,108 @@
+/* Комикс — стиль в духе визитки (та же тема, шрифты, шапка).
+   Самодостаточно: всё нужное этой странице здесь, без общих слоёв. */
+
+:root {
+  --bg: #0e0f1a;
+  --bg-card: #1a1b2e;
+  --text: #f0f0f5;
+  --text-dim: #9a9ab0;
+  --accent: #7c5cff;
+  --accent-2: #ff6b9d;
+  --border: #2a2b42;
+  --ring: #7c5cff44;
+}
+html.light {
+  --bg: #faf8ff;
+  --bg-card: #ffffff;
+  --text: #1a1b2e;
+  --text-dim: #6b6b85;
+  --accent: #6b3cff;
+  --accent-2: #ff4f8b;
+  --border: #e6e2f5;
+  --ring: #6b3cff22;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  transition: background .3s, color .3s;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+
+/* ── Шапка проекта ───────────────────────────────────────── */
+.proj-head {
+  display: flex; align-items: center; gap: 16px;
+  padding: 8px 0 24px;
+}
+.back {
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; color: var(--text);
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600;
+  transition: transform .15s, border-color .15s;
+  flex-shrink: 0;            /* длинный заголовок не сжимает кнопку «назад» в столбик */
+  white-space: nowrap;       /* «← назад» в одну строку */
+}
+.back:hover { transform: translateX(-3px); border-color: var(--accent); }
+.proj-title { font-size: 22px; letter-spacing: -.3px; }
+/* пилюля — как на визитке (.pin); чуть приподнята, чтобы стоять на одной линии с текстом */
+.proj-title .pin {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); background: var(--ring);
+  border-radius: 999px; padding: 3px 10px; margin-right: 10px;
+  position: relative; top: -3px;
+}
+.theme-btn {
+  margin-left: auto;
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text); border-radius: 999px; padding: 8px 14px;
+  cursor: pointer; font-size: 15px; transition: transform .15s;
+}
+.theme-btn:hover { transform: scale(1.05); }
+
+/* ── Заглушка: кадров ещё нет ────────────────────────────── */
+.comic-empty {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 48px 24px; text-align: center;
+  color: var(--text-dim); font-size: 16px;
+}
+.comic-empty-hint { margin-top: 8px; font-size: 14px; opacity: .75; }
+
+/* ── Комикс-лента (рендер comic.js) ──────────────────────── */
+.comic-page {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 20px;
+}
+.comic-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.comic-frame {
+  margin: 0; padding: 0;
+  background: #fff; border: 2px solid #1a1a1a; border-radius: 4px;
+  overflow: hidden; aspect-ratio: 1 / 1; position: relative;
+}
+.comic-frame-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Подпись сцены поверх нижнего края кадра — текст из state.story */
+.comic-caption {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,.82) 45%);
+  color: #fff; font-size: 13px; line-height: 1.35;
+  padding: 28px 12px 10px; text-align: left;
+}
+/* Full-width — обе колонки; half — одна (ритм страницы из comic.js) */
+.comic-frame[data-variant="full"] { grid-column: 1 / -1; aspect-ratio: 16 / 10; }
+.comic-frame[data-variant="half"] { aspect-ratio: 1 / 1; }
+
+@media (max-width: 520px) {
+  .comic-grid { grid-template-columns: 1fr; }
+  .comic-frame[data-variant="half"] { aspect-ratio: 16 / 10; }
+  .comic-caption { font-size: 12px; padding: 24px 10px 8px; }
+  /* шапка: кнопка назад + 🌙 на одной строке, заголовок переносится под них */
+  .proj-head { flex-wrap: wrap; gap: 10px 12px; padding-bottom: 16px; }
+  .proj-title { font-size: 18px; order: 3; flex-basis: 100%; }
+  .theme-btn { margin-left: auto; }
+}

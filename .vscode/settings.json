@@ -1,0 +1,51 @@
+{
+  "workbench.activityBar.location": "hidden",
+  "workbench.statusBar.visible": false,
+  "workbench.sideBar.location": "left",
+  "claudeCode.preferredLocation": "sidebar",
+  "workbench.editor.showTabs": "single",
+  "workbench.layoutControl.enabled": false,
+  "workbench.tips.enabled": false,
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Light Modern",
+
+  "editor.fontSize": 18,
+  "editor.lineHeight": 1.6,
+  "editor.fontFamily": "Cascadia Code, Menlo, Consolas, monospace",
+  "editor.minimap.enabled": false,
+  "editor.lineNumbers": "on",
+  "editor.wordWrap": "on",
+  "editor.glyphMargin": false,
+  "editor.folding": false,
+  "editor.renderLineHighlight": "none",
+  "editor.stickyScroll.enabled": false,
+  "editor.guides.indentation": false,
+  "editor.bracketPairColorization.enabled": true,
+
+  "editor.quickSuggestions": { "other": false, "comments": false, "strings": false },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.parameterHints.enabled": false,
+  "editor.hover.enabled": "off",
+  "editor.inlineSuggest.enabled": false,
+
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+
+  "html.validate.scripts": false,
+  "html.validate.styles": false,
+  "css.validate": false,
+  "javascript.validate.enable": false,
+  "problems.decorations.enabled": false,
+
+  "breadcrumbs.enabled": false,
+  "explorer.compactFolders": false,
+  "explorer.openEditors.visible": 0,
+  "telemetry.telemetryLevel": "off",
+  "update.showReleaseNotes": false,
+
+  "livePreview.openPreviewTarget": "Embedded",
+  "livePreview.autoRefreshPreview": "On All Changes",
+  "livePreview.defaultPreviewPath": "/index.html",
+
+  "window.zoomLevel": 1
+}

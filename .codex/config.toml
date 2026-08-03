@@ -1,0 +1,41 @@
+# Codex project-scoped config — едет с форком курса.
+# Работает только если проект помечен как trusted (Codex спросит при первом запуске).
+#
+# MCP nano-banana — генерация/правка картинок.
+
+# === Permissions: чтобы ребёнок не видел диалогов вообще ===
+# Аналог .claude/settings.json (allow-лист) для Codex.
+# workspace-write: агент молча пишет в папку проекта (state.json, gallery.json,
+#   generated/) и запускает команды. Писать за пределы папки нельзя — песочница.
+# never: НИКОГДА не спрашивать одобрения. Упавшая команда просто падает, агент
+#   адаптируется сам внутри песочницы (ребёнок не должен видеть диалоги — тест
+#   2026-07-07 показал: on-failure тащит попап «retry without sandbox» на любой
+#   упавшей команде, «don't ask again» не запоминается).
+# Следствие: всё, что реально требует выхода из песочницы (npm install, сеть),
+#   должно быть сделано заранее на онбординге (Node + nano-banana-mcp глобально).
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+
+# === MCP nano-banana ===
+#
+# === СЕЙЧАС: прямой stdio-сервер, ключ Gemini в конфиге ===
+# Репо приватное → ключ едет вместе с форком: ученик клонирует и сразу работает,
+# передавать ключ отдельно не нужно. Картинки генерируются автоматически, без
+# диалогов одобрения (per-tool approval НЕ задаём — работает глобальный on-failure).
+# Когда поднимем прокси (блок ниже) — ключ сменим и почистим.
+[mcp_servers.nano-banana]
+command = "npx"
+args = ["nano-banana-mcp"]
+env = { GEMINI_API_KEY = "AIzaSyAaP3eii-0yclg9aWD6uBemL3xHWY7UOUk" }
+
+# === ПОТОМ (прод): через наш прокси, токен на сервере ===
+# Когда поднимем прокси — закомментируй блок выше и раскомментируй этот.
+# Ребёнок токен Gemini не видит, шлёт лагерный ключ; токен подставляет сервер.
+# [mcp_servers.nano-banana]
+# url = "https://teens.make-it.kz/mcp/nano-banana"
+# bearer_token_env_var = "NANO_BANANA_CAMP_KEY"
+
+# Сеть в песочнице: нужна для git push (скил save-progress).
+# Без неё push молча падает (approval_policy = never).
+[sandbox_workspace_write]
+network_access = true

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "mcp__nano-banana__generate_image",
+      "mcp__nano-banana__edit_image",
+      "mcp__nano-banana__continue_editing",
+      "Bash(cp:*)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Edit(state.json)",
+      "Edit(./state.json)",
+      "Edit(**/state.json)",
+      "Edit(gallery.json)",
+      "Edit(./gallery.json)",
+      "Edit(**/gallery.json)"
+    ],
+    "additionalDirectories": [
+      "generated/nano-banana"
+    ]
+  }
+}

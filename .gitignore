@@ -1,0 +1,40 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+
+# VS Code runtime artifacts
+.vscode/vscode-notify-desktop-port.json
+
+# Secrets
+.env
+.env.*
+# .mcp.json и .codex/config.toml — versioned (едут с форком). На время теста в них
+# заглушка PASTE_GEMINI_KEY_HERE; реальный ключ вписывается руками и НЕ коммитится.
+# В проде токен уйдёт на прокси (см. .mcp.proxy.json.example).
+.mcp.local.json
+
+# Node (на будущее)
+node_modules/
+
+# Generated images from course sessions (binary, large, per-user)
+generated/experiments/
+# Финальные медиа продуктов — вне git, едут на прод HTTP-upload'ом (publish-media).
+# См. make-kid/task_tracker/backlog/student_deploy_flow.md
+projects/media/
+# Nano Banana output dir (inside repo so path is portable cross-OS — see .claude/settings.json).
+# Ignore generated images but keep the folder in the fork via .gitkeep.
+generated/nano-banana/*
+!generated/nano-banana/.gitkeep
+
+# Reset script backups (per-user state snapshots)
+.backups/
+
+# Прогресс ученика (state.json / gallery.json в корне) теперь VERSIONED — коммитится в git
+# (уникален для каждого форка). Заводские образцы — в _templates/. Картинки — gitignored ниже.
+
+# Real session logs with kids (local notes, not shared)
+content/dialog_*.md

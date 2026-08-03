@@ -1,0 +1,208 @@
+/* Игра — стиль в духе визитки (та же тема, шрифты, шапка) + canvas/оверлеи.
+   Самодостаточно: всё нужное этой странице здесь, без общих слоёв. */
+
+:root {
+  --bg: #0e0f1a;
+  --bg-card: #1a1b2e;
+  --text: #f0f0f5;
+  --text-dim: #9a9ab0;
+  --accent: #7c5cff;
+  --accent-2: #ff6b9d;
+  --border: #2a2b42;
+  --ring: #7c5cff44;
+}
+html.light {
+  --bg: #faf8ff;
+  --bg-card: #ffffff;
+  --text: #1a1b2e;
+  --text-dim: #6b6b85;
+  --accent: #6b3cff;
+  --accent-2: #ff4f8b;
+  --border: #e6e2f5;
+  --ring: #6b3cff22;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  transition: background .3s, color .3s;
+  -webkit-font-smoothing: antialiased;
+}
+/* Игре нужно больше места под квадратное поле — контейнер шире, чем у визитки/комикса. */
+.wrap { max-width: 920px; margin: 0 auto; padding: 24px 20px 48px; }
+
+/* ── Шапка проекта (как на комиксе/визитке) ──────────────── */
+.proj-head {
+  display: flex; align-items: center; gap: 16px;
+  padding: 8px 0 24px;
+}
+.back {
+  display: inline-flex; align-items: center; gap: 6px;
+  text-decoration: none; color: var(--text);
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600;
+  transition: transform .15s, border-color .15s;
+  flex-shrink: 0;            /* длинный заголовок не сжимает кнопку «назад» в столбик */
+  white-space: nowrap;       /* «← назад» в одну строку */
+}
+.back:hover { transform: translateX(-3px); border-color: var(--accent); }
+.proj-title { font-size: 22px; letter-spacing: -.3px; }
+/* пилюля — как на визитке (.pin); чуть приподнята, чтобы стоять на одной линии с текстом */
+.proj-title .pin {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); background: var(--ring);
+  border-radius: 999px; padding: 3px 10px; margin-right: 10px;
+  position: relative; top: -3px;
+}
+.theme-btn {
+  margin-left: auto;
+  background: var(--bg-card); border: 1px solid var(--border);
+  color: var(--text); border-radius: 999px; padding: 8px 14px;
+  cursor: pointer; font-size: 15px; transition: transform .15s;
+}
+.theme-btn:hover { transform: scale(1.05); }
+
+/* ── Игровое поле ────────────────────────────────────────── */
+/* обёртка центрирует canvas в карточке-контейнере */
+#game-wrap {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+/* Квадрат игры крупный: тянется до меньшей стороны экрана (с запасом под шапку),
+   но не уже текущего и не больше ширины контейнера. */
+#game {
+  border: 2px solid #1a1a1a;
+  border-radius: 8px;
+  width: min(78vh, 100%);
+  height: min(78vh, 100%);
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+/* оверлеи игры (старт + финал) */
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(14,15,26,.78);
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  padding: 32px 24px;
+  gap: 28px;                /* ровные промежутки между блоками, без вертикального провала */
+  box-sizing: border-box;
+}
+.overlay[hidden] { display: none; }
+.overlay .head { margin: 0; }
+.overlay .play { margin: 0; }
+.overlay .title {
+  font-size: clamp(20px, 6vw, 34px);   /* масштаб под ширину canvas, не вылезает на узком */
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+.overlay .subtitle {
+  font-size: 16px; opacity: .85;
+  margin: 0 auto;
+  max-width: 520px;
+}
+.overlay .play {
+  font-size: 20px; font-weight: 700;
+  padding: 13px 38px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 999px;
+  cursor: pointer; transition: transform .15s;
+}
+.overlay .play:hover { transform: translateY(-2px); }
+.overlay .controls {
+  font-size: 13px; opacity: .9;
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  justify-content: center;
+}
+.overlay .controls .group { display: inline-flex; align-items: center; }
+.overlay .controls .label { margin-left: 8px; }
+.overlay .k {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: rgba(255,255,255,.16);
+  border-radius: 5px;
+  margin: 0 2px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 520px) {
+  /* шапка: кнопка назад + 🌙 на одной строке, заголовок переносится под них */
+  .proj-head { flex-wrap: wrap; gap: 10px 12px; padding-bottom: 16px; }
+  .proj-title { font-size: 18px; order: 3; flex-basis: 100%; }
+  .theme-btn { margin-left: auto; }
+  /* .overlay .title теперь через clamp() — отдельный мобильный размер не нужен */
+}
+
+/* ── Тач-управление ──────────────────────────────────────── */
+/* Полоса ПОД канвасом (не поверх поля), видно только на тач-устройствах.
+   Раскладка идентична iframe: D-pad крест слева + одна кнопка действия справа.
+   Стиль под тёмную тему портфолио (var(--accent) #7c5cff), не жёлтый. */
+.touch-controls { display: none; }
+@media (pointer: coarse) {
+  .touch-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 12px auto 0;
+    width: min(78vh, 100%);     /* во всю ширину игрового поля (как #game) */
+    box-sizing: border-box;
+    padding: 0 4px;
+  }
+}
+.touch-controls__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: 56px 56px;
+  grid-template-areas: ". up ." "left down right";
+  gap: 6px;
+}
+.touch-btn--up    { grid-area: up; }
+.touch-btn--left  { grid-area: left; }
+.touch-btn--down  { grid-area: down; }
+.touch-btn--right { grid-area: right; }
+.touch-btn {
+  touch-action: none;          /* зажатая кнопка не скроллит страницу */
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 56px;
+  min-height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.touch-btn:active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.touch-btn--action {
+  min-width: 96px;
+  min-height: 56px;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 15px;
+  line-height: 1.1;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}

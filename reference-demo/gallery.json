@@ -1,0 +1,13 @@
+{
+  "images": [
+    { "path": "process/scene_1_v1.png",            "step": "demo", "ts": "2026-05-19T13:44:41Z" },
+    { "path": "process/scene_1_apartment_canon.png","step": "demo", "ts": "2026-05-19T13:55:24Z" },
+    { "path": "process/italy_v1.png",              "step": "demo", "ts": "2026-05-19T13:49:45Z" },
+    { "path": "process/italy_v2.png",              "step": "demo", "ts": "2026-05-19T14:00:23Z" },
+    { "path": "process/usa_v1.png",                "step": "demo", "ts": "2026-05-19T13:58:29Z" },
+    { "path": "process/japan_v1.png",              "step": "demo", "ts": "2026-05-19T13:59:12Z" },
+    { "path": "process/norway_v1.png",             "step": "demo", "ts": "2026-05-19T13:59:45Z" },
+    { "path": "process/kitchen_fridge_v1.png",     "step": "demo", "ts": "2026-05-19T14:03:18Z" },
+    { "path": "process/kitchen_fridge_v2.png",     "step": "demo", "ts": "2026-05-19T14:14:41Z" }
+  ]
+}

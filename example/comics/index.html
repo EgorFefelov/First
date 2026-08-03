@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+  comics/index.html — проект «комикс». Самодостаточен: все файлы внутри comics/.
+  Контейнер #tab-comic — туда рендерит comic.js (см. comic.js: getElementById("tab-comic")).
+  Данные комикса — data/state.json. Картинки кадров — scenes/. Стиль — в духе визитки (style.css).
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Путешествие Бабла — комикс</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="proj-head">
+    <a class="back" href="../site/">← назад</a>
+    <h1 class="proj-title"><span class="pin">Комикс</span>Путешествие Бабла</h1>
+    <button class="theme-btn" id="themeBtn" title="Сменить тему">🌙</button>
+  </header>
+
+  <!-- сюда comic.js рендерит .comic-page > .comic-grid из state.comic.frames -->
+  <div id="tab-comic"></div>
+
+</div>
+
+<script>
+  // Переключатель темы (дефолт — тёмная), как на визитке
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const light = document.documentElement.classList.toggle('light');
+    btn.textContent = light ? '☀️' : '🌙';
+  });
+</script>
+
+<!-- state.json лежит в data/ этого же проекта -->
+<script>window.STATE_BASE = "data/";</script>
+<script src="state.js"></script>
+<script src="comic.js"></script>
+</body>
+</html>

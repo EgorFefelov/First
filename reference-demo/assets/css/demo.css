@@ -1,0 +1,84 @@
+/*
+  demo.css — добавочные стили для demo.html.
+  Базовая раскладка и Бабл-наставник — из main.css курса.
+  Здесь — только специфика таба «Игра» (canvas + оверлеи).
+*/
+
+/* таб «Игра»: центрируем canvas-обёртку.
+   Без правила #tab-game[hidden] { display: none } браузерный [hidden] не работает,
+   потому что display: flex его перебивает (как сделано для других табов в main.css). */
+#tab-game {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+}
+#tab-game[hidden] {
+  display: none;
+}
+#game-wrap {
+  position: relative;
+  width: max-content;
+}
+#game {
+  border: 2px solid #1a1a1a;
+  border-radius: 4px;
+  max-width: 80vmin;
+  max-height: 80vmin;
+  display: block;
+}
+
+/* оверлеи игры (старт + финал) — те же, что были в game_test.html */
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(28,30,42,.72);
+  border-radius: 4px;
+  color: #fff;
+  text-align: center;
+  padding: 120px 24px;
+  box-sizing: border-box;
+}
+.overlay[hidden] { display: none; }
+.overlay .head { margin-bottom: auto; }
+.overlay .play { margin: 0 0 28px; }
+.overlay .title {
+  font-size: 38px; font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+.overlay .subtitle {
+  font-size: 17px; opacity: .85;
+  margin: 0 auto;
+  max-width: 520px;
+}
+.overlay .play {
+  font-size: 22px; font-weight: 700;
+  padding: 14px 40px;
+  background: #ffd86b; color: #2a2a3a;
+  border: none; border-radius: 999px;
+  cursor: pointer;
+}
+.overlay .play:hover { transform: translateY(-1px); }
+.overlay .controls {
+  font-size: 13px; opacity: .9;
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  justify-content: center;
+}
+.overlay .controls .group { display: inline-flex; align-items: center; }
+.overlay .controls .label { margin-left: 8px; }
+.overlay .k {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: rgba(255,255,255,.14);
+  border-radius: 5px;
+  margin: 0 2px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Точка входа public-demo: визитка живёт в своём проекте site/. Этот файл — редирект на неё.
+     OG-теги ПРОДУБЛИРОВАНЫ здесь намеренно: парсер мессенджера (TG/WA) читает корень /portfolio/ и
+     НЕ идёт за meta-refresh — без дубля превью при шаринге было бы пустым. См. grabli.md (шаг 5/7). -->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=site/">
+  <link rel="canonical" href="https://teens.make-it.kz/portfolio/">
+  <title>Тимур — делаю игры и комиксы с AI · make it, teens</title>
+  <!-- Open Graph — дубль тегов визитки, абсолютные URL (парсер видит их сразу на /portfolio/) -->
+  <meta property="og:title" content="Привет! Я Тимур, делаю комиксы, игры и приложения с AI">
+  <meta property="og:description" content="Кликай и посмотри моё портфолио!">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://teens.make-it.kz/portfolio/site/avatar.png">
+  <meta property="og:url" content="https://teens.make-it.kz/portfolio/">
+</head>
+<body>
+  <p>Открываю <a href="site/">визитку</a>…</p>
+</body>
+</html>

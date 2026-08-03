@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  projects/game/index.html — игра ребёнка. Открывается во вкладке «Игра» курса
+  (iframe) и двойным кликом — без сервера, автономна. Конфиг — config.js
+  («настройки игры»), движок и испытания — assets/.
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Моя игра</title>
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f5f1ea;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-wrap {
+      position: relative;
+      width: max-content;
+    }
+    #game {
+      border: 2px solid #1a1a1a;
+      border-radius: 4px;
+      max-width: 90vmin;
+      max-height: 90vmin;
+      display: block;
+    }
+  </style>
+  <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game" tabindex="0"></canvas>
+    <!-- оверлеи старта/финала создаёт модуль overlays.js (DOM в его setup) -->
+  </div>
+
+  <!-- порядок важен: настройки -> реестр испытаний -> испытания ->
+       реестр модулей -> ядро.
+       Старт Уровня 2: подключены ТОЛЬКО ядро + реестры. Модули
+       (control/transitions/inventory/overlays) наставник дописывает по шагам
+       курса — каждый одной строкой <script> (см. методички level_2_*.md).
+       overlays добавляет ещё <link assets/overlays.css> в <head>. -->
+  <script src="config.js"></script>
+  <script src="assets/mechanics/mechanics.js"></script>
+  <script src="assets/mechanics/seek.js"></script>
+  <script src="assets/mechanics/fog.js"></script>
+  <script src="assets/mechanics/chase.js"></script>
+  <script src="assets/mechanics/collect.js"></script>
+  <script src="assets/mechanics/arrange.js"></script>
+  <!-- dodge_collect — пример «своей механики» (см. mechanics/README.md); наставник
+       дописывает <script> на 2.4, когда ученик делает своё испытание:
+  <script src="assets/mechanics/dodge_collect.js"></script> -->
+  <script src="assets/modules/registry.js"></script>
+  <!-- Модули поведения (control/transitions/inventory) на старте НЕ подключены —
+       герой просто стоит. Наставник дописывает их по шагам Уровня 2, каждый одной
+       строкой <script> + именем в CONFIG.MODULES (config.js). См. level_2_1.md:
+  <script src="assets/modules/control.js"></script>
+  <script src="assets/modules/transitions.js"></script>
+  <script src="assets/modules/inventory.js"></script>
+  -->
+
+  <script src="assets/core.js"></script>
+</body>
+</html>

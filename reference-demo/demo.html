@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+  demo.html — копия index.html курса, адаптированная под reference-demo.
+
+  Что взято as-is из курса:
+    - вёрстка и стили (assets/css/main.css курса)
+    - модули state.js / scene.js / bubble.js / hero.js / board.js / comic.js
+    - tabs.js — взяли локальную копию с поддержкой 3-го таба «Игра»
+
+  Что подменено:
+    - state.json и gallery.json — лежат в этой папке (reference-demo/),
+      содержат данные демки (Бабл-наставник, 9 итераций, 6 кадров комикса)
+    - добавлен третий таб «Игра» с canvas
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Путешествие Бабла по миру — демо</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="assets/css/demo.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="tabs-area">
+      <button class="tab-btn tab-active" data-tab="gallery" type="button">Галерея</button>
+      <button class="tab-btn"             data-tab="comic"   type="button">Комикс</button>
+      <button class="tab-btn"             data-tab="game"    type="button">Игра</button>
+    </div>
+    <div id="board-area">
+      <div id="tab-gallery">
+        <div id="hero-area"></div>
+        <div id="gallery-area"></div>
+      </div>
+      <div id="tab-comic" hidden></div>
+      <div id="tab-game" hidden>
+        <div id="game-wrap">
+          <canvas id="game" tabindex="0"></canvas>
+
+          <!-- стартовый оверлей игры -->
+          <div id="start" class="overlay">
+            <div class="head">
+              <h1 class="title">Путешествие Бабла по миру</h1>
+              <p class="subtitle">Помоги Баблу собрать магнитики из четырёх стран и вернуться домой</p>
+            </div>
+            <button class="play" type="button" id="start-btn">▶ Играть</button>
+            <div class="controls">
+              <span class="group">
+                <span class="k">←</span><span class="k">↑</span><span class="k">↓</span><span class="k">→</span>
+                <span class="label">— перемещение</span>
+              </span>
+              <span class="group">
+                <span class="k">E</span>
+                <span class="label">— действие</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- финальный оверлей игры -->
+          <div id="finish" class="overlay" hidden>
+            <div class="head">
+              <h1 class="title">Хорошо съездил!</h1>
+              <p class="subtitle">Все магнитики у Бабла. Время отдохнуть.</p>
+            </div>
+            <button class="play" type="button" id="restart-btn">↻ Повторить</button>
+            <div class="controls">
+              <span class="group">
+                <span class="k">←</span><span class="k">↑</span><span class="k">↓</span><span class="k">→</span>
+                <span class="label">— перемещение</span>
+              </span>
+              <span class="group">
+                <span class="k">E</span>
+                <span class="label">— действие</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- модули курса (локальная копия, читают state.json/gallery.json из этой папки) -->
+  <script src="assets/js/state.js"></script>
+  <script src="assets/js/scene.js"></script>
+  <script src="assets/js/bubble.js"></script>
+  <script src="assets/js/hero.js"></script>
+  <script src="assets/js/board.js"></script>
+  <script src="assets/js/comic.js"></script>
+  <!-- локальная копия tabs.js с поддержкой третьего таба «Игра» -->
+  <script src="assets/js/tabs.js"></script>
+
+  <!-- оверлеи игры: связь HTML и game.js -->
+  <script>
+    const startOverlay = document.getElementById("start");
+    const finishOverlay = document.getElementById("finish");
+    const canvasEl = document.getElementById("game");
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+      startOverlay.hidden = true;
+      canvasEl.focus();
+    });
+    document.getElementById("restart-btn").addEventListener("click", () => {
+      finishOverlay.hidden = true;
+      if (window.GameAPI && window.GameAPI.restart) window.GameAPI.restart();
+      canvasEl.focus();
+    });
+    window.onGameFinish = () => { finishOverlay.hidden = false; };
+  </script>
+
+  <!-- игровые скрипты: реестр механик, сами механики, движок -->
+  <script src="assets/mechanics/mechanics.js"></script>
+  <script src="assets/mechanics/seek.js"></script>
+  <script src="assets/mechanics/fog.js"></script>
+  <script src="assets/mechanics/chase.js"></script>
+  <script src="assets/mechanics/collect.js"></script>
+  <script src="assets/mechanics/fridge.js"></script>
+  <script src="assets/game.js"></script>
+</body>
+</html>

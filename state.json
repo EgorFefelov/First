@@ -1,0 +1,23 @@
+{
+  "current_step": "0",
+  "profile": {},
+  "progress": {},
+  "checkpoints": {},
+  "hero": {
+    "stage": "bubble",
+    "name": "Бабл",
+    "description": "",
+    "avatar": "",
+    "mood": "любопытный",
+    "say": "Привет! Я Бабл. Буду рядом с тобой на всём курсе."
+  },
+  "site": {
+    "published": {
+      "nick": "",
+      "url": "",
+      "deployed": false,
+      "prod_checked": false,
+      "shared": false
+    }
+  }
+}

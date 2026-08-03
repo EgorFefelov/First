@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+  game/index.html — проект «игра». Самодостаточен: все файлы внутри game/.
+  Структура #game-wrap > canvas + оверлеи старт/финиш — как demo.html:36-77.
+  Порядок скриптов важен: mechanics.js регистрирует реестр, game.js его использует. Картинки игры — в img/ (см. game.js CONFIG).
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Бабл собирает магнитики — игра</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="proj-head">
+    <a class="back" href="../site/">← назад</a>
+    <h1 class="proj-title"><span class="pin">Игра</span>Бабл собирает магнитики</h1>
+    <button class="theme-btn" id="themeBtn" title="Сменить тему">🌙</button>
+  </header>
+
+  <div id="game-wrap">
+    <canvas id="game" tabindex="0"></canvas>
+
+    <!-- стартовый оверлей игры -->
+    <div id="start" class="overlay">
+      <div class="head">
+        <h1 class="title">Путешествие Бабла по миру</h1>
+        <p class="subtitle">Помоги Баблу собрать магнитики из четырёх стран и вернуться домой</p>
+      </div>
+      <button class="play" type="button" id="start-btn">▶ Играть</button>
+      <div class="controls">
+        <span class="group">
+          <span class="k">←</span><span class="k">↑</span><span class="k">↓</span><span class="k">→</span>
+          <span class="label">— перемещение</span>
+        </span>
+        <span class="group">
+          <span class="k">E</span>
+          <span class="label">— действие</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- финальный оверлей игры -->
+    <div id="finish" class="overlay" hidden>
+      <div class="head">
+        <h1 class="title">Хорошо съездил!</h1>
+        <p class="subtitle">Все магнитики у Бабла. Время отдохнуть.</p>
+      </div>
+      <button class="play" type="button" id="restart-btn">↻ Повторить</button>
+      <div class="controls">
+        <span class="group">
+          <span class="k">←</span><span class="k">↑</span><span class="k">↓</span><span class="k">→</span>
+          <span class="label">— перемещение</span>
+        </span>
+        <span class="group">
+          <span class="k">E</span>
+          <span class="label">— действие</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- тач-управление: ПОД канвасом, видно только на тач-устройствах (style.css, pointer: coarse) -->
+  <div class="touch-controls" aria-hidden="true">
+    <div class="touch-controls__pad">
+      <button class="touch-btn touch-btn--up"    data-key="ArrowUp"    type="button">▲</button>
+      <button class="touch-btn touch-btn--left"  data-key="ArrowLeft"  type="button">◀</button>
+      <button class="touch-btn touch-btn--down"  data-key="ArrowDown"  type="button">▼</button>
+      <button class="touch-btn touch-btn--right" data-key="ArrowRight" type="button">▶</button>
+    </div>
+    <button class="touch-btn touch-btn--action" data-action type="button">взять · дальше</button>
+  </div>
+
+</div>
+
+<!-- переключатель темы (как на визитке) -->
+<script>
+  const themeBtn = document.getElementById('themeBtn');
+  themeBtn.addEventListener('click', () => {
+    const light = document.documentElement.classList.toggle('light');
+    themeBtn.textContent = light ? '☀️' : '🌙';
+  });
+</script>
+
+<!-- оверлеи игры: связь HTML и game.js (как demo.html:93-108) -->
+<script>
+    const startOverlay = document.getElementById("start");
+    const finishOverlay = document.getElementById("finish");
+    const canvasEl = document.getElementById("game");
+
+    document.getElementById("start-btn").addEventListener("click", () => {
+      startOverlay.hidden = true;
+      canvasEl.focus();
+    });
+    document.getElementById("restart-btn").addEventListener("click", () => {
+      finishOverlay.hidden = true;
+      if (window.GameAPI && window.GameAPI.restart) window.GameAPI.restart();
+      canvasEl.focus();
+    });
+    window.onGameFinish = () => { finishOverlay.hidden = false; };
+
+    // тач-кнопки → GameAPI (как demo.html). game.js грузится ПОЗЖЕ, но обработчики
+    // срабатывают по тапу пользователя — к этому моменту GameAPI уже есть (guard на всякий).
+    document.querySelectorAll(".touch-btn[data-key]").forEach((btn) => {
+      const key = btn.dataset.key;
+      const down = (e) => { e.preventDefault(); if (window.GameAPI) window.GameAPI.press(key); };
+      const up = () => { if (window.GameAPI) window.GameAPI.release(key); };
+      btn.addEventListener("pointerdown", down);
+      btn.addEventListener("pointerup", up);
+      btn.addEventListener("pointercancel", up);
+      btn.addEventListener("pointerleave", up);
+    });
+    document.querySelector(".touch-btn[data-action]").addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      if (window.GameAPI) window.GameAPI.action();
+    });
+  </script>
+
+  <!-- игровые скрипты. ПОРЯДОК ВАЖЕН: реестр механик → сами механики → движок -->
+  <script src="mechanics/mechanics.js"></script>
+  <script src="mechanics/seek.js"></script>
+  <script src="mechanics/fog.js"></script>
+  <script src="mechanics/chase.js"></script>
+  <script src="mechanics/collect.js"></script>
+  <script src="mechanics/fridge.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

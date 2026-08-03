@@ -1,0 +1,12 @@
+{
+  "_comment": "ПРОД-вариант .mcp.json: nano-banana через наш прокси (токен на сервере). Когда поднимем прокси — содержимое перенести в .mcp.json вместо stdio-блока.",
+  "mcpServers": {
+    "nano-banana": {
+      "type": "http",
+      "url": "https://teens.make-it.kz/mcp/nano-banana",
+      "headers": {
+        "Authorization": "Bearer ${NANO_BANANA_CAMP_KEY}"
+      }
+    }
+  }
+}
