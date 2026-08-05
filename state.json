@@ -1,6 +1,12 @@
 {
   "current_step": "0",
-  "profile": {},
+  "profile": {
+    "name": "Егор",
+    "age": 16,
+    "interests": [],
+    "ai_experience": "",
+    "notes": ""
+  },
   "progress": {},
   "checkpoints": {},
   "hero": {
