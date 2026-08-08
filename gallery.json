@@ -1,3 +1,64 @@
 {
-  "images": []
+  "images": [
+    {
+      "path": "generated/experiments/esports-block-world.png",
+      "step": "0",
+      "ts": "2026-08-05T15:20:57+05:00"
+    },
+    {
+      "path": "generated/experiments/high-tech-house-pool.png",
+      "step": "0",
+      "ts": "2026-08-05T15:22:04+05:00"
+    },
+    {
+      "path": "generated/experiments/attempt_1_weak.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:35:13+05:00"
+    },
+    {
+      "path": "generated/experiments/attempt_1_sport.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:37:18+05:00"
+    },
+    {
+      "path": "generated/experiments/attempt_2_strong.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:39:09+05:00"
+    },
+    {
+      "path": "generated/experiments/user_1.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:46:26+05:00"
+    },
+    {
+      "path": "generated/experiments/user_1_improved.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:50:15+05:00"
+    },
+    {
+      "path": "generated/experiments/user_2.png",
+      "step": "1.1",
+      "ts": "2026-08-05T15:54:42+05:00"
+    },
+    {
+      "path": "generated/experiments/user_3.png",
+      "step": "1.1",
+      "ts": "2026-08-05T16:03:47+05:00"
+    },
+    {
+      "path": "generated/experiments/user_4.png",
+      "step": "1.1",
+      "ts": "2026-08-05T16:06:30+05:00"
+    },
+    {
+      "path": "generated/experiments/hero_v1.png",
+      "step": "1.2",
+      "ts": "2026-08-05T16:14:10+05:00"
+    },
+    {
+      "path": "generated/experiments/hero_v2.png",
+      "step": "1.2",
+      "ts": "2026-08-05T16:16:23+05:00"
+    }
+  ]
 }

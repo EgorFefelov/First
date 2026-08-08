@@ -4,7 +4,7 @@
   "workbench.sideBar.location": "left",
   "claudeCode.preferredLocation": "sidebar",
   "workbench.editor.showTabs": "single",
-  "workbench.layoutControl.enabled": false,
+  "workbench.layoutControl.enabled": true,
   "workbench.tips.enabled": false,
   "workbench.startupEditor": "none",
   "workbench.colorTheme": "Light Modern",
