@@ -1,7 +1,21 @@
 {
   "current_step": "0",
   "profile": {},
-  "progress": {},
+  "progress": {
+    "words_app": {
+      "path": "projects/words/index.html",
+      "status": "working prototype",
+      "features": [
+        "карточки английский↔русский",
+        "тест с вариантами",
+        "ввод перевода",
+        "интервальное повторение",
+        "статистика",
+        "поиск и добавление слов",
+        "фильтр дубликатов и служебных слов"
+      ]
+    }
+  },
   "checkpoints": {},
   "hero": {
     "stage": "bubble",
