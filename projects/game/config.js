@@ -67,7 +67,7 @@ const CONFIG = {
   //   сверить с комиксом. Порядок SCENES = порядок кадров истории.
   // В заготовке один кадр-плейсхолдер; наставник заполняет на шагах 2.1–2.4.
   SCENES: [
-    { image: "scenes/placeholder.png" },
+    { image: "scenes/scene_1.png", comic_frame: "../comics/scenes/david_factory.png" },
   ],
 
   // --- активные модули движка (ядро core.js читает) ---

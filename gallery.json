@@ -59,6 +59,71 @@
       "path": "generated/experiments/hero_v2.png",
       "step": "1.2",
       "ts": "2026-08-05T16:16:23+05:00"
+    },
+    {
+      "path": "generated/experiments/hero_v3.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:09:33+05:00"
+    },
+    {
+      "path": "generated/experiments/factory_worker_v1.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:30:10+05:00"
+    },
+    {
+      "path": "generated/experiments/ray_v1.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:33:38+05:00"
+    },
+    {
+      "path": "generated/experiments/david_factory.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:40:19+05:00"
+    },
+    {
+      "path": "generated/experiments/david_meets_ray.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:47:11+05:00"
+    },
+    {
+      "path": "generated/experiments/david_ray_miami.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:53:03+05:00"
+    },
+    {
+      "path": "generated/experiments/david_ray_first_calls.png",
+      "step": "1.2",
+      "ts": "2026-08-07T15:57:01+05:00"
+    },
+    {
+      "path": "generated/experiments/david_new_house.png",
+      "step": "1.2",
+      "ts": "2026-08-07T16:05:08+05:00"
+    },
+    {
+      "path": "generated/experiments/police_surround_houses.png",
+      "step": "1.2",
+      "ts": "2026-08-07T16:10:06+05:00"
+    },
+    {
+      "path": "projects/game/scenes/scene_1.png",
+      "step": "2.1",
+      "ts": "2026-08-10T15:21:29+05:00"
+    },
+    {
+      "path": "projects/game/items/captain-john.png",
+      "step": "2.1",
+      "ts": "2026-08-10T16:03:15+05:00"
+    },
+    {
+      "path": "projects/game/items/lieutenant-colonel-ryan.png",
+      "step": "2.1",
+      "ts": "2026-08-10T16:39:00+05:00"
+    },
+    {
+      "path": "projects/game/items/president-cindy.png",
+      "step": "2.1",
+      "ts": "2026-08-10T16:40:00+05:00"
     }
   ]
 }

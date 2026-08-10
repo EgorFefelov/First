@@ -1,6 +1,62 @@
 {
-  "story": [],
+  "story": [
+    {
+      "type": "normal_day",
+      "text": "Дэвид с уставшим видом работает на заводе."
+    },
+    {
+      "type": "call",
+      "text": "После смены Дэвид подходит к своему ветхому дому, где его ждёт Рэй на спорткаре."
+    },
+    {
+      "type": "decision",
+      "text": "Старый школьный друг Рэй приглашает Дэвида прокатиться по Майами, и они разговаривают в машине у берега."
+    },
+    {
+      "type": "trouble",
+      "text": "Рэй предлагает Дэвиду войти в незаконный оружейный бизнес, и они вдвоём принимают первые звонки в офисе."
+    },
+    {
+      "type": "resolve",
+      "text": "Дэвид покупает новый дом и теперь выглядит уверенным и довольным в гавайских плавках и солнцезащитных очках."
+    },
+    {
+      "type": "new_hero",
+      "text": "Полиция окружает дома Рэя и Дэвида машинами и вооружёнными сотрудниками, а над домами кружит вертолёт."
+    }
+  ],
   "comic": {
-    "frames": []
+    "frames": [
+      {
+        "story_index": 0,
+        "type": "normal_day",
+        "image": "scenes/david_factory.png"
+      },
+      {
+        "story_index": 1,
+        "type": "call",
+        "image": "scenes/david_meets_ray.png"
+      },
+      {
+        "story_index": 2,
+        "type": "decision",
+        "image": "scenes/david_ray_miami.png"
+      },
+      {
+        "story_index": 3,
+        "type": "trouble",
+        "image": "scenes/david_ray_first_calls.png"
+      },
+      {
+        "story_index": 4,
+        "type": "resolve",
+        "image": "scenes/david_new_house.png"
+      },
+      {
+        "story_index": 5,
+        "type": "new_hero",
+        "image": "scenes/police_surround_houses.png"
+      }
+    ]
   }
 }

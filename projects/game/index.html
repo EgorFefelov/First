@@ -13,7 +13,7 @@
     html, body {
       margin: 0;
       min-height: 100vh;
-      background: #f5f1ea;
+      background: #07111f;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       display: flex;
       align-items: center;
@@ -22,6 +22,7 @@
     #game-wrap {
       position: relative;
       width: max-content;
+      display: none;
     }
     #game {
       border: 2px solid #1a1a1a;
@@ -30,10 +31,271 @@
       max-height: 90vmin;
       display: block;
     }
+    #main-menu {
+      position: relative;
+      width: min(1100px, 94vw);
+      height: min(700px, 88vh);
+      border-radius: 24px;
+      overflow: hidden;
+      background: linear-gradient(90deg, rgba(2, 8, 18, .92), rgba(2, 8, 18, .18)),
+                  url("menu-bg.png") center/cover;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
+      color: white;
+    }
+    .menu-content {
+      width: min(430px, 78%);
+      padding: clamp(28px, 6vw, 72px);
+    }
+    .eyebrow {
+      color: #74d8ff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 12px 0 8px;
+      font-size: clamp(42px, 7vw, 76px);
+      line-height: .92;
+    }
+    .subtitle {
+      margin: 0 0 30px;
+      color: rgba(255,255,255,.72);
+      font-size: 17px;
+    }
+    .menu-actions {
+      display: grid;
+      gap: 12px;
+    }
+    .menu-button, .character-option {
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 14px;
+      background: rgba(8, 18, 33, .78);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .menu-button {
+      padding: 17px 20px;
+      text-align: left;
+      font-size: 18px;
+    }
+    .menu-button:hover, .character-option:hover,
+    .menu-button.active, .character-option.active {
+      transform: translateY(-2px);
+      background: rgba(14, 112, 158, .9);
+      border-color: #74d8ff;
+    }
+    #character-options {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    #character-options.open { display: grid; }
+    .character-option { padding: 13px; }
+    #menu-status {
+      min-height: 22px;
+      margin-top: 18px;
+      color: #9de7ff;
+      font-weight: 700;
+    }
+    #sale-mode {
+      width: min(1100px, 94vw);
+      min-height: min(700px, 88vh);
+      border-radius: 24px;
+      overflow: hidden;
+      color: white;
+      background: linear-gradient(rgba(4, 12, 25, .32), rgba(4, 12, 25, .42)),
+                  url("call-office-bg.png") center/cover;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
+    }
+    .hidden { display: none !important; }
+    .call-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+    }
+    .back-button {
+      border: 0;
+      background: transparent;
+      color: #9de7ff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .call-layout {
+      display: grid;
+      grid-template-columns: minmax(230px, .75fr) minmax(320px, 1.25fr);
+      min-height: 610px;
+    }
+    .caller-card {
+      position: relative;
+      overflow: hidden;
+      background: rgba(2, 9, 20, .48);
+    }
+    .caller-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: .94;
+    }
+    .caller-name {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(2,9,20,.82);
+      backdrop-filter: blur(8px);
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .phone-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(28px, 5vw, 64px);
+      margin: clamp(16px, 3vw, 32px);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 20px;
+      background: rgba(3, 12, 25, .56);
+      backdrop-filter: blur(9px);
+    }
+    .phone-icon { font-size: 54px; }
+    .phone-panel h2 {
+      margin: 14px 0 8px;
+      font-size: clamp(30px, 5vw, 50px);
+    }
+    .phone-panel p { color: rgba(255,255,255,.72); }
+    .call-actions, #answer-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 26px;
+    }
+    .call-action, .answer-button {
+      padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 13px;
+      color: white;
+      background: rgba(255,255,255,.08);
+      font: inherit;
+      font-size: 17px;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+    }
+    .call-action.accept { background: #147d58; }
+    .call-action.decline { background: #7d2834; }
+    .call-action:hover, .answer-button:hover { filter: brightness(1.25); }
+    .answer-button.correct, .number-submit.correct {
+      background: #16834f;
+      border-color: #63efac;
+    }
+    .answer-button.wrong, .number-submit.wrong {
+      background: #a62f3e;
+      border-color: #ff8292;
+    }
+    .answer-button:disabled, .number-submit:disabled { cursor: default; }
+    .number-answer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+    .number-answer input {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 13px;
+      background: rgba(255,255,255,.1);
+      color: white;
+      font: inherit;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .number-submit {
+      padding: 16px 20px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 13px;
+      background: #176f98;
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    #quiz-progress {
+      color: #74d8ff;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    #question-text { line-height: 1.12; }
+    #call-message {
+      min-height: 24px;
+      margin-top: 18px;
+      color: #9de7ff;
+      font-weight: 800;
+    }
+    @media (max-width: 760px) {
+      .call-layout { grid-template-columns: 1fr; }
+      .caller-card { height: 280px; }
+    }
   </style>
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
 <body>
+  <section id="main-menu" aria-label="Главное меню">
+    <div class="menu-content">
+      <div class="eyebrow">Майами · новая история</div>
+      <h1>Выбери путь</h1>
+      <p class="subtitle">Сначала персонаж, затем режим игры.</p>
+      <div class="menu-actions">
+        <button class="menu-button mode-button" data-mode="Продажа оружия">Продажа оружия</button>
+        <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
+        <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
+        <div id="character-options">
+          <button class="character-option" data-character="Дэвид">Дэвид</button>
+          <button class="character-option" data-character="Рэй">Рэй</button>
+        </div>
+      </div>
+      <div id="menu-status">Выбери персонажа и режим</div>
+    </div>
+  </section>
+  <section id="sale-mode" class="hidden" aria-label="Режим продажи">
+    <header class="call-header">
+      <strong id="active-player">Игрок</strong>
+      <button class="back-button" id="back-to-menu">← В меню</button>
+    </header>
+    <div class="call-layout">
+      <aside class="caller-card">
+        <img id="caller-image" src="items/captain-john.png" alt="Капитан Джон">
+        <div class="caller-name" id="caller-name">Капитан Джон</div>
+      </aside>
+      <main class="phone-panel">
+        <div id="incoming-view">
+          <div class="phone-icon">☎️</div>
+          <h2>Входящий звонок</h2>
+          <p id="incoming-caller">Капитан Джон звонит по защищённой линии.</p>
+          <div class="call-actions">
+            <button class="call-action accept" id="accept-call">Принять</button>
+            <button class="call-action decline" id="decline-call">Отклонить</button>
+          </div>
+        </div>
+        <div id="quiz-view" class="hidden">
+          <div id="quiz-progress">Вопрос 1 из 3</div>
+          <h2 id="question-text"></h2>
+          <div id="answer-list"></div>
+        </div>
+        <div id="call-message"></div>
+      </main>
+    </div>
+  </section>
   <div id="game-wrap">
     <canvas id="game" tabindex="0"></canvas>
     <!-- оверлеи старта/финала создаёт модуль overlays.js (DOM в его setup) -->
@@ -65,5 +327,226 @@
   -->
 
   <script src="assets/core.js"></script>
+  <script>
+    let selectedMode = "";
+    let selectedCharacter = "";
+    const status = document.getElementById("menu-status");
+    const characterButton = document.getElementById("character-button");
+    const characterOptions = document.getElementById("character-options");
+    const mainMenu = document.getElementById("main-menu");
+    const saleMode = document.getElementById("sale-mode");
+    const incomingView = document.getElementById("incoming-view");
+    const quizView = document.getElementById("quiz-view");
+    const callMessage = document.getElementById("call-message");
+    const questionText = document.getElementById("question-text");
+    const answerList = document.getElementById("answer-list");
+    const quizProgress = document.getElementById("quiz-progress");
+    const callers = [
+      {
+        name: "Капитан Джон",
+        image: "items/captain-john.png",
+        questions: [
+          { text: "Где был создан автомат Калашникова?", answers: ["В СССР", "В США", "В Германии"], correct: 0 },
+          { text: "Какая страна победила в Великой Отечественной войне?", answers: ["Германия", "СССР", "Италия"], correct: 1 },
+          { text: "По версии игры, кто поджёг Москву во время войны с Наполеоном?", answers: ["Войска Москвы", "Британская армия", "Испанская армия"], correct: 0 }
+        ]
+      },
+      {
+        name: "Подполковник Райан",
+        image: "items/lieutenant-colonel-ryan.png",
+        questions: [
+          { text: "У какой страны крупнейший общий запас атомных боеголовок?", answers: ["Россия", "Франция", "Китай"], correct: 0 },
+          { text: "В какой стране берет впервые стал частью массовой военной формы?", answers: ["Франция", "Бразилия", "Канада"], correct: 0 },
+          { text: "В каком году из Казахстана вывезли последнее ядерное оружие?", answers: ["1991", "1995", "2001"], correct: 1 }
+        ]
+      },
+      {
+        name: "Президент Синди",
+        image: "items/president-cindy.png",
+        questions: [
+          { text: "В какой стране находится американская авиабаза Рамштайн?", answers: ["Германия", "Япония", "Канада"], correct: 0 },
+          { text: "Как расшифровывается ПВО?", answers: ["Противовоздушная оборона", "Полевая военная операция", "Пункт воздушного обзора"], correct: 0 },
+          { text: "Сколько патронов в стандартном магазине автомата Калашникова?", type: "number", correctValue: "30" }
+        ]
+      }
+    ];
+    const callerImage = document.getElementById("caller-image");
+    const callerName = document.getElementById("caller-name");
+    const incomingCaller = document.getElementById("incoming-caller");
+    let callerIndex = 0;
+    let questionIndex = 0;
+    let cooldownTimer = null;
+    let feedbackTimer = null;
+
+    function updateMenuStatus() {
+      status.textContent = selectedCharacter && selectedMode
+        ? `${selectedCharacter} · ${selectedMode}`
+        : "Выбери персонажа и режим";
+    }
+
+    function showIncomingCall() {
+      clearInterval(cooldownTimer);
+      clearTimeout(feedbackTimer);
+      questionIndex = 0;
+      const caller = callers[callerIndex];
+      callerImage.src = caller.image;
+      callerImage.alt = caller.name;
+      callerName.textContent = caller.name;
+      incomingCaller.textContent = `${caller.name} звонит по защищённой линии.`;
+      quizView.classList.add("hidden");
+      incomingView.classList.remove("hidden");
+      callMessage.textContent = "";
+    }
+
+    function openSaleMode() {
+      mainMenu.classList.add("hidden");
+      saleMode.classList.remove("hidden");
+      document.getElementById("active-player").textContent = `Игрок: ${selectedCharacter}`;
+      showIncomingCall();
+    }
+
+    function showQuestion() {
+      const questions = callers[callerIndex].questions;
+      const question = questions[questionIndex];
+      incomingView.classList.add("hidden");
+      quizView.classList.remove("hidden");
+      quizProgress.textContent = `${callers[callerIndex].name} · вопрос ${questionIndex + 1} из ${questions.length}`;
+      questionText.textContent = question.text;
+      answerList.innerHTML = "";
+      if (question.type === "number") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "number-answer";
+        const input = document.createElement("input");
+        input.type = "number";
+        input.inputMode = "numeric";
+        input.placeholder = "Введи число";
+        const submit = document.createElement("button");
+        submit.className = "number-submit";
+        submit.textContent = "Ответить";
+        const send = () => checkNumberAnswer(input.value.trim(), submit, input);
+        submit.addEventListener("click", send);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") send();
+        });
+        wrapper.append(input, submit);
+        answerList.appendChild(wrapper);
+        input.focus();
+        return;
+      }
+      question.answers.forEach((answer, index) => {
+        const button = document.createElement("button");
+        button.className = "answer-button";
+        button.textContent = answer;
+        button.addEventListener("click", () => checkAnswer(index, button));
+        answerList.appendChild(button);
+      });
+    }
+
+    function startCooldown() {
+      quizView.classList.add("hidden");
+      callerIndex = 0;
+      let seconds = 10;
+      callMessage.textContent = `Звонок сброшен. Новый звонок через ${seconds} сек.`;
+      cooldownTimer = setInterval(() => {
+        seconds -= 1;
+        callMessage.textContent = `Звонок сброшен. Новый звонок через ${seconds} сек.`;
+        if (seconds <= 0) showIncomingCall();
+      }, 1000);
+    }
+
+    function lockAnswers() {
+      answerList.querySelectorAll("button, input").forEach((control) => control.disabled = true);
+    }
+
+    function handleAnswer(isCorrect, control) {
+      lockAnswers();
+      control.classList.add(isCorrect ? "correct" : "wrong");
+      callMessage.textContent = isCorrect ? "Верный ответ" : "Неверный ответ — звонок сброшен";
+      feedbackTimer = setTimeout(() => {
+        if (!isCorrect) {
+          startCooldown();
+          return;
+        }
+        questionIndex += 1;
+        const questions = callers[callerIndex].questions;
+        if (questionIndex < questions.length) {
+          callMessage.textContent = "";
+          showQuestion();
+          return;
+        }
+        const completedCaller = callers[callerIndex].name;
+        callerIndex += 1;
+        if (callerIndex < callers.length) {
+          quizView.classList.add("hidden");
+          callMessage.textContent = `${completedCaller}: звонок завершён без ошибок. Следующий заказчик на линии.`;
+          feedbackTimer = setTimeout(showIncomingCall, 1100);
+          return;
+        }
+        quizView.classList.add("hidden");
+        callerIndex = 0;
+        callMessage.textContent = "Все три звонка завершены без ошибок! Сделка состоялась.";
+      }, isCorrect ? 650 : 850);
+    }
+
+    function checkAnswer(answerIndex, button) {
+      const question = callers[callerIndex].questions[questionIndex];
+      handleAnswer(answerIndex === question.correct, button);
+    }
+
+    function checkNumberAnswer(value, button, input) {
+      if (!value) {
+        input.focus();
+        return;
+      }
+      const question = callers[callerIndex].questions[questionIndex];
+      handleAnswer(value === question.correctValue, button);
+    }
+
+    characterButton.addEventListener("click", () => {
+      characterOptions.classList.toggle("open");
+    });
+
+    document.querySelectorAll(".character-option").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedCharacter = button.dataset.character;
+        document.querySelectorAll(".character-option").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        characterButton.textContent = `Выбор персонажа: ${selectedCharacter}`;
+        characterOptions.classList.remove("open");
+        updateMenuStatus();
+      });
+    });
+
+    document.querySelectorAll(".mode-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedMode = button.dataset.mode;
+        document.querySelectorAll(".mode-button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        updateMenuStatus();
+        if (!selectedCharacter) {
+          status.textContent = "Сначала выбери Дэвида или Рэя";
+          return;
+        }
+        if (selectedMode === "Продажа оружия") {
+          openSaleMode();
+        } else {
+          status.textContent = "Режим перевозки добавим следующим";
+        }
+      });
+    });
+
+    document.getElementById("accept-call").addEventListener("click", showQuestion);
+    document.getElementById("decline-call").addEventListener("click", () => {
+      saleMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+    });
+    document.getElementById("back-to-menu").addEventListener("click", () => {
+      clearInterval(cooldownTimer);
+      clearTimeout(feedbackTimer);
+      callerIndex = 0;
+      saleMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+    });
+  </script>
 </body>
 </html>

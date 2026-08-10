@@ -1,5 +1,5 @@
 {
-  "workbench.activityBar.location": "hidden",
+  "workbench.activityBar.location": "default",
   "workbench.statusBar.visible": false,
   "workbench.sideBar.location": "left",
   "claudeCode.preferredLocation": "sidebar",
