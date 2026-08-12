@@ -46,14 +46,54 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
+    background:
+      linear-gradient(rgba(6, 10, 35, .45), rgba(6, 10, 35, .68)),
+      url('miami-portfolio-background.png') center / cover fixed;
     color: var(--text);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     line-height: 1.5;
     transition: background .3s, color .3s;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+  .ak-pattern {
+    position: fixed; inset: 0; z-index: 1; overflow: hidden;
+    pointer-events: none;
+  }
+  .ak-pattern img {
+    position: absolute; width: 138px; opacity: .62;
+    filter: drop-shadow(0 0 10px rgba(82, 236, 255, .55));
+    animation: ak-spin 10s linear infinite;
+  }
+  .ak-pattern img:nth-child(even) { animation-direction: reverse; }
+  .ak-pattern img:nth-child(1)  { left: 4%;  top: 8%; }
+  .ak-pattern img:nth-child(2)  { left: 28%; top: 22%; }
+  .ak-pattern img:nth-child(3)  { left: 53%; top: 8%; }
+  .ak-pattern img:nth-child(4)  { left: 78%; top: 22%; }
+  .ak-pattern img:nth-child(5)  { left: 15%; top: 43%; }
+  .ak-pattern img:nth-child(6)  { left: 40%; top: 57%; }
+  .ak-pattern img:nth-child(7)  { left: 65%; top: 43%; }
+  .ak-pattern img:nth-child(8)  { left: 88%; top: 57%; }
+  .ak-pattern img:nth-child(9)  { left: 4%;  top: 78%; }
+  .ak-pattern img:nth-child(10) { left: 28%; top: 88%; }
+  .ak-pattern img:nth-child(11) { left: 53%; top: 78%; }
+  .ak-pattern img:nth-child(12) { left: 78%; top: 88%; }
+  @keyframes ak-spin {
+    from { transform: rotate(45deg); }
+    to { transform: rotate(405deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ak-pattern img { animation: none; transform: rotate(45deg); }
+  }
+  .wrap {
+    position: relative; z-index: 2;
+    max-width: 800px; margin: 0 auto; padding: 24px 36px 80px;
+    min-height: 100vh;
+    background: rgba(9, 14, 38, .78);
+    border-left: 1px solid rgba(95, 255, 214, .2);
+    border-right: 1px solid rgba(145, 92, 255, .25);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 70px rgba(0, 0, 0, .5);
+  }
 
   /* ── Бейдж бренда — floating слева вверху, симметрично кнопке темы справа.
         Лого ведёт на основной сайт. UGC-реклама: портфолио шарят прямой ссылкой. ────── */
@@ -271,6 +311,14 @@
 </style>
 </head>
 <body>
+<div class="ak-pattern" aria-hidden="true">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+  <img src="ak47.png?v=2" alt=""><img src="ak47.png?v=2" alt="">
+</div>
 <div class="wrap">
 
   <!-- Кнопка темы — floating, правый верхний угол -->
@@ -287,14 +335,14 @@
     <!-- Главный аватар = сам ученик. ЗАГЛУШКА: градиент + эмодзи.
          На 3.2 наставник заменяет эмодзи на картинку-аватар (img внутри .hero-ava). -->
     <div class="hero-ava">
-      🙂
+      <img src="avatar.png" alt="Аватар Егора">
       <!-- ОПЦИОНАЛЬНО: спутник-герой. ЗАГЛУШКА: эмодзи. На 3.3 → <img src="...">.
            Нет героя → удалить этот бейдж и .hero-bubble ниже, hero останется цел -->
       <div class="hero-pet">✨</div>
     </div>
     <div class="hero-text">
-      <h1>Привет, я ...</h1>
-      <p class="hero-line">Тут будет фраза про меня</p>
+      <h1>Егор</h1>
+      <p class="hero-line">Твоя жизнь — твоя история</p>
 
       <!-- ОПЦИОНАЛЬНО: реплика героя от первого лица. Удаляется в паре со спутником-бейджем выше -->
       <div class="hero-bubble">
@@ -303,30 +351,34 @@
     </div>
   </section>
 
-  <!-- 3 факта о себе — отдельной полосой под hero, на всю ширину.
-       На 3.2 наставник вписывает реальные факты ученика. -->
-  <div class="facts">
-    <div class="fact"><span>📍</span>факт о себе</div>
-    <div class="fact"><span>⭐</span>факт о себе</div>
-    <div class="fact"><span>🎮</span>факт о себе</div>
-  </div>
-
   <!-- ПРОЕКТЫ -->
   <h2 class="sec-title">Мои проекты</h2>
   <div class="grid">
     <!-- ЗАГЛУШКИ-призраки для своих проектов. На 3.4 наставник превращает их в живые
          карточки (.card href="../comics/" с обложкой, названием, описанием). -->
-    <div class="card ghost">
-      <div class="ghost-ico">📖</div>
-      <div class="ghost-pin">Твой комикс</div>
-      <div class="ghost-txt">тут появится твой комикс</div>
-    </div>
+    <a class="card" href="../comics/">
+      <div class="card-cover cover-comic">
+        <img src="../comics/scenes/david_ray_miami.png" alt="Майами: История Дэвида">
+        <span class="pin">Комикс</span>
+      </div>
+      <div class="card-body">
+        <h3>Майами: История Дэвида</h3>
+        <p>Дэвид встречает своего старого приятеля, и его жизнь обретает новые краски.</p>
+        <div class="card-cta">Читать комикс →</div>
+      </div>
+    </a>
 
-    <div class="card ghost">
-      <div class="ghost-ico">🎮</div>
-      <div class="ghost-pin">Твоя игра</div>
-      <div class="ghost-txt">тут появится твоя игра</div>
-    </div>
+    <a class="card" href="../game/">
+      <div class="card-cover cover-game">
+        <img src="../comics/scenes/police_surround_houses.png" alt="Полиция окружила дома — Майами: Новая история">
+        <span class="pin">Игра</span>
+      </div>
+      <div class="card-body">
+        <h3>Майами: Новая история</h3>
+        <p>Интересное приключение с оружейным бизнесом.</p>
+        <div class="card-cta">Играть →</div>
+      </div>
+    </a>
 
     <!-- Призраки: будущие проекты курса. Тип уже известен — он и мотивирует ("вот что меня ждёт") -->
     <div class="card ghost">

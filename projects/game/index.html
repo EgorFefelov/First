@@ -111,6 +111,27 @@
                   url("call-office-bg.png") center/cover;
       box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
     }
+    #transport-mode {
+      position: relative;
+      width: min(1100px, 94vw);
+      height: min(700px, 88vh);
+      overflow: hidden;
+      border-radius: 24px;
+      color: white;
+      background: #142436;
+      box-shadow: 0 28px 80px rgba(0,0,0,.55);
+    }
+    #transport-canvas { width: 100%; height: 100%; display: block; }
+    .transport-hud { position: absolute; inset: 0; pointer-events: none; }
+    #transport-lives { position: absolute; top: 20px; right: 26px; font-size: 30px; filter: drop-shadow(0 2px 4px #000); }
+    #transport-title { position: absolute; top: 22px; left: 28px; font-weight: 900; text-shadow: 0 2px 4px #000; }
+    #transport-back { position: absolute; left: 24px; bottom: 22px; pointer-events: auto; padding: 11px 16px; border: 0; border-radius: 12px; background: rgba(3,12,25,.8); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+    #route-choice, #transport-result { position: absolute; inset: 0; display: grid; place-content: center; gap: 16px; text-align: center; background: rgba(3,10,20,.72); backdrop-filter: blur(7px); pointer-events: auto; }
+    #route-choice h2, #transport-result h2 { margin: 0; font-size: clamp(32px,5vw,56px); }
+    .route-hint { margin: -4px 0 4px; color: #ffd85c; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+    .route-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .route-button { padding: 20px 28px; border: 1px solid rgba(255,255,255,.3); border-radius: 15px; color: white; background: rgba(20,85,120,.86); font: inherit; font-size: 19px; font-weight: 900; cursor: pointer; }
+    #transport-result button { justify-self: center; padding: 15px 24px; border: 0; border-radius: 12px; background: #16834f; color: white; font: inherit; font-weight: 900; cursor: pointer; }
     .hidden { display: none !important; }
     .call-header {
       display: flex;
@@ -120,6 +141,7 @@
       border-bottom: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.22);
     }
+    #sale-lives { margin-left: auto; margin-right: 24px; font-size: 22px; }
     .back-button {
       border: 0;
       background: transparent;
@@ -270,6 +292,7 @@
   <section id="sale-mode" class="hidden" aria-label="Режим продажи">
     <header class="call-header">
       <strong id="active-player">Игрок</strong>
+      <span id="sale-lives">❤️❤️❤️</span>
       <button class="back-button" id="back-to-menu">← В меню</button>
     </header>
     <div class="call-layout">
@@ -294,6 +317,26 @@
         </div>
         <div id="call-message"></div>
       </main>
+    </div>
+  </section>
+  <section id="transport-mode" class="hidden" aria-label="Режим перевозки">
+    <canvas id="transport-canvas" width="1100" height="700"></canvas>
+    <div class="transport-hud">
+      <div id="transport-title">Перевозка</div>
+      <div id="transport-lives">❤️❤️❤️</div>
+      <button id="transport-back">← В меню</button>
+      <div id="route-choice">
+        <h2>Куда везём груз?</h2>
+        <p class="route-hint">Уклоняйся от пуль!</p>
+        <div class="route-actions">
+          <button class="route-button" data-route="russia">🌲 В Россию</button>
+          <button class="route-button" data-route="afghanistan">🏜️ В Афганистан</button>
+        </div>
+      </div>
+      <div id="transport-result" class="hidden">
+        <h2 id="transport-result-title">Груз потерян</h2>
+        <button id="transport-retry">Попробовать снова</button>
+      </div>
     </div>
   </section>
   <div id="game-wrap">
@@ -335,6 +378,7 @@
     const characterOptions = document.getElementById("character-options");
     const mainMenu = document.getElementById("main-menu");
     const saleMode = document.getElementById("sale-mode");
+    const transportMode = document.getElementById("transport-mode");
     const incomingView = document.getElementById("incoming-view");
     const quizView = document.getElementById("quiz-view");
     const callMessage = document.getElementById("call-message");
@@ -377,6 +421,24 @@
     let questionIndex = 0;
     let cooldownTimer = null;
     let feedbackTimer = null;
+    let saleLives = 3;
+    const transportCanvas = document.getElementById("transport-canvas");
+    const transportCtx = transportCanvas.getContext("2d");
+    const transportLives = document.getElementById("transport-lives");
+    const transportTitle = document.getElementById("transport-title");
+    const routeChoice = document.getElementById("route-choice");
+    const transportResult = document.getElementById("transport-result");
+    let transportAnimation = null;
+    let transportRoute = "russia";
+    let truckLane = 0;
+    let lives = 3;
+    let bullets = [];
+    let boosts = [];
+    let lastBullet = 0;
+    let lastBoost = 0;
+    let roadOffset = 0;
+    let driveSpeed = 8;
+    let transportRunning = false;
 
     function updateMenuStatus() {
       status.textContent = selectedCharacter && selectedMode
@@ -388,6 +450,8 @@
       clearInterval(cooldownTimer);
       clearTimeout(feedbackTimer);
       questionIndex = 0;
+      saleLives = 3;
+      document.getElementById("sale-lives").textContent = "❤️❤️❤️";
       const caller = callers[callerIndex];
       callerImage.src = caller.image;
       callerImage.alt = caller.name;
@@ -403,6 +467,132 @@
       saleMode.classList.remove("hidden");
       document.getElementById("active-player").textContent = `Игрок: ${selectedCharacter}`;
       showIncomingCall();
+    }
+
+    function openTransportMode() {
+      mainMenu.classList.add("hidden");
+      transportMode.classList.remove("hidden");
+      routeChoice.classList.remove("hidden");
+      transportResult.classList.add("hidden");
+      transportLives.textContent = "❤️❤️❤️";
+      drawTransportScene();
+    }
+
+    function startTransport(route) {
+      transportRoute = route;
+      truckLane = 0;
+      lives = 3;
+      bullets = [];
+      boosts = [];
+      lastBullet = performance.now();
+      lastBoost = performance.now();
+      driveSpeed = 8;
+      transportRunning = true;
+      transportLives.textContent = "❤️❤️❤️";
+      transportTitle.textContent = route === "russia" ? "Маршрут: Россия · обычная скорость" : "Маршрут: Афганистан · высокая скорость";
+      routeChoice.classList.add("hidden");
+      transportResult.classList.add("hidden");
+      cancelAnimationFrame(transportAnimation);
+      transportAnimation = requestAnimationFrame(transportLoop);
+    }
+
+    function drawTransportScene() {
+      const ctx = transportCtx;
+      const w = transportCanvas.width;
+      const h = transportCanvas.height;
+      const isRussia = transportRoute === "russia";
+      ctx.fillStyle = isRussia ? "#245b39" : "#cf9b4d";
+      ctx.fillRect(0, 0, w, h);
+      if (isRussia) {
+        for (let y = -80; y < h + 100; y += 95) {
+          for (const x of [90, 190, 910, 1010]) {
+            ctx.fillStyle = "#183a28"; ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 800, 38, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#2d7747"; ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 800 - 18, 30, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+      } else {
+        ctx.fillStyle = "#e3bc71";
+        for (let y = -100; y < h + 100; y += 150) for (const x of [100, 190, 920, 1010]) { ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 850, 26, 0, Math.PI * 2); ctx.fill(); }
+      }
+      ctx.fillStyle = "#30343a"; ctx.fillRect(280, 0, 540, h);
+      ctx.fillStyle = "#e8e8d4"; ctx.fillRect(276, 0, 8, h); ctx.fillRect(816, 0, 8, h);
+      ctx.setLineDash([48, 38]); ctx.lineDashOffset = roadOffset;
+      ctx.strokeStyle = "#f4df75"; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(475, 0); ctx.lineTo(475, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(625, 0); ctx.lineTo(625, h); ctx.stroke();
+      ctx.setLineDash([]);
+      const truckX = [400, 550, 700][truckLane];
+      ctx.fillStyle = "#1e91c2"; ctx.fillRect(truckX - 62, 505, 124, 150);
+      ctx.fillStyle = "#d8e7ed"; ctx.fillRect(truckX - 48, 515, 96, 42);
+      ctx.fillStyle = "#123f55"; ctx.fillRect(truckX - 52, 570, 104, 70);
+      ctx.fillStyle = "#111"; ctx.fillRect(truckX - 72, 530, 12, 38); ctx.fillRect(truckX + 60, 530, 12, 38); ctx.fillRect(truckX - 72, 605, 12, 38); ctx.fillRect(truckX + 60, 605, 12, 38);
+      bullets.forEach((bullet) => {
+        ctx.save();
+        ctx.translate(bullet.x, bullet.y);
+        ctx.rotate(Math.PI);
+        ctx.fillStyle = "#c51f32";
+        ctx.beginPath();
+        ctx.roundRect(-7, -20, 14, 31, 6);
+        ctx.fill();
+        ctx.fillStyle = "#ff5265";
+        ctx.beginPath();
+        ctx.moveTo(-7, -14); ctx.quadraticCurveTo(0, -28, 7, -14); ctx.lineTo(7, -8); ctx.lineTo(-7, -8); ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#71101d";
+        ctx.fillRect(-8, 9, 16, 7);
+        ctx.restore();
+      });
+      boosts.forEach((boost) => {
+        ctx.save(); ctx.translate(boost.x, boost.y);
+        ctx.shadowColor = boost.type === "life" ? "#56ff8b" : "#55cfff"; ctx.shadowBlur = 18;
+        ctx.fillStyle = boost.type === "life" ? "#21b85c" : "#168ed0";
+        ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.fillStyle = "white"; ctx.font = "900 28px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(boost.type === "life" ? "+" : "⇈", 0, -1); ctx.restore();
+      });
+    }
+
+    function transportLoop(now) {
+      if (!transportRunning) return;
+      roadOffset = (roadOffset + driveSpeed) % 86;
+      const bulletSpeed = transportRoute === "afghanistan" ? 15 : 5.5;
+      const interval = transportRoute === "afghanistan" ? 1550 : 2200;
+      if (now - lastBullet > interval) {
+        bullets.push({ x: [400, 550, 700][Math.floor(Math.random() * 3)], y: -20 });
+        lastBullet = now;
+      }
+      if (now - lastBoost > 4200) {
+        boosts.push({ x: [400, 550, 700][Math.floor(Math.random() * 3)], y: -30, type: Math.random() < .35 ? "life" : "speed" });
+        lastBoost = now;
+      }
+      bullets.forEach((bullet) => bullet.y += bulletSpeed);
+      boosts.forEach((boost) => boost.y += 4.2);
+      const truckX = [400, 550, 700][truckLane];
+      bullets = bullets.filter((bullet) => {
+        if (bullet.y > 500 && bullet.y < 660 && Math.abs(bullet.x - truckX) < 70) {
+          lives -= 1;
+          transportLives.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+          if (lives <= 0) endTransport();
+          return false;
+        }
+        return bullet.y < 730;
+      });
+      boosts = boosts.filter((boost) => {
+        if (boost.y > 500 && boost.y < 660 && Math.abs(boost.x - truckX) < 70) {
+          if (boost.type === "life") lives = Math.min(3, lives + 1);
+          else driveSpeed = Math.min(18, driveSpeed + 1.5);
+          transportLives.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
+          return false;
+        }
+        return boost.y < 730;
+      });
+      drawTransportScene();
+      if (transportRunning) transportAnimation = requestAnimationFrame(transportLoop);
+    }
+
+    function endTransport() {
+      transportRunning = false;
+      transportResult.classList.remove("hidden");
     }
 
     function showQuestion() {
@@ -464,7 +654,13 @@
       callMessage.textContent = isCorrect ? "Верный ответ" : "Неверный ответ — звонок сброшен";
       feedbackTimer = setTimeout(() => {
         if (!isCorrect) {
-          startCooldown();
+          saleLives -= 1;
+          document.getElementById("sale-lives").textContent = "❤️".repeat(saleLives) + "🖤".repeat(3 - saleLives);
+          if (saleLives <= 0) startCooldown();
+          else {
+            callMessage.textContent = "Осталась ещё одна попытка";
+            feedbackTimer = setTimeout(() => { callMessage.textContent = ""; showQuestion(); }, 700);
+          }
           return;
         }
         questionIndex += 1;
@@ -530,7 +726,7 @@
         if (selectedMode === "Продажа оружия") {
           openSaleMode();
         } else {
-          status.textContent = "Режим перевозки добавим следующим";
+          openTransportMode();
         }
       });
     });
@@ -546,6 +742,19 @@
       callerIndex = 0;
       saleMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
+    });
+    document.querySelectorAll(".route-button").forEach((button) => button.addEventListener("click", () => startTransport(button.dataset.route)));
+    document.getElementById("transport-retry").addEventListener("click", () => startTransport(transportRoute));
+    document.getElementById("transport-back").addEventListener("click", () => {
+      transportRunning = false;
+      cancelAnimationFrame(transportAnimation);
+      transportMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+    });
+    window.addEventListener("keydown", (event) => {
+      if (!transportRunning) return;
+      if (event.key === "ArrowLeft") truckLane = Math.max(0, truckLane - 1);
+      if (event.key === "ArrowRight") truckLane = Math.min(2, truckLane + 1);
     });
   </script>
 </body>
