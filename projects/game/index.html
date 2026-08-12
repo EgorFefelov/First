@@ -111,7 +111,7 @@
                   url("call-office-bg.png") center/cover;
       box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
     }
-    #transport-mode {
+    #transport-mode, #air-mode {
       position: relative;
       width: min(1100px, 94vw);
       height: min(700px, 88vh);
@@ -132,6 +132,16 @@
     .route-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .route-button { padding: 20px 28px; border: 1px solid rgba(255,255,255,.3); border-radius: 15px; color: white; background: rgba(20,85,120,.86); font: inherit; font-size: 19px; font-weight: 900; cursor: pointer; }
     #transport-result button { justify-self: center; padding: 15px 24px; border: 0; border-radius: 12px; background: #16834f; color: white; font: inherit; font-weight: 900; cursor: pointer; }
+    #air-canvas { width: 100%; height: 100%; display: block; }
+    #air-score { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); color: white; font-size: 34px; font-weight: 900; text-shadow: 0 3px 5px #000; }
+    #air-lives { position: absolute; top: 22px; right: 26px; color: white; font-size: 28px; filter: drop-shadow(0 2px 4px #000); }
+    #air-back { position: absolute; left: 24px; bottom: 22px; pointer-events: auto; padding: 11px 16px; border: 0; border-radius: 12px; background: rgba(3,12,25,.8); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+    #air-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; text-align: center; color: white; background: rgba(35,18,10,.45); pointer-events: auto; }
+    #air-overlay h2 { margin: 0; font-size: clamp(36px,6vw,64px); }
+    #air-overlay p { margin: 0; font-size: 20px; font-weight: 800; }
+    #air-start { justify-self: center; margin-top: 10px; padding: 15px 26px; border: 0; border-radius: 13px; background: #d47a24; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; }
+    .air-difficulty { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .air-difficulty button { padding: 16px 22px; border: 1px solid rgba(255,255,255,.3); border-radius: 13px; color: white; background: rgba(46,34,27,.86); font: inherit; font-weight: 900; cursor: pointer; }
     .hidden { display: none !important; }
     .call-header {
       display: flex;
@@ -280,6 +290,7 @@
       <div class="menu-actions">
         <button class="menu-button mode-button" data-mode="Продажа оружия">Продажа оружия</button>
         <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
+        <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
         <div id="character-options">
           <button class="character-option" data-character="Дэвид">Дэвид</button>
@@ -339,6 +350,23 @@
       </div>
     </div>
   </section>
+  <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия">
+    <canvas id="air-canvas" width="1100" height="700"></canvas>
+    <div class="transport-hud">
+      <div id="air-score">0</div>
+      <div id="air-lives">❤️❤️❤️</div>
+      <button id="air-back">← В меню</button>
+      <div id="air-overlay">
+        <h2 id="air-message">Воздушная перевозка</h2>
+        <p id="air-help">Выбери сложность</p>
+        <div class="air-difficulty" id="air-difficulty">
+          <button data-air-difficulty="normal">Обычный · 3 жизни</button>
+          <button data-air-difficulty="hardcore">Хардкор · 1 жизнь</button>
+        </div>
+        <button id="air-start" class="hidden">Ещё раз</button>
+      </div>
+    </div>
+  </section>
   <div id="game-wrap">
     <canvas id="game" tabindex="0"></canvas>
     <!-- оверлеи старта/финала создаёт модуль overlays.js (DOM в его setup) -->
@@ -379,6 +407,7 @@
     const mainMenu = document.getElementById("main-menu");
     const saleMode = document.getElementById("sale-mode");
     const transportMode = document.getElementById("transport-mode");
+    const airMode = document.getElementById("air-mode");
     const incomingView = document.getElementById("incoming-view");
     const quizView = document.getElementById("quiz-view");
     const callMessage = document.getElementById("call-message");
@@ -439,6 +468,20 @@
     let roadOffset = 0;
     let driveSpeed = 8;
     let transportRunning = false;
+    const airCanvas = document.getElementById("air-canvas");
+    const airCtx = airCanvas.getContext("2d");
+    const airOverlay = document.getElementById("air-overlay");
+    const airScore = document.getElementById("air-score");
+    let airAnimation = null;
+    let airRunning = false;
+    let jetY = 330;
+    let jetVelocity = 0;
+    let towers = [];
+    let airPoints = 0;
+    let lastTower = 0;
+    let airLivesCount = 3;
+    let airDifficulty = "normal";
+    let airInvulnerableUntil = 0;
 
     function updateMenuStatus() {
       status.textContent = selectedCharacter && selectedMode
@@ -476,6 +519,115 @@
       transportResult.classList.add("hidden");
       transportLives.textContent = "❤️❤️❤️";
       drawTransportScene();
+    }
+
+    function openAirMode() {
+      mainMenu.classList.add("hidden");
+      airMode.classList.remove("hidden");
+      airOverlay.classList.remove("hidden");
+      document.getElementById("air-message").textContent = "Воздушная перевозка";
+      document.getElementById("air-help").textContent = "Выбери сложность";
+      document.getElementById("air-difficulty").classList.remove("hidden");
+      document.getElementById("air-start").classList.add("hidden");
+      airScore.textContent = "0";
+      resetAirGame();
+      drawAirGame();
+    }
+
+    function resetAirGame() {
+      jetY = 330;
+      jetVelocity = 0;
+      towers = [];
+      airPoints = 0;
+      lastTower = performance.now();
+    }
+
+    function startAirGame(difficulty = airDifficulty) {
+      airDifficulty = difficulty;
+      resetAirGame();
+      airLivesCount = difficulty === "normal" ? 3 : 1;
+      airInvulnerableUntil = 0;
+      document.getElementById("air-lives").textContent = difficulty === "normal" ? "❤️❤️❤️" : "☠️";
+      airRunning = true;
+      airOverlay.classList.add("hidden");
+      cancelAnimationFrame(airAnimation);
+      airAnimation = requestAnimationFrame(airLoop);
+    }
+
+    function airFlap() {
+      if (airRunning) jetVelocity = -7.8;
+    }
+
+    function drawAirGame() {
+      const ctx = airCtx, w = airCanvas.width, h = airCanvas.height;
+      const sky = ctx.createLinearGradient(0, 0, 0, h);
+      sky.addColorStop(0, "#ee8242"); sky.addColorStop(.58, "#f6bd62"); sky.addColorStop(1, "#d99038");
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(255,225,150,.55)"; ctx.beginPath(); ctx.arc(870, 125, 68, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#b96c31"; ctx.beginPath(); ctx.moveTo(0, 520); ctx.quadraticCurveTo(220, 430, 430, 540); ctx.quadraticCurveTo(700, 430, 1100, 520); ctx.lineTo(1100,700); ctx.lineTo(0,700); ctx.fill();
+      ctx.fillStyle = "#d49142"; ctx.beginPath(); ctx.moveTo(0, 585); ctx.quadraticCurveTo(320, 500, 650, 590); ctx.quadraticCurveTo(900, 520, 1100, 570); ctx.lineTo(1100,700); ctx.lineTo(0,700); ctx.fill();
+      for (const x of [70, 500, 930]) {
+        ctx.fillStyle = "#493c34"; ctx.fillRect(x, 510, 95, 45);
+        ctx.fillStyle = "#272626"; ctx.beginPath(); ctx.ellipse(x + 45, 557, 62, 14, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#633c27"; ctx.fillRect(x + 38, 485, 52, 28);
+        ctx.strokeStyle = "#242222"; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(x + 78, 490); ctx.lineTo(x + 130, 470); ctx.stroke();
+        ctx.fillStyle = "#ff6a20"; ctx.beginPath(); ctx.moveTo(x + 30, 510); ctx.lineTo(x + 48, 462); ctx.lineTo(x + 65, 510); ctx.fill();
+        ctx.fillStyle = "rgba(34,31,31,.55)"; ctx.beginPath(); ctx.arc(x + 52, 420, 42, 0, Math.PI * 2); ctx.arc(x + 68, 375, 30, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = "#51463d";
+      for (const x of [235, 760]) { ctx.fillRect(x, 500, 22, 90); ctx.fillRect(x + 26, 530, 60, 60); ctx.fillRect(x + 12, 545, 105, 18); }
+      towers.forEach((tower) => {
+        if (performance.now() < airInvulnerableUntil && Math.floor(performance.now() / 180) % 2 === 0) return;
+        ctx.fillStyle = "#171719";
+        ctx.fillRect(tower.x, 0, 92, tower.top);
+        ctx.fillRect(tower.x, tower.bottom, 92, h - tower.bottom);
+        for (const y of [tower.top - 34, tower.bottom]) {
+          ctx.fillStyle = "#29292d"; ctx.fillRect(tower.x - 14, y, 120, 34);
+          ctx.strokeStyle = "#09090a"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(tower.x + 46, y + 4); ctx.lineTo(tower.x + 88, y - 28); ctx.stroke();
+        }
+        ctx.fillStyle = "rgba(35,35,35,.35)"; ctx.beginPath(); ctx.arc(tower.x + 45, tower.top - 20, 35, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.save(); ctx.translate(245, jetY); ctx.rotate(Math.max(-.35, Math.min(.5, jetVelocity * .045)));
+      const metal = ctx.createLinearGradient(0,-35,0,35); metal.addColorStop(0,"#b8c4cb"); metal.addColorStop(.5,"#536875"); metal.addColorStop(1,"#253742");
+      ctx.fillStyle = metal; ctx.beginPath(); ctx.moveTo(-72,0); ctx.quadraticCurveTo(5,-24,74,-3); ctx.quadraticCurveTo(88,2,72,7); ctx.quadraticCurveTo(0,25,-72,9); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#344b59"; ctx.beginPath(); ctx.moveTo(-18,-4); ctx.lineTo(18,-58); ctx.lineTo(43,-5); ctx.lineTo(10,56); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#152835"; ctx.beginPath(); ctx.ellipse(42,-10,23,9,-.08,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "#d7e2e5"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-35,-12); ctx.lineTo(48,-8); ctx.stroke();
+      ctx.fillStyle = "#ff8b24"; ctx.beginPath(); ctx.moveTo(-70,-8); ctx.lineTo(-108,0); ctx.lineTo(-70,9); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+
+    function airLoop(now) {
+      if (!airRunning) return;
+      jetVelocity += .43;
+      jetY += jetVelocity;
+      if (now - lastTower > 1650) {
+        const gapTop = 130 + Math.random() * 260;
+        towers.push({ x: 1130, top: gapTop, bottom: gapTop + 205, passed: false });
+        lastTower = now;
+      }
+      towers.forEach((tower) => {
+        tower.x -= 5.2;
+        if (!tower.passed && tower.x + 92 < 245) { tower.passed = true; airPoints += 1; airScore.textContent = String(airPoints); }
+      });
+      towers = towers.filter((tower) => tower.x > -120);
+      const hit = performance.now() >= airInvulnerableUntil && towers.some((tower) => 245 + 55 > tower.x && 245 - 55 < tower.x + 92 && (jetY - 24 < tower.top || jetY + 24 > tower.bottom));
+      if (hit && airDifficulty === "normal" && airLivesCount > 1) {
+        airLivesCount -= 1;
+        document.getElementById("air-lives").textContent = "❤️".repeat(airLivesCount) + "🖤".repeat(3 - airLivesCount);
+        airInvulnerableUntil = performance.now() + 3000;
+        towers = towers.filter((tower) => tower.x > 330 || tower.x + 92 < 160);
+      }
+      if (jetY < 20 || jetY > 675 || (hit && (airDifficulty === "hardcore" || airLivesCount <= 1))) {
+        airRunning = false;
+        document.getElementById("air-message").textContent = `Полёт окончен · счёт ${airPoints}`;
+        document.getElementById("air-start").textContent = "Ещё раз";
+        document.getElementById("air-start").classList.remove("hidden");
+        document.getElementById("air-difficulty").classList.add("hidden");
+        document.getElementById("air-help").textContent = "Пробел или клик — поднять истребитель";
+        airOverlay.classList.remove("hidden");
+      }
+      drawAirGame();
+      if (airRunning) airAnimation = requestAnimationFrame(airLoop);
     }
 
     function startTransport(route) {
@@ -725,8 +877,10 @@
         }
         if (selectedMode === "Продажа оружия") {
           openSaleMode();
-        } else {
+        } else if (selectedMode === "Перевозка оружия") {
           openTransportMode();
+        } else {
+          openAirMode();
         }
       });
     });
@@ -751,7 +905,21 @@
       transportMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
     });
+    document.querySelectorAll("[data-air-difficulty]").forEach((button) => button.addEventListener("click", () => startAirGame(button.dataset.airDifficulty)));
+    document.getElementById("air-start").addEventListener("click", () => startAirGame(airDifficulty));
+    document.getElementById("air-back").addEventListener("click", () => {
+      airRunning = false;
+      cancelAnimationFrame(airAnimation);
+      airMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+    });
+    airCanvas.addEventListener("pointerdown", airFlap);
     window.addEventListener("keydown", (event) => {
+      if (airRunning && (event.code === "Space" || event.key === "ArrowUp")) {
+        event.preventDefault();
+        airFlap();
+        return;
+      }
       if (!transportRunning) return;
       if (event.key === "ArrowLeft") truckLane = Math.max(0, truckLane - 1);
       if (event.key === "ArrowRight") truckLane = Math.min(2, truckLane + 1);
