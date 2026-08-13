@@ -161,7 +161,7 @@
     #air-start { justify-self: center; margin-top: 10px; padding: 15px 26px; border: 0; border-radius: 13px; background: #d47a24; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; }
     .air-difficulty { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .air-difficulty button { padding: 16px 22px; border: 1px solid rgba(255,255,255,.3); border-radius: 13px; color: white; background: rgba(46,34,27,.86); font: inherit; font-weight: 900; cursor: pointer; }
-    #offroad-canvas{width:100%;height:100%;display:block;background:#9ce8f4}.offroad-hud{position:absolute;inset:0;pointer-events:none}.offroad-fuel{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:9px;width:230px;font-weight:900;text-shadow:0 2px 4px #000}.offroad-fuel-icon{font-size:35px}.offroad-fuel-bar{height:27px;flex:1;border:4px solid #1b2228;background:#edf1f2}.offroad-fuel-fill{height:100%;width:100%;background:#a8ec18;transform-origin:left}.offroad-distance{position:absolute;top:64px;left:28px;font-size:28px;font-weight:950;text-shadow:0 3px 4px #000}.offroad-pause{position:absolute;top:18px;right:20px;width:54px;height:50px;border:0;border-radius:8px;background:#eceff1;color:#29313a;font-size:25px;font-weight:950;pointer-events:auto;cursor:pointer;box-shadow:0 3px 0 #80878d}.offroad-pedal{position:absolute;bottom:18px;width:160px;height:145px;border:2px solid #d9dde0;border-radius:12px;background:linear-gradient(#f3f4f5,#979da1);color:#24272a;font:950 22px Arial;pointer-events:auto;cursor:pointer;box-shadow:0 8px 0 #555b60}.offroad-pedal:active,.offroad-pedal.active{transform:translateY(6px);box-shadow:0 2px 0 #555b60}.offroad-brake{left:22px}.offroad-gas{right:22px}.offroad-message{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#0008;color:#fff;pointer-events:auto}.offroad-message h2{margin:0;font-size:52px}.offroad-message button{justify-self:center;padding:14px 24px;border:0;border-radius:9px;background:#a7e51b;font:900 18px Arial;cursor:pointer}
+    #offroad-canvas{width:100%;height:100%;display:block;background:#302b29}.offroad-hud{position:absolute;inset:0;pointer-events:none}.offroad-fuel{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:9px;width:230px;font-weight:900;text-shadow:0 2px 4px #000}.offroad-fuel-icon{font-size:35px}.offroad-fuel-bar{height:27px;flex:1;border:4px solid #1b2228;background:#edf1f2}.offroad-fuel-fill{height:100%;width:100%;background:#a8ec18;transform-origin:left}.offroad-distance{position:absolute;top:64px;left:28px;font-size:28px;font-weight:950;text-shadow:0 3px 4px #000}.offroad-pedal{position:absolute;bottom:18px;width:160px;height:145px;border:2px solid #d9dde0;border-radius:12px;background:linear-gradient(#f3f4f5,#979da1);color:#24272a;font:950 22px Arial;pointer-events:auto;cursor:pointer;box-shadow:0 8px 0 #555b60}.offroad-pedal:active,.offroad-pedal.active{transform:translateY(6px);box-shadow:0 2px 0 #555b60}.offroad-brake{left:22px}.offroad-gas{right:22px}.offroad-message{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#0008;color:#fff;pointer-events:auto}.offroad-message h2{margin:0;font-size:52px}.offroad-message button{justify-self:center;padding:14px 24px;border:0;border-radius:9px;background:#a7e51b;font:900 18px Arial;cursor:pointer}
     .hidden { display: none !important; }
     .call-header {
       display: flex;
@@ -171,7 +171,7 @@
       border-bottom: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.22);
     }
-    #sale-lives { margin-left: auto; margin-right: 24px; font-size: 22px; }
+    .sale-wallet{margin-left:auto;margin-right:24px;display:flex;align-items:center;gap:10px;font-size:22px;font-weight:950}.wallet-icon{position:relative;width:34px;height:25px;border-radius:5px;background:#a86b2c;border:2px solid #e1ad65;box-shadow:inset 0 0 0 2px #704115}.wallet-icon::after{content:"";position:absolute;right:-4px;top:6px;width:15px;height:10px;border-radius:3px;background:#75451f;border:2px solid #e1ad65}
     .back-button {
       border: 0;
       background: transparent;
@@ -312,18 +312,20 @@
     .browser-page { height:calc(100% - 54px); overflow:auto; background:#f5f7fa; color:#20242a; font-family:Arial,sans-serif; }
     .orders-site-header { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 22px; background:#15191f; color:#fff; }
     .orders-site-header strong { font-size:23px; }.orders-site-header span{font-size:12px;color:#aeb6c2}
+    #contract-status.stock-error{color:#ff4d5a;font-size:14px;font-weight:950;text-shadow:0 0 10px #ff213f55}
     .warehouse-stock { display:flex; align-items:center; gap:12px; padding:10px 16px; background:#252b34; color:#fff; }
     .warehouse-stock strong{margin-right:auto;font-size:13px}.stock-item{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:5px;background:#353d49;font-weight:800}.stock-item img,.order-boxes img{width:30px;height:24px;object-fit:contain}
     .orders-table { width:100%; border-collapse:collapse; background:#fff; font-size:13px; }
     .orders-table th { position:sticky; top:0; z-index:1; padding:10px 9px; text-align:left; background:#e4e8ee; border:1px solid #bdc4ce; white-space:nowrap; }
     .orders-table td { padding:8px 9px; border:1px solid #d1d6dc; vertical-align:middle; }
-    .orders-table tbody tr:hover { background:#f0f6ff; }
+    .orders-table tbody tr{cursor:pointer}.orders-table tbody tr:hover { background:#dcecff; }
     .level { display:inline-block; min-width:76px; padding:4px 7px; color:#17202a; font-weight:700; text-align:center; border-radius:3px; }
     .level-easy{background:#9ce7b0}.level-medium{background:#ffe285}.level-hard{background:#ff9eaa}.level-hardcore{background:#f21c2b;color:#fff}
     .level-delivery{display:flex;align-items:center;gap:7px;white-space:nowrap}.delivery-icon{display:grid;place-items:center;width:31px;height:27px;border-radius:5px;background:#e8edf3;font-size:19px;cursor:help}
     .order-boxes { display:flex; flex-wrap:wrap; gap:5px 10px; white-space:nowrap; }
     .order-boxes span { display:flex;align-items:center;gap:4px;padding:3px 6px; border-radius:4px; background:#eef1f5; }
     .order-price{font-weight:900;color:#16803a;white-space:nowrap}
+    .contract-country-banner{position:absolute;z-index:30;left:50%;top:42%;transform:translate(-50%,-50%);padding:20px 42px;border:3px solid #fff8;background:#080b0ed9;color:#fff;font:950 clamp(42px,9vw,94px)/1 Arial,sans-serif;text-transform:uppercase;text-align:center;text-shadow:0 5px 12px #000;box-shadow:0 14px 45px #000b;pointer-events:none}
     .mac-dock { position:absolute; z-index:5; left:50%; bottom:10px; transform:translateX(-50%); display:flex; align-items:flex-end; gap:7px; max-width:calc(100vw - 28px); padding:7px 10px; border:1px solid rgba(255,255,255,.48); border-radius:16px; background:rgba(225,232,243,.55); box-shadow:0 8px 25px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.7); backdrop-filter:blur(18px); }
     .dock-icon { width:39px; height:39px; border-radius:10px; display:grid; place-items:center; color:#fff; font-size:22px; font-weight:800; text-shadow:0 1px 2px #0006; box-shadow:inset 0 1px 2px #fff8,0 2px 5px #0005; transition:.16s transform; }
     .dock-icon:hover { transform:translateY(-8px) scale(1.22); }
@@ -359,13 +361,13 @@
   <section id="sale-mode" class="hidden" aria-label="Режим продажи">
     <header class="call-header">
       <strong id="active-player">Игрок</strong>
-      <span id="sale-lives">❤️❤️❤️</span>
+      <span class="sale-wallet"><i class="wallet-icon" aria-hidden="true"></i><b id="wallet-balance">$0</b></span>
       <button class="back-button" id="back-to-menu">← В меню</button>
     </header>
     <div class="mac-browser">
       <div class="browser-bar"><span class="traffic-lights"><i></i><i></i><i></i></span><div class="browser-address">НЕоружие🔫.com</div></div>
       <div class="browser-page">
-        <div class="orders-site-header"><strong>НЕоружие🔫.com</strong><span>Закрытая база заказчиков</span></div>
+        <div class="orders-site-header"><strong>НЕоружие🔫.com</strong><span id="contract-status">Закрытая база заказчиков</span></div>
         <div class="warehouse-stock"><strong>Склад</strong><span class="stock-item"><img src="weapon-crate.png" alt="Ящики с оружием"><b id="stock-weapon">0</b></span><span class="stock-item"><img src="grenade-crate.png" alt="Ящики с гранатами"><b id="stock-grenade">0</b></span><span class="stock-item"><img src="ammo-crate.png" alt="Ящики с пулями"><b id="stock-ammo">0</b></span></div>
         <table class="orders-table">
           <thead><tr><th>Имя</th><th>Страна</th><th>Уровень</th><th>Нужное кол-во боеприпасов</th><th>Оплата</th></tr></thead>
@@ -409,6 +411,7 @@
       <div id="transport-crates"><div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-crate-count="ammo">0</span></div><div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-crate-count="weapon">0</span></div><div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-crate-count="grenade">0</span></div></div>
       <div id="transport-speed"><div id="fuel-arc"></div><span class="dial-number n100">100</span><span class="dial-number n125">125</span><span class="dial-number n150">150</span><span class="dial-number n175">175</span><span class="dial-number n200">200</span><span class="dial-number n225">225</span><div id="fuel-icon">⛽</div><div id="fuel-needle"></div><div id="speed-needle"></div><div id="speed-value">0<span id="speed-unit">КМ/Ч</span></div></div>
       <div id="transport-controls">W / ↑ газ · S / ↓ тормоз · A D / ← → руль</div>
+      <div id="transport-country-banner" class="contract-country-banner hidden"></div>
       <button id="transport-back">← В меню</button>
       <div id="route-choice">
         <h2>Куда везём груз?</h2>
@@ -430,6 +433,7 @@
       <div id="air-score">0</div>
       <div id="air-ammo-score"><div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-air-crate="ammo">0</span></div><div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air-crate="weapon">0</span></div><div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air-crate="grenade">0</span></div></div>
       <div id="air-lives">❤️❤️❤️</div>
+      <div id="air-country-banner" class="contract-country-banner hidden"></div>
       <button id="air-back">← В меню</button>
       <div id="air-overlay">
         <h2 id="air-message">Воздушная перевозка</h2>
@@ -447,7 +451,6 @@
     <div class="offroad-hud">
       <div class="offroad-fuel"><span class="offroad-fuel-icon">⛽</span><div class="offroad-fuel-bar"><div class="offroad-fuel-fill" id="offroad-fuel-fill"></div></div></div>
       <div class="offroad-distance"><span id="offroad-distance">0</span> м</div>
-      <button class="offroad-pause" id="offroad-pause" title="Пауза">Ⅱ</button>
       <button class="offroad-pedal offroad-brake" id="offroad-brake">ТОРМОЗ</button>
       <button class="offroad-pedal offroad-gas" id="offroad-gas">ГАЗ</button>
       <div class="offroad-message" id="offroad-message"><h2>Внедорожная перевозка оружия</h2><p>Газ и тормоз удерживают грузовик на колёсах</p><button id="offroad-start">Начать</button><button id="offroad-back">В меню</button></div>
@@ -506,6 +509,7 @@
     const answerList = document.getElementById("answer-list");
     const quizProgress = document.getElementById("quiz-progress");
     const warehouseStock = JSON.parse(localStorage.getItem("notWeaponStock") || '{"weapon":0,"grenade":0,"ammo":0}');
+    let walletBalance = Number(localStorage.getItem("notWeaponWallet") || 0);
     const orders = [
       ["Капитан Джон","Канада","easy",2,1,4,12500], ["Майор Берик","Казахстан","hard",5,3,8,38000],
       ["Лейтенант Мэй","Франция","easy",1,2,3,10500], ["Подполковник Райан","Афганистан","medium",4,2,6,27000],
@@ -529,18 +533,25 @@
         const byFighter = level === "hardcore" || (level === "hard" && index % 2 === 1) || ["Япония","Австралия","Китай","ОАЭ","Южная Корея","Египет"].includes(country);
         const delivery = byFighter ? "✈️" : "🚚";
         const deliveryName = byFighter ? "Доставка истребителем" : "Доставка машиной";
-        return `<tr><td>${name}</td><td>${country}</td><td><div class="level-delivery"><span class="level level-${level}">${levelNames[level]}</span><span class="delivery-icon" title="${deliveryName}" aria-label="${deliveryName}">${delivery}</span></div></td><td><div class="order-boxes">${crateOrder("weapon-crate.png",weapon,"Оружие")}${crateOrder("grenade-crate.png",grenade,"Гранаты")}${crateOrder("ammo-crate.png",ammo,"Пули")}</div></td><td class="order-price">$${payment.toLocaleString("en-US")}</td></tr>`;
+        return `<tr data-order-index="${index}" title="Открыть контракт"><td>${name}</td><td>${country}</td><td><div class="level-delivery"><span class="level level-${level}">${levelNames[level]}</span><span class="delivery-icon" title="${deliveryName}" aria-label="${deliveryName}">${delivery}</span></div></td><td><div class="order-boxes">${crateOrder("weapon-crate.png",weapon,"Оружие")}${crateOrder("grenade-crate.png",grenade,"Гранаты")}${crateOrder("ammo-crate.png",ammo,"Пули")}</div></td><td class="order-price">$${payment.toLocaleString("en-US")}</td></tr>`;
       }).join("");
+      document.querySelectorAll("#orders-body tr").forEach(row=>row.addEventListener("click",()=>launchContract(Number(row.dataset.orderIndex))));
     }
 
     function updateWarehouseStock() {
+      Object.assign(warehouseStock,JSON.parse(localStorage.getItem("notWeaponStock")||'{"weapon":0,"grenade":0,"ammo":0}'));
       document.getElementById("stock-weapon").textContent = warehouseStock.weapon;
       document.getElementById("stock-grenade").textContent = warehouseStock.grenade;
       document.getElementById("stock-ammo").textContent = warehouseStock.ammo;
     }
 
+    function updateWallet() {
+      document.getElementById("wallet-balance").textContent=`$${walletBalance.toLocaleString("en-US")}`;
+    }
+
     renderOrders();
     updateWarehouseStock();
+    updateWallet();
     const callers = [
       {
         name: "Капитан Джон",
@@ -578,6 +589,10 @@
     let cooldownTimer = null;
     let feedbackTimer = null;
     let saleLives = 3;
+    let activeContractCountry = "";
+    let activeContractPayment = 0;
+    let contractCountryTimer = null;
+    let contractBannerTimer = null;
     const transportCanvas = document.getElementById("transport-canvas");
     const transportCtx = transportCanvas.getContext("2d");
     const transportLives = document.getElementById("transport-lives");
@@ -671,7 +686,10 @@
     const offroadKeys = { gas:false, brake:false };
     let offroadRunning = false, offroadPaused = false, offroadAnimation = 0;
     let offroadX = 0, offroadSpeed = 0, offroadFuel = 100, offroadAngle = 0, offroadAngular = 0;
-    let offroadCans = [700,1450,2250,3100,4050];
+    let offroadTruckY = 0, offroadVerticalSpeed = 0, offroadGrounded = true, offroadPreviousSlope = 0;
+    let offroadCans = [1900,4600,7600,10800];
+    const offroadWarSky = new Image(); offroadWarSky.src = "offroad-war-sky.png";
+    const offroadRockTerrain = new Image(); offroadRockTerrain.src = "offroad-rock-terrain.png";
     const offroadTruckImage = new Image();
     offroadTruckImage.src = "offroad-truck.png";
     let offroadTruckSprite = offroadTruckImage;
@@ -695,31 +713,43 @@
 
     function drawOffroad() {
       const ctx=offroadCtx,w=offroadCanvas.width,h=offroadCanvas.height;
-      ctx.clearRect(0,0,w,h); ctx.fillStyle="#9ce8f4";ctx.fillRect(0,0,w,h);
-      ctx.fillStyle="#d7edf0"; for(let i=0;i<7;i++){const x=((i*240-offroadX*.12)%1500+1500)%1500-150;ctx.beginPath();ctx.arc(x,130+(i%3)*35,55,Math.PI,0);ctx.arc(x+70,130+(i%3)*35,75,Math.PI,0);ctx.fill()}
-      ctx.beginPath();ctx.moveTo(0,h); for(let sx=0;sx<=w;sx+=8)ctx.lineTo(sx,offroadGround(offroadX+sx-330));ctx.lineTo(w,h);ctx.closePath();ctx.fillStyle="#70553d";ctx.fill();ctx.strokeStyle="#78bd23";ctx.lineWidth=14;ctx.stroke();
+      ctx.clearRect(0,0,w,h);
+      if(offroadWarSky.complete&&offroadWarSky.naturalWidth)ctx.drawImage(offroadWarSky,0,0,w,h);else{ctx.fillStyle="#393330";ctx.fillRect(0,0,w,h)}
+      ctx.save();ctx.beginPath();ctx.moveTo(0,h);for(let sx=0;sx<=w;sx+=8)ctx.lineTo(sx,offroadGround(offroadX+sx-330));ctx.lineTo(w,h);ctx.closePath();ctx.clip();
+      if(offroadRockTerrain.complete&&offroadRockTerrain.naturalWidth){const shift=-((offroadX*.55)%w);ctx.drawImage(offroadRockTerrain,shift,315,w,h-245);ctx.drawImage(offroadRockTerrain,shift+w,315,w,h-245)}else{ctx.fillStyle="#4e4540";ctx.fillRect(0,315,w,h)}ctx.restore();
+      ctx.beginPath();for(let sx=0;sx<=w;sx+=8){const y=offroadGround(offroadX+sx-330);if(sx===0)ctx.moveTo(sx,y);else ctx.lineTo(sx,y)}ctx.strokeStyle="#2b211d";ctx.lineWidth=8;ctx.stroke();
       offroadCans.forEach(cx=>{const sx=cx-offroadX+330;if(sx>-60&&sx<w+60){const gy=offroadGround(cx)-55;ctx.fillStyle="#d92920";ctx.strokeStyle="#171717";ctx.lineWidth=5;ctx.beginPath();ctx.roundRect(sx-22,gy-28,44,55,7);ctx.fill();ctx.stroke();ctx.fillStyle="#171717";ctx.fillRect(sx+7,gy-36,16,11);ctx.strokeStyle="#ff8b78";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(sx-10,gy-15);ctx.lineTo(sx+10,gy+14);ctx.moveTo(sx+10,gy-15);ctx.lineTo(sx-10,gy+14);ctx.stroke()}});
-      drawOffroadTruck(330,offroadGround(offroadX)-29,offroadAngle);
+      drawOffroadTruck(330,offroadTruckY-29,offroadAngle);
     }
 
     function offroadLoop() {
       if(!offroadRunning)return;
       if(!offroadPaused){
-        if(offroadKeys.gas&&offroadFuel>0){offroadSpeed+=.075;offroadAngular-=.0015;offroadFuel-=.038}
-        if(offroadKeys.brake){offroadSpeed-=.09;offroadAngular+=.002}
+        if(offroadKeys.gas&&offroadFuel>0){offroadSpeed+=.075;offroadAngular+=offroadGrounded?.0008:.0032;offroadFuel-=.038}
+        if(offroadKeys.brake){offroadSpeed-=.09;offroadAngular-=offroadGrounded?.0012:.0038}
         offroadSpeed*=.992;offroadSpeed=Math.max(-2.5,Math.min(7.2,offroadSpeed));offroadX=Math.max(0,offroadX+offroadSpeed);
-        const slope=Math.atan2(offroadGround(offroadX+5)-offroadGround(offroadX-5),10);offroadAngular+=(slope-offroadAngle)*.018;offroadAngular*=.91;offroadAngle+=offroadAngular;
+        const groundY=offroadGround(offroadX),slope=Math.atan2(offroadGround(offroadX+18)-offroadGround(offroadX-18),36);
+        if(offroadGrounded){
+          offroadTruckY+=(groundY-offroadTruckY)*.28;
+          offroadAngular+=(slope-offroadAngle)*.014+(slope-offroadPreviousSlope)*Math.abs(offroadSpeed)*.025;
+          if(slope-offroadPreviousSlope<-.04&&offroadSpeed>5.1){offroadGrounded=false;offroadVerticalSpeed=-Math.min(6.2,offroadSpeed*.62)}
+        }else{
+          offroadVerticalSpeed+=.34;offroadTruckY+=offroadVerticalSpeed;
+          if(offroadTruckY>=groundY){offroadTruckY=groundY;offroadGrounded=true;offroadVerticalSpeed=0;offroadAngular+=(slope-offroadAngle)*.12}
+        }
+        offroadPreviousSlope+=(slope-offroadPreviousSlope)*.22;offroadAngular*=offroadGrounded?.955:.992;offroadAngle+=offroadAngular;
+        if(offroadGrounded&&Math.abs(offroadAngle-slope)>1.42){offroadRunning=false;document.getElementById("offroad-message").classList.remove("hidden");document.querySelector("#offroad-message h2").textContent="Грузовик перевернулся";document.getElementById("offroad-start").textContent="Ещё раз"}
         offroadFuel=Math.max(0,offroadFuel-.006); offroadCans=offroadCans.filter(cx=>{if(Math.abs(cx-offroadX)<70){offroadFuel=Math.min(100,offroadFuel+42);return false}return true});
-        if(offroadCans.length<4)offroadCans.push(Math.max(...offroadCans,offroadX)+900+Math.random()*450);
+        if(offroadCans.length<3)offroadCans.push(Math.max(...offroadCans,offroadX)+2600+Math.random()*1200);
         document.getElementById("offroad-fuel-fill").style.transform=`scaleX(${offroadFuel/100})`;document.getElementById("offroad-distance").textContent=Math.floor(offroadX/10);
         if(offroadFuel<=0&&Math.abs(offroadSpeed)<.08){offroadRunning=false;document.getElementById("offroad-message").classList.remove("hidden");document.querySelector("#offroad-message h2").textContent="Топливо закончилось";document.getElementById("offroad-start").textContent="Ещё раз"}
       }
       drawOffroad();offroadAnimation=requestAnimationFrame(offroadLoop);
     }
 
-    function startOffroad(){offroadX=0;offroadSpeed=0;offroadFuel=100;offroadAngle=0;offroadAngular=0;offroadCans=[700,1450,2250,3100,4050];offroadPaused=false;offroadRunning=true;document.getElementById("offroad-message").classList.add("hidden");cancelAnimationFrame(offroadAnimation);offroadLoop()}
+    function startOffroad(){offroadX=0;offroadSpeed=0;offroadFuel=100;offroadAngle=0;offroadAngular=0;offroadTruckY=offroadGround(0);offroadVerticalSpeed=0;offroadGrounded=true;offroadPreviousSlope=0;offroadCans=[1900,4600,7600,10800];offroadPaused=false;offroadRunning=true;document.getElementById("offroad-message").classList.add("hidden");cancelAnimationFrame(offroadAnimation);offroadLoop()}
 
-    function openOffroadMode(){mainMenu.classList.add("hidden");offroadMode.classList.remove("hidden");document.querySelector("#offroad-message h2").textContent="Внедорожная перевозка оружия";drawOffroad()}
+    function openOffroadMode(){mainMenu.classList.add("hidden");offroadMode.classList.remove("hidden");offroadTruckY=offroadGround(offroadX);document.querySelector("#offroad-message h2").textContent="Внедорожная перевозка оружия";drawOffroad()}
 
     function updateMenuStatus() {
       status.textContent = selectedCharacter && selectedMode
@@ -732,7 +762,6 @@
       clearTimeout(feedbackTimer);
       questionIndex = 0;
       saleLives = 3;
-      document.getElementById("sale-lives").textContent = "❤️❤️❤️";
       const caller = callers[callerIndex];
       callerImage.src = caller.image;
       callerImage.alt = caller.name;
@@ -752,7 +781,7 @@
       showIncomingCall();
     }
 
-    function playSaleIntro(videoFile) {
+    function playModeIntro(videoFile, openMode = openSaleMode) {
       mainMenu.classList.add("hidden");
       saleIntro.classList.remove("hidden");
       saleIntroVideo.src = videoFile;
@@ -761,7 +790,7 @@
       const finish = () => {
         saleIntroVideo.pause();
         saleIntro.classList.add("hidden");
-        openSaleMode();
+        openMode();
       };
       saleIntroVideo.onended = finish;
       saleIntroVideo.onerror = finish;
@@ -773,6 +802,41 @@
           if (mutedAttempt) mutedAttempt.catch(finish);
         });
       }
+    }
+
+    function showContractCountry(mode) {
+      clearTimeout(contractCountryTimer);clearTimeout(contractBannerTimer);
+      const banner=document.getElementById(`${mode}-country-banner`);if(!banner||!activeContractCountry)return;
+      banner.classList.add("hidden");
+      contractCountryTimer=setTimeout(()=>{
+        const deliveryRunning=mode==="air"?airRunning:Boolean(window.Transport3D&&window.Transport3D.isRunning&&window.Transport3D.isRunning());
+        if(!deliveryRunning){document.getElementById("contract-status").textContent="Контракт не выполнен";return}
+        walletBalance+=activeContractPayment;localStorage.setItem("notWeaponWallet",String(walletBalance));updateWallet();
+        banner.textContent=activeContractCountry;banner.classList.remove("hidden");
+        if(selectedCharacter==="Рэй"||selectedCharacter==="Дэвид"){
+          if(mode==="air"){airRunning=false;cancelAnimationFrame(airAnimation)}else{transportRunning=false;if(window.Transport3D)window.Transport3D.stop();cancelAnimationFrame(transportAnimation)}
+          const arrivalVideo=selectedCharacter==="Рэй"?"ray-contract-arrival.mp4":"david-contract-arrival.mp4";
+          contractBannerTimer=setTimeout(()=>{banner.classList.add("hidden");airMode.classList.add("hidden");transportMode.classList.add("hidden");playModeIntro(arrivalVideo,openSaleMode)},1200);
+        }else contractBannerTimer=setTimeout(()=>banner.classList.add("hidden"),4000);
+      },30000);
+    }
+
+    function contractIntro(openMode) {
+      const air=openMode===openAirMode;
+      const file=air?(selectedCharacter==="Дэвид"?"david-air-transport-intro.mp4":"ray-air-transport-intro.mp4"):(selectedCharacter==="Дэвид"?"david-ground-transport-intro.mp4":"ray-ground-transport-intro.mp4");
+      playModeIntro(file,openMode);
+    }
+
+    function launchContract(index) {
+      const [,country,level,weapon,grenade,ammo,payment]=orders[index];
+      const status=document.getElementById("contract-status");
+      if(warehouseStock.weapon<weapon||warehouseStock.grenade<grenade||warehouseStock.ammo<ammo){status.textContent="На складе не хватает ящиков для контракта";status.classList.add("stock-error");return}
+      status.classList.remove("stock-error");
+      warehouseStock.weapon-=weapon;warehouseStock.grenade-=grenade;warehouseStock.ammo-=ammo;localStorage.setItem("notWeaponStock",JSON.stringify(warehouseStock));updateWarehouseStock();
+      const byFighter=level==="hardcore"||(level==="hard"&&index%2===1)||["Япония","Австралия","Китай","ОАЭ","Южная Корея","Египет"].includes(country);
+      activeContractCountry=country;activeContractPayment=payment;status.textContent=`Контракт принят: ${country}`;saleMode.classList.add("hidden");
+      if(byFighter) contractIntro(()=>{openAirMode();startAirGame("normal");showContractCountry("air")});
+      else contractIntro(()=>{openTransportMode();startTransport(["Афганистан","ОАЭ","Египет"].includes(country)?"afghanistan":"russia");showContractCountry("transport")});
     }
 
     function openTransportMode() {
@@ -1133,7 +1197,6 @@
       feedbackTimer = setTimeout(() => {
         if (!isCorrect) {
           saleLives -= 1;
-          document.getElementById("sale-lives").textContent = "❤️".repeat(saleLives) + "🖤".repeat(3 - saleLives);
           if (saleLives <= 0) startCooldown();
           else {
             callMessage.textContent = "Осталась ещё одна попытка";
@@ -1207,15 +1270,21 @@
           return;
         }
         if (selectedMode === "Продажа оружия") {
-          if (selectedCharacter === "Рэй") playSaleIntro("source-new-video.mp4");
-          else if (selectedCharacter === "Дэвид") playSaleIntro("david-sale-intro.mp4");
+          if (selectedCharacter === "Рэй") playModeIntro("source-new-video.mp4");
+          else if (selectedCharacter === "Дэвид") playModeIntro("david-sale-intro.mp4");
           else openSaleMode();
         } else if (selectedMode === "Перевозка оружия") {
-          openTransportMode();
+          if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openTransportMode);
+          else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openTransportMode);
+          else openTransportMode();
         } else if (selectedMode === "Внедорожная перевозка оружия") {
-          openOffroadMode();
+          if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openOffroadMode);
+          else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openOffroadMode);
+          else openOffroadMode();
         } else {
-          openAirMode();
+          if (selectedCharacter === "Дэвид") playModeIntro("david-air-transport-intro.mp4", openAirMode);
+          else if (selectedCharacter === "Рэй") playModeIntro("ray-air-transport-intro.mp4", openAirMode);
+          else openAirMode();
         }
       });
     });
@@ -1251,7 +1320,6 @@
     });
     document.getElementById("offroad-start").addEventListener("click", startOffroad);
     document.getElementById("offroad-back").addEventListener("click",()=>{offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
-    document.getElementById("offroad-pause").addEventListener("click",()=>{offroadPaused=!offroadPaused;document.getElementById("offroad-pause").textContent=offroadPaused?"▶":"Ⅱ"});
     [["offroad-gas","gas"],["offroad-brake","brake"]].forEach(([id,key])=>{const el=document.getElementById(id);const set=value=>{offroadKeys[key]=value;el.classList.toggle("active",value)};el.addEventListener("pointerdown",()=>set(true));el.addEventListener("pointerup",()=>set(false));el.addEventListener("pointerleave",()=>set(false))});
     window.addEventListener("keydown",event=>{if(event.code==="ArrowRight"||event.code==="KeyD")offroadKeys.gas=true;if(event.code==="ArrowLeft"||event.code==="KeyA")offroadKeys.brake=true});
     window.addEventListener("keyup",event=>{if(event.code==="ArrowRight"||event.code==="KeyD")offroadKeys.gas=false;if(event.code==="ArrowLeft"||event.code==="KeyA")offroadKeys.brake=false});
