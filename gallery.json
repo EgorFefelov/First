@@ -249,6 +249,11 @@
       "path": "projects/game/offroad-war-sky.png",
       "step": "2.1",
       "ts": "2026-08-13T17:46:00+05:00"
+    },
+    {
+      "path": "projects/game/truck-textures/khaki-canvas.png",
+      "step": "2.1",
+      "ts": "2026-08-13T20:00:00+05:00"
     }
   ]
 }

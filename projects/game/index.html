@@ -114,7 +114,7 @@
                   url("call-office-bg.png") center/cover;
       box-shadow: 0 28px 80px rgba(0, 0, 0, .55);
     }
-    #transport-mode, #air-mode, #offroad-mode {
+    #transport-mode, #air-mode, #offroad-mode, #supply-maze-mode {
       position: relative;
       width: min(1100px, 94vw);
       height: min(700px, 88vh);
@@ -130,7 +130,7 @@
     #transport-crates { position:absolute;top:62px;right:28px;display:flex;gap:7px;padding:5px 8px;border-radius:12px;background:rgba(3,12,25,.55);font-size:18px;font-weight:950;text-shadow:0 2px 4px #000; }
     .crate-counter { display:flex;align-items:center;gap:3px; }.crate-counter img { width:31px;height:31px;object-fit:contain; }
     #transport-title { position: absolute; top: 22px; left: 28px; font-weight: 900; text-shadow: 0 2px 4px #000; }
-    #transport-camera { position: absolute; top: 52px; left: 28px; color: #ffe17a; font-weight: 900; text-shadow: 0 2px 4px #000; }
+    #transport-camera { display:none; }
     #transport-speed { position:absolute;right:24px;bottom:20px;width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,rgba(22,27,34,.48) 0 57%,rgba(5,8,12,.72) 59% 68%,rgba(170,205,225,.35) 69% 70%,rgba(0,0,0,.22) 71%);box-shadow:0 8px 28px rgba(0,0,0,.65),inset 0 0 28px rgba(0,0,0,.72);border:2px solid rgba(190,220,235,.42);backdrop-filter:blur(5px); }
     #speed-value { position:absolute;inset:79px 34px auto;text-align:center;font-size:34px;font-weight:950;line-height:1;text-shadow:0 2px 5px #000; }
     #speed-unit { display:block;margin-top:7px;color:#9ca4ad;font-size:12px;letter-spacing:.12em; }
@@ -161,6 +161,7 @@
     #air-start { justify-self: center; margin-top: 10px; padding: 15px 26px; border: 0; border-radius: 13px; background: #d47a24; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; }
     .air-difficulty { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .air-difficulty button { padding: 16px 22px; border: 1px solid rgba(255,255,255,.3); border-radius: 13px; color: white; background: rgba(46,34,27,.86); font: inherit; font-weight: 900; cursor: pointer; }
+    #supply-maze-canvas{width:100%;height:100%;display:block}.maze-hud{position:absolute;inset:0;pointer-events:none}.maze-hud::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;border:2px solid #fff9;border-radius:50%;box-shadow:0 0 4px #000;transform:translate(-50%,-50%)}.maze-title{position:absolute;top:18px;left:22px;font-size:20px;font-weight:950;text-shadow:0 3px 5px #000}.maze-crates{position:absolute;top:16px;right:20px;display:flex;gap:10px;padding:7px 12px;border-radius:7px;background:#111d;font-size:20px;font-weight:950;box-shadow:0 5px 18px #0007}.maze-crates span{display:flex;align-items:center;gap:5px}.maze-crates img{width:36px;height:30px;object-fit:contain}.maze-exit-distance{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-weight:900;text-shadow:0 2px 5px #000}.maze-back{position:absolute;left:20px;bottom:20px;pointer-events:auto;padding:12px 17px;border:0;border-radius:7px;background:#121a22dd;color:#fff;font:900 15px Arial;cursor:pointer}.maze-help{position:absolute;right:20px;bottom:20px;padding:10px 14px;border-radius:7px;background:#121a22dd;font-weight:800}.maze-overlay{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#07100ddd;color:#fff;pointer-events:auto}.maze-overlay h2{margin:0;font-size:clamp(38px,6vw,70px)}.maze-overlay p{max-width:640px;margin:0 auto;font-size:18px;line-height:1.45}.maze-overlay button{justify-self:center;padding:15px 25px;border:0;border-radius:7px;background:#d2a84b;color:#111;font:950 18px Arial;cursor:pointer}
     #offroad-canvas{width:100%;height:100%;display:block;background:#302b29}.offroad-hud{position:absolute;inset:0;pointer-events:none}.offroad-fuel{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:9px;width:230px;font-weight:900;text-shadow:0 2px 4px #000}.offroad-fuel-icon{font-size:35px}.offroad-fuel-bar{height:27px;flex:1;border:4px solid #1b2228;background:#edf1f2}.offroad-fuel-fill{height:100%;width:100%;background:#a8ec18;transform-origin:left}.offroad-distance{position:absolute;top:64px;left:28px;font-size:28px;font-weight:950;text-shadow:0 3px 4px #000}.offroad-pedal{position:absolute;bottom:18px;width:160px;height:145px;border:2px solid #d9dde0;border-radius:12px;background:linear-gradient(#f3f4f5,#979da1);color:#24272a;font:950 22px Arial;pointer-events:auto;cursor:pointer;box-shadow:0 8px 0 #555b60}.offroad-pedal:active,.offroad-pedal.active{transform:translateY(6px);box-shadow:0 2px 0 #555b60}.offroad-brake{left:22px}.offroad-gas{right:22px}.offroad-message{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#0008;color:#fff;pointer-events:auto}.offroad-message h2{margin:0;font-size:52px}.offroad-message button{justify-self:center;padding:14px 24px;border:0;border-radius:9px;background:#a7e51b;font:900 18px Arial;cursor:pointer}
     .hidden { display: none !important; }
     .call-header {
@@ -348,6 +349,7 @@
           <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Внедорожная перевозка оружия">Внедорожная перевозка оружия</button>
+          <button class="menu-button mode-button" data-mode="Поиск припасов">Поиск припасов</button>
         </div>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
         <div id="character-options">
@@ -456,6 +458,17 @@
       <div class="offroad-message" id="offroad-message"><h2>Внедорожная перевозка оружия</h2><p>Газ и тормоз удерживают грузовик на колёсах</p><button id="offroad-start">Начать</button><button id="offroad-back">В меню</button></div>
     </div>
   </section>
+  <section id="supply-maze-mode" class="hidden" aria-label="Поиск припасов">
+    <canvas id="supply-maze-canvas" width="1100" height="700"></canvas>
+    <div class="maze-hud">
+      <div class="maze-title">Поиск припасов · лесной склад Майами</div>
+      <div class="maze-crates"><span><img src="weapon-crate.png" alt="Оружие"><b data-maze-crate="weapon">0</b></span><span><img src="grenade-crate.png" alt="Гранаты"><b data-maze-crate="grenade">0</b></span><span><img src="ammo-crate.png" alt="Пули"><b data-maze-crate="ammo">0</b></span></div>
+      <div class="maze-exit-distance" id="maze-exit-distance">Выход потерян в лесу</div>
+      <button class="maze-back" id="maze-back">← В меню</button>
+      <div class="maze-help">WASD · движение · мышь / ← → обзор</div>
+      <div class="maze-overlay" id="maze-overlay"><h2 id="maze-message">Поиск припасов</h2><p id="maze-description">Заброшенный склад в лесах за Майами. Собирай три вида ящиков и найди выход из большого лабиринта.</p><button id="maze-start">Войти в лабиринт</button></div>
+    </div>
+  </section>
   <div id="game-wrap">
     <canvas id="game" tabindex="0"></canvas>
     <!-- оверлеи старта/финала создаёт модуль overlays.js (DOM в его setup) -->
@@ -488,7 +501,8 @@
 
   <script src="assets/core.js"></script>
   <script src="vendor/three.min.js?v=6"></script>
-  <script src="transport3d.js?v=32"></script>
+  <script src="transport3d.js?v=39"></script>
+  <script src="maze3d.js?v=5"></script>
   <script>
     let selectedMode = "";
     let selectedCharacter = "";
@@ -500,6 +514,7 @@
     const transportMode = document.getElementById("transport-mode");
     const airMode = document.getElementById("air-mode");
     const offroadMode = document.getElementById("offroad-mode");
+    const supplyMazeMode = document.getElementById("supply-maze-mode");
     const saleIntro = document.getElementById("sale-intro");
     const saleIntroVideo = document.getElementById("sale-intro-video");
     const incomingView = document.getElementById("incoming-view");
@@ -815,14 +830,13 @@
         banner.textContent=activeContractCountry;banner.classList.remove("hidden");
         if(selectedCharacter==="Рэй"||selectedCharacter==="Дэвид"){
           if(mode==="air"){airRunning=false;cancelAnimationFrame(airAnimation)}else{transportRunning=false;if(window.Transport3D)window.Transport3D.stop();cancelAnimationFrame(transportAnimation)}
-          const arrivalVideo=selectedCharacter==="Рэй"?"ray-contract-arrival.mp4":"david-contract-arrival.mp4";
-          contractBannerTimer=setTimeout(()=>{banner.classList.add("hidden");airMode.classList.add("hidden");transportMode.classList.add("hidden");playModeIntro(arrivalVideo,openSaleMode)},1200);
+          const arrivalVideo=selectedCharacter==="Рэй"?(mode==="transport"?"ray-road-contract-arrival.mp4":"ray-air-contract-arrival.mp4"):(mode==="transport"?"david-road-contract-arrival.mp4":"david-air-contract-arrival.mp4");
+          contractBannerTimer=setTimeout(()=>{banner.classList.add("hidden");airMode.classList.add("hidden");transportMode.classList.add("hidden");playModeIntro(arrivalVideo,openSaleMode)},2000);
         }else contractBannerTimer=setTimeout(()=>banner.classList.add("hidden"),4000);
       },30000);
     }
 
-    function contractIntro(openMode) {
-      const air=openMode===openAirMode;
+    function contractIntro(openMode, air) {
       const file=air?(selectedCharacter==="Дэвид"?"david-air-transport-intro.mp4":"ray-air-transport-intro.mp4"):(selectedCharacter==="Дэвид"?"david-ground-transport-intro.mp4":"ray-ground-transport-intro.mp4");
       playModeIntro(file,openMode);
     }
@@ -835,8 +849,8 @@
       warehouseStock.weapon-=weapon;warehouseStock.grenade-=grenade;warehouseStock.ammo-=ammo;localStorage.setItem("notWeaponStock",JSON.stringify(warehouseStock));updateWarehouseStock();
       const byFighter=level==="hardcore"||(level==="hard"&&index%2===1)||["Япония","Австралия","Китай","ОАЭ","Южная Корея","Египет"].includes(country);
       activeContractCountry=country;activeContractPayment=payment;status.textContent=`Контракт принят: ${country}`;saleMode.classList.add("hidden");
-      if(byFighter) contractIntro(()=>{openAirMode();startAirGame("normal");showContractCountry("air")});
-      else contractIntro(()=>{openTransportMode();startTransport(["Афганистан","ОАЭ","Египет"].includes(country)?"afghanistan":"russia");showContractCountry("transport")});
+      if(byFighter) contractIntro(()=>{openAirMode();startAirGame("normal");showContractCountry("air")},true);
+      else contractIntro(()=>{openTransportMode();startTransport(["Афганистан","ОАЭ","Египет"].includes(country)?"afghanistan":"russia");showContractCountry("transport")},false);
     }
 
     function openTransportMode() {
@@ -1281,6 +1295,8 @@
           if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openOffroadMode);
           else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openOffroadMode);
           else openOffroadMode();
+        } else if(selectedMode === "Поиск припасов") {
+          mainMenu.classList.add("hidden");supplyMazeMode.classList.remove("hidden");window.SupplyMaze.prepare();
         } else {
           if (selectedCharacter === "Дэвид") playModeIntro("david-air-transport-intro.mp4", openAirMode);
           else if (selectedCharacter === "Рэй") playModeIntro("ray-air-transport-intro.mp4", openAirMode);
@@ -1320,6 +1336,9 @@
     });
     document.getElementById("offroad-start").addEventListener("click", startOffroad);
     document.getElementById("offroad-back").addEventListener("click",()=>{offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
+    document.getElementById("maze-start").addEventListener("click",()=>window.SupplyMaze.start());
+    document.getElementById("maze-back").addEventListener("click",()=>{window.SupplyMaze.stop();supplyMazeMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
+    window.addEventListener("supply-maze-win",event=>{walletBalance+=50000;localStorage.setItem("notWeaponWallet",String(walletBalance));updateWallet();const stock=JSON.parse(localStorage.getItem("notWeaponStock")||'{"weapon":0,"grenade":0,"ammo":0}');Object.keys(event.detail).forEach(type=>stock[type]=(stock[type]||0)+event.detail[type]);localStorage.setItem("notWeaponStock",JSON.stringify(stock));updateWarehouseStock()});
     [["offroad-gas","gas"],["offroad-brake","brake"]].forEach(([id,key])=>{const el=document.getElementById(id);const set=value=>{offroadKeys[key]=value;el.classList.toggle("active",value)};el.addEventListener("pointerdown",()=>set(true));el.addEventListener("pointerup",()=>set(false));el.addEventListener("pointerleave",()=>set(false))});
     window.addEventListener("keydown",event=>{if(event.code==="ArrowRight"||event.code==="KeyD")offroadKeys.gas=true;if(event.code==="ArrowLeft"||event.code==="KeyA")offroadKeys.brake=true});
     window.addEventListener("keyup",event=>{if(event.code==="ArrowRight"||event.code==="KeyD")offroadKeys.gas=false;if(event.code==="ArrowLeft"||event.code==="KeyA")offroadKeys.brake=false});
