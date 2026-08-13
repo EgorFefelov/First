@@ -2,7 +2,7 @@
 const THREE = window.THREE;
 
 let renderer, scene, camera, truck, enemy, frame;
-let running = false, speed = 15, playerX = 0, lives = 3, shotClock = 0, bonusClock = 0, damageCooldown = 0, speedBoostCount = 0, speedBoostUntil = 0, fuel = 1, activeRoute = "russia";
+let running = false, speed = 15, playerX = 0, lives = 3, shotClock = 0, bonusClock = 0, damageCooldown = 0, speedBoostCount = 0, speedBoostUntil = 0, fuel = 1, activeRoute = "russia", crateCounts = {ammo:0,weapon:0,grenade:0};
 const keys = Object.create(null), roadParts = [], trees = [], bullets = [], bonuses = [];
 
 const mat = (color, roughness = .7, metalness = .05) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
@@ -150,7 +150,14 @@ function buildWorld(route) {
   enemy=new THREE.Group(); const enemyBase=makeTruck(0x25282d,true); enemyBase.visible=false; enemy.add(enemyBase); enemy.add(vehicleCard("enemy-vehicle-cartoon.png",4.9,4.9)); enemy.position.set(0,0,-42); scene.add(enemy);
 }
 function spawnBonus() {
-  const roll=Math.random(),type=roll<.34?"life":roll<.68?"speed":"fuel", g=new THREE.Group();
+  const roll=Math.random(),type=roll<.22?"life":roll<.44?"speed":roll<.64?"fuel":roll<.76?"ammo":roll<.88?"weapon":"grenade", g=new THREE.Group();
+  if(["ammo","weapon","grenade"].includes(type)){
+    const files={ammo:"ammo-crate.png",weapon:"weapon-crate.png",grenade:"grenade-crate.png"};
+    const texture=new THREE.TextureLoader().load(files[type]);texture.colorSpace=THREE.SRGBColorSpace;
+    const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,alphaTest:.08,side:THREE.DoubleSide});
+    const card=new THREE.Mesh(new THREE.PlaneGeometry(2.25,2.25),material);g.add(card);
+    g.userData.kind=type;g.position.set([-8,-3,3,8][Math.floor(Math.random()*4)],1.15,-125);scene.add(g);bonuses.push(g);return;
+  }
   const color=type==="life"?0x16b84e:type==="speed"?0x22bfff:0xe32624;
   const coreMaterial=type==="life"?new THREE.MeshBasicMaterial({color:0x16b84e}):new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.6,metalness:.18,roughness:.25});
   const core=new THREE.Mesh(new THREE.BoxGeometry(1.35,1.35,.38),coreMaterial);
@@ -186,7 +193,7 @@ function animate(now=0) {
   roadParts.forEach(o=>{o.position.z+=visualSpeed*dt;if(o.position.z>18)o.position.z-=360;}); trees.forEach(o=>{o.position.z+=visualSpeed*dt;if(o.position.z>22)o.position.z-=320;});
   damageCooldown=Math.max(0,damageCooldown-dt); shotClock+=dt; bonusClock+=dt; if(shotClock>1.65){shoot();shotClock=0;} if(bonusClock>2.8){spawnBonus();bonusClock=0;}
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.position.addScaledVector(b.userData.velocity,dt);if(b.position.z>3){if(Math.abs(b.position.x-truck.position.x)<1.7&&damageCooldown===0){lives=Math.max(0,lives-1);damageCooldown=.7;updateLives();}scene.remove(b);bullets.splice(i,1);}}
-  for(let i=bonuses.length-1;i>=0;i--){const b=bonuses[i];b.position.z+=visualSpeed*dt;b.rotation.y+=dt*2.5;if(b.position.z>1){if(Math.abs(b.position.x-truck.position.x)<2){if(b.userData.kind==="life")lives=Math.min(3,lives+1);if(b.userData.kind==="speed"){speedBoostCount+=1;speedBoostUntil=now+5000;speed=Math.min(42+speedBoostCount*2,speed+2);}if(b.userData.kind==="fuel")fuel=Math.min(1,fuel+.2);updateLives();}scene.remove(b);bonuses.splice(i,1);}}
+  for(let i=bonuses.length-1;i>=0;i--){const b=bonuses[i];b.position.z+=visualSpeed*dt;b.rotation.y+=dt*2.5;if(b.position.z>1){if(Math.abs(b.position.x-truck.position.x)<2){if(b.userData.kind==="life")lives=Math.min(3,lives+1);if(b.userData.kind==="speed"){speedBoostCount+=1;speedBoostUntil=now+5000;speed=Math.min(42+speedBoostCount*2,speed+2);}if(b.userData.kind==="fuel")fuel=Math.min(1,fuel+.2);if(crateCounts[b.userData.kind]!==undefined){crateCounts[b.userData.kind]++;document.querySelector(`[data-crate-count="${b.userData.kind}"]`).textContent=String(crateCounts[b.userData.kind]);}updateLives();}scene.remove(b);bonuses.splice(i,1);}}
   const kmh=Math.round(speed*5);const speedDial=Math.max(0,Math.min(1,(kmh-100)/150));document.getElementById("speed-value").firstChild.nodeValue=String(kmh);document.getElementById("speed-needle").style.transform=`rotate(${speedDial*180}deg)`;document.getElementById("fuel-needle").style.transform=`rotate(${-180+fuel*180}deg)`;document.getElementById("fuel-arc").style.setProperty("--fuel-angle",`${fuel*180}deg`); renderer.render(scene,camera); frame=requestAnimationFrame(animate);
 }
 function updateLives(){
@@ -199,5 +206,5 @@ function updateLives(){
   }
 }
 window.addEventListener("keydown",e=>{keys[e.code]=true;if(running&&e.code.startsWith("Arrow"))e.preventDefault();}); window.addEventListener("keyup",e=>keys[e.code]=false);
-window.Transport3D={start(route){this.stop();bullets.length=0;bonuses.length=0;activeRoute=route;resetCanvas();buildWorld(route);running=true;speed=15;playerX=0;lives=3;shotClock=0;bonusClock=0;damageCooldown=0;speedBoostCount=0;speedBoostUntil=0;fuel=1;updateLives();animate.last=performance.now();frame=requestAnimationFrame(animate);},stop(){running=false;if(frame)cancelAnimationFrame(frame);if(renderer)renderer.dispose();}};
+window.Transport3D={start(route){this.stop();bullets.length=0;bonuses.length=0;activeRoute=route;resetCanvas();buildWorld(route);running=true;speed=15;playerX=0;lives=3;shotClock=0;bonusClock=0;damageCooldown=0;speedBoostCount=0;speedBoostUntil=0;fuel=1;crateCounts={ammo:0,weapon:0,grenade:0};document.querySelectorAll("[data-crate-count]").forEach(el=>el.textContent="0");updateLives();animate.last=performance.now();frame=requestAnimationFrame(animate);},stop(){running=false;if(frame)cancelAnimationFrame(frame);if(renderer)renderer.dispose();}};
 })();

@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#111}canvas{max-width:100vw}button{position:fixed;z-index:2;top:10px;left:10px}</style>
+<button>Обрезать видео</button><video hidden src="source-new-video.mp4"></video><canvas width="960" height="680"></canvas>
+<script>
+const video=document.querySelector('video'),canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),button=document.querySelector('button');
+function frame(){ctx.drawImage(video,20,20,960,680,0,0,960,680)}
+video.onloadeddata=frame;
+button.onclick=async()=>{button.disabled=true;video.currentTime=0;await video.play();const chunks=[],stream=canvas.captureStream(30),rec=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:8000000});rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);const done=new Promise(r=>rec.onstop=r);rec.start();await new Promise(resolve=>{function draw(){frame();if(video.ended)return resolve();requestAnimationFrame(draw)}draw()});rec.stop();await done;const blob=new Blob(chunks,{type:'video/webm'});await fetch('/save-cropped-video',{method:'POST',body:blob});button.disabled=false;document.title='готово'};
+</script>

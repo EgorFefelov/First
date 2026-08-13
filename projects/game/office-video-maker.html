@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Office camera video</title>
+<style>html,body{margin:0;background:#111;display:grid;place-items:center;height:100%}canvas{width:min(96vw,1280px);box-shadow:0 20px 60px #000}button{position:fixed;top:14px;left:14px;padding:12px 18px}</style>
+<canvas id="c" width="1280" height="720"></canvas><button id="make">Создать видео</button>
+<script>
+const canvas=document.querySelector('#c'),ctx=canvas.getContext('2d'),button=document.querySelector('#make');
+const image=new Image();image.src='office-video-source.png';
+const duration=3.8,hold=.3,turnStart=1.45,whiteStart=3.3;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function draw(time){
+  const approach=ease(Math.max(0,Math.min(1,(time-hold)/(turnStart-hold))));
+  const turn=ease(Math.max(0,Math.min(1,(time-turnStart)/(whiteStart-turnStart))));
+  // Сначала камера подходит к Рэю, затем поворачивает влево к его монитору.
+  const focusX=768+(350-768)*approach+(78-350)*turn;
+  const focusY=512+(430-512)*approach+(520-430)*turn;
+  const scale=1+approach*.85+turn*6.4;
+  const angle=(-.035*Math.sin(approach*Math.PI))+.075*Math.sin(turn*Math.PI);
+  const sourceRatio=image.width/image.height,canvasRatio=canvas.width/canvas.height;
+  let baseW,baseH;if(sourceRatio>canvasRatio){baseH=canvas.height;baseW=baseH*sourceRatio}else{baseW=canvas.width;baseH=baseW/sourceRatio}
+  const imageX=focusX/image.width*baseW;
+  const imageY=(canvas.height-baseH)/2+focusY/image.height*baseH;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(angle);ctx.scale(scale,scale);ctx.translate(-imageX,-imageY);
+  ctx.drawImage(image,0,(canvas.height-baseH)/2,baseW,baseH);
+  // Включённый белый экран монитора Рэя.
+  const sx=baseW/image.width,sy=baseH/image.height,top=(canvas.height-baseH)/2;
+  ctx.fillStyle='#f7fbff';ctx.beginPath();ctx.moveTo(0*sx,390*sy+top);ctx.lineTo(151*sx,401*sy+top);ctx.lineTo(153*sx,650*sy+top);ctx.lineTo(0*sx,644*sy+top);ctx.closePath();ctx.fill();ctx.restore();
+  if(time>=whiteStart){ctx.fillStyle=`rgba(255,255,255,${Math.min(1,(time-whiteStart)/.16)})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+}
+async function render(){
+  button.disabled=true;const stream=canvas.captureStream(60),chunks=[];
+  const type=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+  const recorder=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:9000000});recorder.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  const done=new Promise(resolve=>recorder.onstop=resolve);recorder.start();const start=performance.now();
+  await new Promise(resolve=>{function frame(now){const t=Math.min(duration,(now-start)/1000);draw(t);if(t<duration)requestAnimationFrame(frame);else resolve()}requestAnimationFrame(frame)});
+  recorder.stop();await done;const blob=new Blob(chunks,{type});await fetch('/save-office-video',{method:'POST',body:blob});window.renderedUrl=URL.createObjectURL(blob);let video=document.querySelector('video');if(!video){video=document.createElement('video');video.controls=true;video.style.display='none';document.body.append(video)}video.src=window.renderedUrl;video.dataset.ready='yes';button.disabled=false;
+}
+image.onload=()=>{draw(0);button.onclick=render};
+</script>
