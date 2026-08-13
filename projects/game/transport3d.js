@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 const THREE = window.THREE;
 
 let renderer, scene, camera, truck, enemy, frame;
@@ -193,7 +193,7 @@ function animate(now=0) {
   roadParts.forEach(o=>{o.position.z+=visualSpeed*dt;if(o.position.z>18)o.position.z-=360;}); trees.forEach(o=>{o.position.z+=visualSpeed*dt;if(o.position.z>22)o.position.z-=320;});
   damageCooldown=Math.max(0,damageCooldown-dt); shotClock+=dt; bonusClock+=dt; if(shotClock>1.65){shoot();shotClock=0;} if(bonusClock>2.8){spawnBonus();bonusClock=0;}
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.position.addScaledVector(b.userData.velocity,dt);if(b.position.z>3){if(Math.abs(b.position.x-truck.position.x)<1.7&&damageCooldown===0){lives=Math.max(0,lives-1);damageCooldown=.7;updateLives();}scene.remove(b);bullets.splice(i,1);}}
-  for(let i=bonuses.length-1;i>=0;i--){const b=bonuses[i];b.position.z+=visualSpeed*dt;b.rotation.y+=dt*2.5;if(b.position.z>1){if(Math.abs(b.position.x-truck.position.x)<2){if(b.userData.kind==="life")lives=Math.min(3,lives+1);if(b.userData.kind==="speed"){speedBoostCount+=1;speedBoostUntil=now+5000;speed=Math.min(42+speedBoostCount*2,speed+2);}if(b.userData.kind==="fuel")fuel=Math.min(1,fuel+.2);if(crateCounts[b.userData.kind]!==undefined){crateCounts[b.userData.kind]++;document.querySelector(`[data-crate-count="${b.userData.kind}"]`).textContent=String(crateCounts[b.userData.kind]);}updateLives();}scene.remove(b);bonuses.splice(i,1);}}
+  for(let i=bonuses.length-1;i>=0;i--){const b=bonuses[i];b.position.z+=visualSpeed*dt;b.rotation.y+=dt*2.5;if(b.position.z>1){if(Math.abs(b.position.x-truck.position.x)<2){if(b.userData.kind==="life")lives=Math.min(3,lives+1);if(b.userData.kind==="speed"){speedBoostCount+=1;speedBoostUntil=now+5000;speed=Math.min(42+speedBoostCount*2,speed+2);}if(b.userData.kind==="fuel")fuel=Math.min(1,fuel+.2);if(crateCounts[b.userData.kind]!==undefined){crateCounts[b.userData.kind]++;const counter=document.querySelector(`[data-crate-count="${b.userData.kind}"]`);if(counter)counter.textContent=String(crateCounts[b.userData.kind]);}updateLives();}scene.remove(b);bonuses.splice(i,1);}}
   const kmh=Math.round(speed*5);const speedDial=Math.max(0,Math.min(1,(kmh-100)/150));document.getElementById("speed-value").firstChild.nodeValue=String(kmh);document.getElementById("speed-needle").style.transform=`rotate(${speedDial*180}deg)`;document.getElementById("fuel-needle").style.transform=`rotate(${-180+fuel*180}deg)`;document.getElementById("fuel-arc").style.setProperty("--fuel-angle",`${fuel*180}deg`); renderer.render(scene,camera); frame=requestAnimationFrame(animate);
 }
 function updateLives(){
