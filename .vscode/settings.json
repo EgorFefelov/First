@@ -7,7 +7,7 @@
   "workbench.layoutControl.enabled": true,
   "workbench.tips.enabled": false,
   "workbench.startupEditor": "none",
-  "workbench.colorTheme": "Light Modern",
+  "workbench.colorTheme": "Dark Modern",
 
   "editor.fontSize": 18,
   "editor.lineHeight": 1.6,

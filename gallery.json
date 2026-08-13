@@ -144,6 +144,66 @@
       "path": "generated/experiments/ak47-transparent.png",
       "step": "2.1",
       "ts": "2026-08-12T00:03:00+05:00"
+    },
+    {
+      "path": "projects/game/air-battlefield-bg.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:00:00+05:00"
+    },
+    {
+      "path": "projects/game/fighter-jet.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:01:00+05:00"
+    },
+    {
+      "path": "projects/game/ammo-crate.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:02:00+05:00"
+    },
+    {
+      "path": "projects/game/transport-truck.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:03:00+05:00"
+    },
+    {
+      "path": "projects/game/enemy-vehicle.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:04:00+05:00"
+    },
+    {
+      "path": "projects/game/russia-forest-road.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:05:00+05:00"
+    },
+    {
+      "path": "projects/game/russia-cockpit-road.png",
+      "step": "2.1",
+      "ts": "2026-08-13T00:06:00+05:00"
+    },
+    {
+      "path": "generated/experiments/enemy-vehicle-straight-chroma.png",
+      "step": "2.1",
+      "ts": "2026-08-13T08:34:03+05:00"
+    },
+    {
+      "path": "generated/experiments/transport-truck-straight-chroma.png",
+      "step": "2.1",
+      "ts": "2026-08-13T08:45:42+05:00"
+    },
+    {
+      "path": "generated/experiments/enemy-vehicle-cartoon-v2.png",
+      "step": "2.1",
+      "ts": "2026-08-13T09:20:00+05:00"
+    },
+    {
+      "path": "generated/experiments/transport-truck-cartoon-v2.png",
+      "step": "2.1",
+      "ts": "2026-08-13T09:21:00+05:00"
+    },
+    {
+      "path": "generated/experiments/transport-truck-khaki-v3.png",
+      "step": "2.1",
+      "ts": "2026-08-13T09:31:33+05:00"
     }
   ]
 }

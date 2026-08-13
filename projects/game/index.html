@@ -125,6 +125,9 @@
     .transport-hud { position: absolute; inset: 0; pointer-events: none; }
     #transport-lives { position: absolute; top: 20px; right: 26px; font-size: 30px; filter: drop-shadow(0 2px 4px #000); }
     #transport-title { position: absolute; top: 22px; left: 28px; font-weight: 900; text-shadow: 0 2px 4px #000; }
+    #transport-camera { position: absolute; top: 52px; left: 28px; color: #ffe17a; font-weight: 900; text-shadow: 0 2px 4px #000; }
+    #transport-speed { position: absolute; right: 30px; bottom: 30px; padding: 12px 18px; border-radius: 18px; background: rgba(3,12,25,.72); font-size: 28px; font-weight: 950; text-shadow: 0 2px 5px #000; backdrop-filter: blur(8px); }
+    #transport-controls { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 10px 18px; border-radius: 16px; background: rgba(3,12,25,.72); color: #dff6ff; font-weight: 900; text-shadow: 0 2px 4px #000; }
     #transport-back { position: absolute; left: 24px; bottom: 22px; pointer-events: auto; padding: 11px 16px; border: 0; border-radius: 12px; background: rgba(3,12,25,.8); color: white; font: inherit; font-weight: 800; cursor: pointer; }
     #route-choice, #transport-result { position: absolute; inset: 0; display: grid; place-content: center; gap: 16px; text-align: center; background: rgba(3,10,20,.72); backdrop-filter: blur(7px); pointer-events: auto; }
     #route-choice h2, #transport-result h2 { margin: 0; font-size: clamp(32px,5vw,56px); }
@@ -134,6 +137,8 @@
     #transport-result button { justify-self: center; padding: 15px 24px; border: 0; border-radius: 12px; background: #16834f; color: white; font: inherit; font-weight: 900; cursor: pointer; }
     #air-canvas { width: 100%; height: 100%; display: block; }
     #air-score { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); color: white; font-size: 34px; font-weight: 900; text-shadow: 0 3px 5px #000; }
+    #air-ammo-score { position: absolute; top: 18px; left: 24px; display: flex; align-items: center; gap: 8px; color: white; font-size: 30px; font-weight: 900; text-shadow: 0 3px 5px #000; }
+    #air-ammo-score img { width: 48px; height: 48px; object-fit: contain; }
     #air-lives { position: absolute; top: 22px; right: 26px; color: white; font-size: 28px; filter: drop-shadow(0 2px 4px #000); }
     #air-back { position: absolute; left: 24px; bottom: 22px; pointer-events: auto; padding: 11px 16px; border: 0; border-radius: 12px; background: rgba(3,12,25,.8); color: white; font: inherit; font-weight: 800; cursor: pointer; }
     #air-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; text-align: center; color: white; background: rgba(35,18,10,.45); pointer-events: auto; }
@@ -334,7 +339,10 @@
     <canvas id="transport-canvas" width="1100" height="700"></canvas>
     <div class="transport-hud">
       <div id="transport-title">Перевозка</div>
+      <div id="transport-camera">Камера сзади · дорожная перспектива</div>
       <div id="transport-lives">❤️❤️❤️</div>
+      <div id="transport-speed">0 км/ч</div>
+      <div id="transport-controls">W / ↑ газ · S / ↓ тормоз · A D / ← → руль</div>
       <button id="transport-back">← В меню</button>
       <div id="route-choice">
         <h2>Куда везём груз?</h2>
@@ -354,6 +362,7 @@
     <canvas id="air-canvas" width="1100" height="700"></canvas>
     <div class="transport-hud">
       <div id="air-score">0</div>
+      <div id="air-ammo-score"><img src="ammo-crate.png" alt="Боеприпасы"><span>0</span></div>
       <div id="air-lives">❤️❤️❤️</div>
       <button id="air-back">← В меню</button>
       <div id="air-overlay">
@@ -398,6 +407,8 @@
   -->
 
   <script src="assets/core.js"></script>
+  <script src="vendor/three.min.js?v=6"></script>
+  <script src="transport3d.js?v=14"></script>
   <script>
     let selectedMode = "";
     let selectedCharacter = "";
@@ -459,7 +470,7 @@
     const transportResult = document.getElementById("transport-result");
     let transportAnimation = null;
     let transportRoute = "russia";
-    let truckLane = 0;
+    let truckLane = 1;
     let lives = 3;
     let bullets = [];
     let boosts = [];
@@ -468,17 +479,72 @@
     let roadOffset = 0;
     let driveSpeed = 8;
     let transportRunning = false;
+    let transportCamera = "cockpit";
+    let enemyLane = 1;
+    let cockpitSteer = 0;
+    let truckPosition = 0;
+    const transportKeys = Object.create(null);
     const airCanvas = document.getElementById("air-canvas");
     const airCtx = airCanvas.getContext("2d");
+    const airBackground = new Image();
+    airBackground.src = "air-battlefield-bg.png";
+    const fighterJet = new Image();
+    fighterJet.src = "fighter-jet.png";
+    const ammoCrate = new Image();
+    ammoCrate.src = "ammo-crate.png";
     const airOverlay = document.getElementById("air-overlay");
     const airScore = document.getElementById("air-score");
+    const airAmmoScore = document.querySelector("#air-ammo-score span");
+    const transportTruckImage = new Image();
+    transportTruckImage.src = "transport-truck.png";
+    let transportTruckSprite = transportTruckImage;
+    transportTruckImage.addEventListener("load", () => {
+      const cutout = document.createElement("canvas");
+      cutout.width = transportTruckImage.naturalWidth;
+      cutout.height = transportTruckImage.naturalHeight;
+      const cutoutCtx = cutout.getContext("2d", { willReadFrequently: true });
+      cutoutCtx.drawImage(transportTruckImage, 0, 0);
+      const pixels = cutoutCtx.getImageData(0, 0, cutout.width, cutout.height);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
+        if (g > 95 && g > r * 1.3 && g > b * 1.3) pixels.data[i + 3] = Math.max(0, 255 - (g - Math.max(r, b)) * 5);
+      }
+      cutoutCtx.putImageData(pixels, 0, 0);
+      transportTruckSprite = cutout;
+    });
+    const enemyVehicleImage = new Image();
+    enemyVehicleImage.src = "enemy-vehicle.png";
+    let enemyVehicleSprite = enemyVehicleImage;
+    enemyVehicleImage.addEventListener("load", () => {
+      const cutout = document.createElement("canvas");
+      cutout.width = enemyVehicleImage.naturalWidth;
+      cutout.height = enemyVehicleImage.naturalHeight;
+      const cutoutCtx = cutout.getContext("2d", { willReadFrequently: true });
+      cutoutCtx.drawImage(enemyVehicleImage, 0, 0);
+      const pixels = cutoutCtx.getImageData(0, 0, cutout.width, cutout.height);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const r = pixels.data[i], g = pixels.data[i + 1], b = pixels.data[i + 2];
+        if (g > 95 && g > r * 1.3 && g > b * 1.3) {
+          pixels.data[i + 3] = Math.max(0, 255 - (g - Math.max(r, b)) * 5);
+        }
+      }
+      cutoutCtx.putImageData(pixels, 0, 0);
+      enemyVehicleSprite = cutout;
+    });
+    const russiaRoadImage = new Image();
+    russiaRoadImage.src = "russia-forest-road.png";
+    const russiaCockpitRoadImage = new Image();
+    russiaCockpitRoadImage.src = "russia-cockpit-road.png";
     let airAnimation = null;
     let airRunning = false;
     let jetY = 330;
     let jetVelocity = 0;
     let towers = [];
+    let ammoCrates = [];
     let airPoints = 0;
+    let ammoCount = 0;
     let lastTower = 0;
+    let lastAmmo = 0;
     let airLivesCount = 3;
     let airDifficulty = "normal";
     let airInvulnerableUntil = 0;
@@ -538,8 +604,12 @@
       jetY = 330;
       jetVelocity = 0;
       towers = [];
+      ammoCrates = [];
       airPoints = 0;
+      ammoCount = 0;
+      airAmmoScore.textContent = "0";
       lastTower = performance.now();
+      lastAmmo = performance.now();
     }
 
     function startAirGame(difficulty = airDifficulty) {
@@ -560,22 +630,12 @@
 
     function drawAirGame() {
       const ctx = airCtx, w = airCanvas.width, h = airCanvas.height;
-      const sky = ctx.createLinearGradient(0, 0, 0, h);
-      sky.addColorStop(0, "#ee8242"); sky.addColorStop(.58, "#f6bd62"); sky.addColorStop(1, "#d99038");
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(255,225,150,.55)"; ctx.beginPath(); ctx.arc(870, 125, 68, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#b96c31"; ctx.beginPath(); ctx.moveTo(0, 520); ctx.quadraticCurveTo(220, 430, 430, 540); ctx.quadraticCurveTo(700, 430, 1100, 520); ctx.lineTo(1100,700); ctx.lineTo(0,700); ctx.fill();
-      ctx.fillStyle = "#d49142"; ctx.beginPath(); ctx.moveTo(0, 585); ctx.quadraticCurveTo(320, 500, 650, 590); ctx.quadraticCurveTo(900, 520, 1100, 570); ctx.lineTo(1100,700); ctx.lineTo(0,700); ctx.fill();
-      for (const x of [70, 500, 930]) {
-        ctx.fillStyle = "#493c34"; ctx.fillRect(x, 510, 95, 45);
-        ctx.fillStyle = "#272626"; ctx.beginPath(); ctx.ellipse(x + 45, 557, 62, 14, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#633c27"; ctx.fillRect(x + 38, 485, 52, 28);
-        ctx.strokeStyle = "#242222"; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(x + 78, 490); ctx.lineTo(x + 130, 470); ctx.stroke();
-        ctx.fillStyle = "#ff6a20"; ctx.beginPath(); ctx.moveTo(x + 30, 510); ctx.lineTo(x + 48, 462); ctx.lineTo(x + 65, 510); ctx.fill();
-        ctx.fillStyle = "rgba(34,31,31,.55)"; ctx.beginPath(); ctx.arc(x + 52, 420, 42, 0, Math.PI * 2); ctx.arc(x + 68, 375, 30, 0, Math.PI * 2); ctx.fill();
+      if (airBackground.complete && airBackground.naturalWidth) {
+        ctx.drawImage(airBackground, 0, 0, w, h);
+      } else {
+        ctx.fillStyle = "#d99038";
+        ctx.fillRect(0, 0, w, h);
       }
-      ctx.fillStyle = "#51463d";
-      for (const x of [235, 760]) { ctx.fillRect(x, 500, 22, 90); ctx.fillRect(x + 26, 530, 60, 60); ctx.fillRect(x + 12, 545, 105, 18); }
       towers.forEach((tower) => {
         if (performance.now() < airInvulnerableUntil && Math.floor(performance.now() / 180) % 2 === 0) return;
         ctx.fillStyle = "#171719";
@@ -587,13 +647,14 @@
         }
         ctx.fillStyle = "rgba(35,35,35,.35)"; ctx.beginPath(); ctx.arc(tower.x + 45, tower.top - 20, 35, 0, Math.PI * 2); ctx.fill();
       });
+      ammoCrates.forEach((crate) => {
+        if (ammoCrate.complete && ammoCrate.naturalWidth) ctx.drawImage(ammoCrate, crate.x, crate.y, 58, 58);
+      });
       ctx.save(); ctx.translate(245, jetY); ctx.rotate(Math.max(-.35, Math.min(.5, jetVelocity * .045)));
-      const metal = ctx.createLinearGradient(0,-35,0,35); metal.addColorStop(0,"#b8c4cb"); metal.addColorStop(.5,"#536875"); metal.addColorStop(1,"#253742");
-      ctx.fillStyle = metal; ctx.beginPath(); ctx.moveTo(-72,0); ctx.quadraticCurveTo(5,-24,74,-3); ctx.quadraticCurveTo(88,2,72,7); ctx.quadraticCurveTo(0,25,-72,9); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#344b59"; ctx.beginPath(); ctx.moveTo(-18,-4); ctx.lineTo(18,-58); ctx.lineTo(43,-5); ctx.lineTo(10,56); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#152835"; ctx.beginPath(); ctx.ellipse(42,-10,23,9,-.08,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle = "#d7e2e5"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-35,-12); ctx.lineTo(48,-8); ctx.stroke();
-      ctx.fillStyle = "#ff8b24"; ctx.beginPath(); ctx.moveTo(-70,-8); ctx.lineTo(-108,0); ctx.lineTo(-70,9); ctx.closePath(); ctx.fill(); ctx.restore();
+      if (fighterJet.complete && fighterJet.naturalWidth) {
+        ctx.drawImage(fighterJet, -92, -37, 184, 74);
+      }
+      ctx.restore();
     }
 
     function airLoop(now) {
@@ -605,21 +666,44 @@
         towers.push({ x: 1130, top: gapTop, bottom: gapTop + 205, passed: false });
         lastTower = now;
       }
+      if (now - lastAmmo > 2400) {
+        ammoCrates.push({ x: 1130, y: 90 + Math.random() * 520 });
+        lastAmmo = now;
+      }
       towers.forEach((tower) => {
         tower.x -= 5.2;
         if (!tower.passed && tower.x + 92 < 245) { tower.passed = true; airPoints += 1; airScore.textContent = String(airPoints); }
       });
       towers = towers.filter((tower) => tower.x > -120);
-      const hit = performance.now() >= airInvulnerableUntil && towers.some((tower) => 245 + 55 > tower.x && 245 - 55 < tower.x + 92 && (jetY - 24 < tower.top || jetY + 24 > tower.bottom));
-      if (hit && airDifficulty === "normal" && airLivesCount > 1) {
-        airLivesCount -= 1;
-        document.getElementById("air-lives").textContent = "❤️".repeat(airLivesCount) + "🖤".repeat(3 - airLivesCount);
-        airInvulnerableUntil = performance.now() + 3000;
-        towers = towers.filter((tower) => tower.x > 330 || tower.x + 92 < 160);
+      ammoCrates.forEach((crate) => { crate.x -= 4.6; });
+      ammoCrates = ammoCrates.filter((crate) => {
+        const collected = 245 + 50 > crate.x && 245 - 50 < crate.x + 58 && jetY + 22 > crate.y && jetY - 22 < crate.y + 58;
+        if (collected) {
+          ammoCount += 1;
+          airAmmoScore.textContent = String(ammoCount);
+          return false;
+        }
+        return crate.x > -70;
+      });
+      const hit = performance.now() >= airInvulnerableUntil && towers.some((tower) => 245 + 50 > tower.x && 245 - 50 < tower.x + 92 && (jetY - 22 < tower.top || jetY + 22 > tower.bottom));
+      let fatalHit = false;
+      if (hit) {
+        if (airDifficulty === "hardcore") {
+          fatalHit = true;
+        } else {
+          airLivesCount -= 1;
+          document.getElementById("air-lives").textContent = "❤️".repeat(airLivesCount) + "🖤".repeat(3 - airLivesCount);
+          if (airLivesCount <= 0) {
+            fatalHit = true;
+          } else {
+            airInvulnerableUntil = performance.now() + 3000;
+            towers = towers.filter((tower) => tower.x > 330 || tower.x + 92 < 160);
+          }
+        }
       }
-      if (jetY < 20 || jetY > 675 || (hit && (airDifficulty === "hardcore" || airLivesCount <= 1))) {
+      if (jetY < 20 || jetY > 675 || fatalHit) {
         airRunning = false;
-        document.getElementById("air-message").textContent = `Полёт окончен · счёт ${airPoints}`;
+        document.getElementById("air-message").textContent = `Полёт окончен · ящиков ${ammoCount}`;
         document.getElementById("air-start").textContent = "Ещё раз";
         document.getElementById("air-start").classList.remove("hidden");
         document.getElementById("air-difficulty").classList.add("hidden");
@@ -630,98 +714,138 @@
       if (airRunning) airAnimation = requestAnimationFrame(airLoop);
     }
 
-    function startTransport(route) {
+    async function startTransport(route) {
       transportRoute = route;
-      truckLane = 0;
+      truckLane = 1;
       lives = 3;
       bullets = [];
       boosts = [];
       lastBullet = performance.now();
       lastBoost = performance.now();
       driveSpeed = 8;
+      enemyLane = Math.floor(Math.random() * 4);
+      cockpitSteer = 0;
       transportRunning = true;
+      transportCamera = "chase";
+      truckPosition = 0;
+      driveSpeed = 5;
+      document.getElementById("transport-camera").textContent = "Камера сзади · дорожная перспектива";
       transportLives.textContent = "❤️❤️❤️";
       transportTitle.textContent = route === "russia" ? "Маршрут: Россия · обычная скорость" : "Маршрут: Афганистан · высокая скорость";
       routeChoice.classList.add("hidden");
       transportResult.classList.add("hidden");
-      cancelAnimationFrame(transportAnimation);
-      transportAnimation = requestAnimationFrame(transportLoop);
+      transportRunning = false;
+      document.getElementById("transport-camera").textContent = "Загрузка настоящей 3D-трассы…";
+      for (let attempt = 0; attempt < 100 && !window.Transport3D; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      if (!window.Transport3D) {
+        document.getElementById("transport-camera").textContent = "3D не загрузилось · обнови вкладку игры";
+        routeChoice.classList.remove("hidden");
+        return;
+      }
+      document.getElementById("transport-camera").textContent = "Настоящая 3D-трасса · камера сзади";
+      window.Transport3D.start(route);
+    }
+
+    function transportLaneX(lane, y) {
+      const depth = Math.max(0, Math.min(1, (y - 400) / 300));
+      const roadHalf = 7 + depth * 650;
+      return 550 + ((lane - 1.5) / 2) * roadHalf;
     }
 
     function drawTransportScene() {
       const ctx = transportCtx;
       const w = transportCanvas.width;
       const h = transportCanvas.height;
+      const nowForDraw = performance.now();
       const isRussia = transportRoute === "russia";
-      ctx.fillStyle = isRussia ? "#245b39" : "#cf9b4d";
-      ctx.fillRect(0, 0, w, h);
-      if (isRussia) {
-        for (let y = -80; y < h + 100; y += 95) {
-          for (const x of [90, 190, 910, 1010]) {
-            ctx.fillStyle = "#183a28"; ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 800, 38, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = "#2d7747"; ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 800 - 18, 30, 0, Math.PI * 2); ctx.fill();
-          }
+      const backdrop = isRussia ? russiaRoadImage : airBackground;
+      if (backdrop.complete && backdrop.naturalWidth) ctx.drawImage(backdrop, 0, 0, w, h);
+      else { ctx.fillStyle = isRussia ? "#39794b" : "#b47a3a"; ctx.fillRect(0, 0, w, h); }
+      const horizon = 400;
+      const curve = 0;
+      ctx.fillStyle = "#30343a";
+      ctx.beginPath(); ctx.moveTo(543, horizon); ctx.lineTo(557, horizon); ctx.lineTo(w + 105, h); ctx.lineTo(-105, h); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#eceff1"; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(543, horizon); ctx.lineTo(-105, h); ctx.moveTo(557, horizon); ctx.lineTo(w + 105, h); ctx.stroke();
+      for (let lane = 1; lane < 4; lane++) {
+        for (let z = 0; z < 14; z++) {
+          const phase = (z * 76 + roadOffset * 8) % 1064;
+          const y1 = horizon + Math.pow(phase / 1064, 2) * 300;
+          const y2 = horizon + Math.pow(Math.min(1, (phase + 38) / 1064), 2) * 300;
+          const x1 = transportLaneX(lane - .5, y1) + curve * (1 - (y1 - horizon) / 525);
+          const x2 = transportLaneX(lane - .5, y2) + curve * (1 - (y2 - horizon) / 525);
+          ctx.strokeStyle = "rgba(255,255,255,.92)"; ctx.lineWidth = 1.5 + (y1 - horizon) / 42;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
         }
-      } else {
-        ctx.fillStyle = "#e3bc71";
-        for (let y = -100; y < h + 100; y += 150) for (const x of [100, 190, 920, 1010]) { ctx.beginPath(); ctx.arc(x, (y + roadOffset) % 850, 26, 0, Math.PI * 2); ctx.fill(); }
       }
-      ctx.fillStyle = "#30343a"; ctx.fillRect(280, 0, 540, h);
-      ctx.fillStyle = "#e8e8d4"; ctx.fillRect(276, 0, 8, h); ctx.fillRect(816, 0, 8, h);
-      ctx.setLineDash([48, 38]); ctx.lineDashOffset = roadOffset;
-      ctx.strokeStyle = "#f4df75"; ctx.lineWidth = 7;
-      ctx.beginPath(); ctx.moveTo(475, 0); ctx.lineTo(475, h); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(625, 0); ctx.lineTo(625, h); ctx.stroke();
-      ctx.setLineDash([]);
-      const truckX = [400, 550, 700][truckLane];
-      ctx.fillStyle = "#1e91c2"; ctx.fillRect(truckX - 62, 505, 124, 150);
-      ctx.fillStyle = "#d8e7ed"; ctx.fillRect(truckX - 48, 515, 96, 42);
-      ctx.fillStyle = "#123f55"; ctx.fillRect(truckX - 52, 570, 104, 70);
-      ctx.fillStyle = "#111"; ctx.fillRect(truckX - 72, 530, 12, 38); ctx.fillRect(truckX + 60, 530, 12, 38); ctx.fillRect(truckX - 72, 605, 12, 38); ctx.fillRect(truckX + 60, 605, 12, 38);
+      const playerShift = truckPosition * 250;
+      const enemyY = 500;
+      const enemyX = transportLaneX(enemyLane, enemyY) - playerShift * .28 + curve * .35;
+      const enemyScale = 126;
+      if (enemyVehicleImage.complete && enemyVehicleImage.naturalWidth) {
+        const enemyBob = Math.sin(performance.now() * 0.014) * 1.5;
+        ctx.save();
+        ctx.translate(enemyX, enemyY + enemyBob);
+        ctx.drawImage(enemyVehicleSprite, -enemyScale / 2, -enemyScale * 1.15, enemyScale, enemyScale * 1.15);
+        ctx.restore();
+      }
+      const truckX = 550 + truckPosition * 250;
+      if (transportTruckImage.complete && transportTruckImage.naturalWidth) {
+        ctx.save(); ctx.translate(truckX, 600); ctx.rotate(cockpitSteer * .0009);
+        ctx.shadowColor = "rgba(0,0,0,.65)"; ctx.shadowBlur = 22; ctx.shadowOffsetY = 14;
+        ctx.drawImage(transportTruckSprite, -110, -176, 220, 250); ctx.restore();
+      }
       bullets.forEach((bullet) => {
         ctx.save();
-        ctx.translate(bullet.x, bullet.y);
-        ctx.rotate(Math.PI);
-        ctx.fillStyle = "#c51f32";
-        ctx.beginPath();
-        ctx.roundRect(-7, -20, 14, 31, 6);
-        ctx.fill();
-        ctx.fillStyle = "#ff5265";
-        ctx.beginPath();
-        ctx.moveTo(-7, -14); ctx.quadraticCurveTo(0, -28, 7, -14); ctx.lineTo(7, -8); ctx.lineTo(-7, -8); ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#71101d";
-        ctx.fillRect(-8, 9, 16, 7);
+        ctx.translate(transportLaneX(bullet.lane, bullet.y), bullet.y);
+        const tracer = ctx.createLinearGradient(0, -35, 0, 18);
+        tracer.addColorStop(0, "rgba(255,185,60,0)"); tracer.addColorStop(1, "#ff4d22");
+        ctx.strokeStyle = tracer; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(0, 15); ctx.stroke();
+        ctx.fillStyle = "#fff1a6"; ctx.beginPath(); ctx.arc(0, 16, 6, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       });
       boosts.forEach((boost) => {
-        ctx.save(); ctx.translate(boost.x, boost.y);
-        ctx.shadowColor = boost.type === "life" ? "#56ff8b" : "#55cfff"; ctx.shadowBlur = 18;
-        ctx.fillStyle = boost.type === "life" ? "#21b85c" : "#168ed0";
-        ctx.beginPath(); ctx.arc(0, 0, 24, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0; ctx.fillStyle = "white"; ctx.font = "900 28px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(boost.type === "life" ? "+" : "⇈", 0, -1); ctx.restore();
+        const bx = transportLaneX(boost.lane, boost.y) - playerShift * Math.max(0, (boost.y - horizon) / 525);
+        const size = 20 + Math.max(0, boost.y - horizon) * .055;
+        ctx.save(); ctx.translate(bx, boost.y); ctx.rotate(nowForDraw * .0015);
+        ctx.shadowColor = boost.type === "life" ? "#50ff87" : "#42c9ff"; ctx.shadowBlur = 24;
+        const glow = ctx.createRadialGradient(0, 0, 3, 0, 0, size); glow.addColorStop(0, "white"); glow.addColorStop(.28, boost.type === "life" ? "#35ef74" : "#25bfff"); glow.addColorStop(1, boost.type === "life" ? "#087a35" : "#075d9d");
+        ctx.fillStyle = glow; ctx.beginPath(); ctx.roundRect(-size, -size, size * 2, size * 2, 9); ctx.fill();
+        ctx.shadowBlur = 0; ctx.fillStyle = "white"; ctx.font = `950 ${size * 1.15}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(boost.type === "life" ? "+" : "⚡", 0, 1); ctx.restore();
       });
     }
 
     function transportLoop(now) {
       if (!transportRunning) return;
+      const gas = transportKeys.ArrowUp || transportKeys.KeyW;
+      const brake = transportKeys.ArrowDown || transportKeys.KeyS;
+      const steer = (transportKeys.ArrowRight || transportKeys.KeyD ? 1 : 0) - (transportKeys.ArrowLeft || transportKeys.KeyA ? 1 : 0);
+      if (gas) driveSpeed = Math.min(18, driveSpeed + .16);
+      else driveSpeed = Math.max(4, driveSpeed - .045);
+      if (brake) driveSpeed = Math.max(1.5, driveSpeed - .28);
+      truckPosition = Math.max(-1.55, Math.min(1.55, truckPosition + steer * (.018 + driveSpeed * .0008)));
+      cockpitSteer += (steer * 28 - cockpitSteer) * .16;
+      truckLane = Math.max(0, Math.min(3, Math.round(truckPosition + 1.5)));
+      document.getElementById("transport-speed").textContent = `${Math.round(driveSpeed * 14)} км/ч`;
       roadOffset = (roadOffset + driveSpeed) % 86;
       const bulletSpeed = transportRoute === "afghanistan" ? 15 : 5.5;
       const interval = transportRoute === "afghanistan" ? 1550 : 2200;
       if (now - lastBullet > interval) {
-        bullets.push({ x: [400, 550, 700][Math.floor(Math.random() * 3)], y: -20 });
+        enemyLane = Math.floor(Math.random() * 4);
+        bullets.push({ lane: enemyLane, y: 330 });
         lastBullet = now;
       }
       if (now - lastBoost > 4200) {
-        boosts.push({ x: [400, 550, 700][Math.floor(Math.random() * 3)], y: -30, type: Math.random() < .35 ? "life" : "speed" });
+        boosts.push({ lane: Math.floor(Math.random() * 4), y: 190, type: Math.random() < .35 ? "life" : "speed" });
         lastBoost = now;
       }
       bullets.forEach((bullet) => bullet.y += bulletSpeed);
       boosts.forEach((boost) => boost.y += 4.2);
-      const truckX = [400, 550, 700][truckLane];
       bullets = bullets.filter((bullet) => {
-        if (bullet.y > 500 && bullet.y < 660 && Math.abs(bullet.x - truckX) < 70) {
+        if (bullet.y > 500 && bullet.y < 660 && bullet.lane === truckLane) {
           lives -= 1;
           transportLives.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
           if (lives <= 0) endTransport();
@@ -730,7 +854,7 @@
         return bullet.y < 730;
       });
       boosts = boosts.filter((boost) => {
-        if (boost.y > 500 && boost.y < 660 && Math.abs(boost.x - truckX) < 70) {
+        if (boost.y > 500 && boost.y < 660 && boost.lane === truckLane) {
           if (boost.type === "life") lives = Math.min(3, lives + 1);
           else driveSpeed = Math.min(18, driveSpeed + 1.5);
           transportLives.textContent = "❤️".repeat(lives) + "🖤".repeat(3 - lives);
@@ -901,6 +1025,7 @@
     document.getElementById("transport-retry").addEventListener("click", () => startTransport(transportRoute));
     document.getElementById("transport-back").addEventListener("click", () => {
       transportRunning = false;
+      if (window.Transport3D) window.Transport3D.stop();
       cancelAnimationFrame(transportAnimation);
       transportMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
@@ -921,9 +1046,10 @@
         return;
       }
       if (!transportRunning) return;
-      if (event.key === "ArrowLeft") truckLane = Math.max(0, truckLane - 1);
-      if (event.key === "ArrowRight") truckLane = Math.min(2, truckLane + 1);
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) event.preventDefault();
+      transportKeys[event.code] = true;
     });
+    window.addEventListener("keyup", (event) => { transportKeys[event.code] = false; });
   </script>
 </body>
 </html>
