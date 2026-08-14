@@ -341,26 +341,98 @@
 
   function createExit(setBeacon, metalMaterial) {
     const position = cellPosition(EXIT.x, EXIT.y);
-    const coldLight = new THREE.MeshStandardMaterial({ color: 0xcdfcff, emissive: 0x75eaff, emissiveIntensity: 3 });
-    const leftTower = box(1.15, WALL_HEIGHT + 2, 1.15, metalMaterial);
+    const gate = new THREE.Group();
+    gate.position.copy(position);
+
+    const cyanMaterial = new THREE.MeshStandardMaterial({
+      color: 0xbefaff,
+      emissive: 0x2bdfff,
+      emissiveIntensity: 3.4,
+      roughness: 0.22,
+      metalness: 0.15
+    });
+    const hazardMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffbd2e,
+      emissive: 0xff7b00,
+      emissiveIntensity: 0.75,
+      roughness: 0.62
+    });
+    const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x151b1c, roughness: 0.72, metalness: 0.62 });
+    const portalMaterial = new THREE.MeshBasicMaterial({
+      color: 0x54e9ff,
+      transparent: true,
+      opacity: 0.18,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const leftTower = box(1.35, WALL_HEIGHT + 2.5, 1.35, metalMaterial);
     const rightTower = leftTower.clone();
-    leftTower.position.set(position.x + CELL / 2, (WALL_HEIGHT + 2) / 2, position.z - CELL / 2 + 0.7);
-    rightTower.position.set(position.x + CELL / 2, (WALL_HEIGHT + 2) / 2, position.z + CELL / 2 - 0.7);
-    const lintel = box(1.2, 1.15, CELL - 1.4, metalMaterial);
-    lintel.position.set(position.x + CELL / 2, WALL_HEIGHT - 1.4, position.z);
-    const beacon = box(0.38, 11.5, CELL - 2.1, coldLight);
-    beacon.position.set(position.x + CELL / 2 + 0.1, 5.75, position.z);
-    const exitLight = new THREE.PointLight(0x8eefff, 5, 34, 1.5);
-    exitLight.position.set(position.x + CELL / 2 - 1, 5.5, position.z);
+    leftTower.position.set(CELL / 2, (WALL_HEIGHT + 2.5) / 2, -CELL / 2 + 0.75);
+    rightTower.position.set(CELL / 2, (WALL_HEIGHT + 2.5) / 2, CELL / 2 - 0.75);
+    const lintel = box(1.45, 1.35, CELL - 1.25, metalMaterial);
+    lintel.position.set(CELL / 2, WALL_HEIGHT - 0.75, 0);
+
+    // Yellow-black armor plates make the extraction gate readable from far away.
+    const hazardPlates = [];
+    for (let side = -1; side <= 1; side += 2) {
+      for (let i = 0; i < 7; i++) {
+        const plate = box(0.16, 0.82, 0.78, i % 2 ? darkMaterial : hazardMaterial);
+        plate.position.set(CELL / 2 - 0.76, 2.05 + i * 1.12, side * (CELL / 2 - 0.73));
+        plate.rotation.x = side * 0.1;
+        hazardPlates.push(plate);
+      }
+    }
+
+    const portal = new THREE.Mesh(new THREE.PlaneGeometry(CELL - 2.05, WALL_HEIGHT - 3.1), portalMaterial);
+    portal.rotation.y = Math.PI / 2;
+    portal.position.set(CELL / 2 + 0.22, (WALL_HEIGHT - 3.1) / 2 + 0.4, 0);
+
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.15, 0.14, 10, 56), cyanMaterial);
+    ring.rotation.y = Math.PI / 2;
+    ring.scale.set(0.92, 1.48, 1);
+    ring.position.set(CELL / 2 - 0.04, 5.65, 0);
+
+    const floorMarkers = [];
+    for (let i = 0; i < 6; i++) {
+      const marker = box(1.1, 0.055, 0.24, cyanMaterial.clone());
+      marker.position.set(CELL / 2 - 1.4 - i * 1.35, 0.055, 0);
+      marker.material.emissiveIntensity = 1.4 + i * 0.25;
+      floorMarkers.push(marker);
+    }
+
+    // Three luminous chevrons point directly through the gate.
+    const chevrons = [];
+    for (let i = 0; i < 3; i++) {
+      const chevron = new THREE.Group();
+      const left = box(0.62, 0.06, 0.13, cyanMaterial);
+      const right = left.clone();
+      left.rotation.y = Math.PI / 4;
+      right.rotation.y = -Math.PI / 4;
+      left.position.z = -0.19;
+      right.position.z = 0.19;
+      chevron.add(left, right);
+      chevron.position.set(CELL / 2 - 2.1 - i * 1.55, 0.085, 0);
+      chevrons.push(chevron);
+    }
+
+    const exitLight = new THREE.PointLight(0x65eaff, 7.5, 42, 1.35);
+    exitLight.position.set(CELL / 2 - 2.2, 5.5, 0);
+    const warmLight = new THREE.PointLight(0xffa62f, 3.2, 20, 1.7);
+    warmLight.position.set(CELL / 2 - 1.1, 2.3, 0);
     const sign = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.2, 1.6),
-      new THREE.MeshBasicMaterial({ map: makeTextTexture("ВЫХОД", "#d9ffff", "#21383a"), side: THREE.DoubleSide })
+      new THREE.PlaneGeometry(6.25, 1.72),
+      new THREE.MeshBasicMaterial({ map: makeTextTexture("ЭВАКУАЦИЯ", "#e8fdff", "#102b31"), side: THREE.DoubleSide })
     );
     sign.rotation.y = -Math.PI / 2;
-    sign.position.set(position.x + CELL / 2 - 0.62, 11.2, position.z);
-    scene.add(leftTower, rightTower, lintel, beacon, exitLight, sign);
-    exitBeacon = beacon;
-    setBeacon(beacon);
+    sign.position.set(CELL / 2 - 0.78, WALL_HEIGHT - 2.05, 0);
+
+    gate.add(leftTower, rightTower, lintel, portal, ring, exitLight, warmLight, sign, ...hazardPlates, ...floorMarkers, ...chevrons);
+    gate.userData = { portal, ring, floorMarkers, chevrons, exitLight };
+    scene.add(gate);
+    exitBeacon = gate;
+    setBeacon(gate);
   }
 
   function createPickups(metalMaterial) {
@@ -423,7 +495,7 @@
     const sector = `${String.fromCharCode(65 + Math.floor(cx / 5))}-${String(cy + 1).padStart(2, "0")}`;
     if (sector !== currentSector) {
       currentSector = sector;
-      title.textContent = `Поиск припасов · сектор ${sector}`;
+      title.textContent = `В заложниках · сектор ${sector}`;
     }
     const exitPosition = cellPosition(EXIT.x, EXIT.y);
     const distance = Math.round(Math.hypot(camera.position.x - exitPosition.x, camera.position.z - exitPosition.z));
@@ -469,7 +541,18 @@
     }
 
     if (exitBeacon) {
-      exitBeacon.material.emissiveIntensity = 2.4 + Math.sin(time * 0.004) * 0.65;
+      const pulse = Math.sin(time * 0.004);
+      const { portal, ring, floorMarkers, chevrons, exitLight } = exitBeacon.userData;
+      portal.material.opacity = 0.14 + (pulse + 1) * 0.055;
+      ring.scale.set(0.92 + pulse * 0.025, 1.48 + pulse * 0.035, 1);
+      ring.material.emissiveIntensity = 3.2 + pulse * 0.8;
+      exitLight.intensity = 6.5 + (pulse + 1) * 1.15;
+      floorMarkers.forEach((marker, index) => {
+        marker.material.emissiveIntensity = 1.25 + (Math.sin(time * 0.006 - index * 0.9) + 1) * 1.15;
+      });
+      chevrons.forEach((chevron, index) => {
+        chevron.position.y = 0.085 + Math.sin(time * 0.005 - index * 0.7) * 0.025;
+      });
     }
     updateHud();
 
@@ -485,7 +568,8 @@
 
   function prepare() {
     overlay.classList.remove("hidden");
-    document.getElementById("maze-message").textContent = "Поиск припасов";
+    document.getElementById("maze-menu").classList.add("hidden");
+    document.getElementById("maze-message").textContent = "В заложниках";
     document.getElementById("maze-description").textContent = "Высокие стены старого комплекса скрывают оружейный склад. Собирай ящики, запоминай номера секторов и найди светящиеся ворота. Награда: $50,000.";
     document.getElementById("maze-start").textContent = "Войти в лабиринт";
   }
@@ -542,6 +626,7 @@
     document.getElementById("maze-message").textContent = "Выход найден · +$50,000";
     document.getElementById("maze-description").textContent = `Склад пополнен: оружие ${collected.weapon}, гранаты ${collected.grenade}, пули ${collected.ammo}.`;
     document.getElementById("maze-start").textContent = "Новый лабиринт";
+    document.getElementById("maze-menu").classList.remove("hidden");
   }
 
   function stop() {

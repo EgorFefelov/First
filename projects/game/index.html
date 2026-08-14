@@ -349,7 +349,7 @@
           <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Внедорожная перевозка оружия">Внедорожная перевозка оружия</button>
-          <button class="menu-button mode-button" data-mode="Поиск припасов">Поиск припасов</button>
+          <button class="menu-button mode-button" data-mode="В заложниках">В заложниках</button>
         </div>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
         <div id="character-options">
@@ -458,15 +458,15 @@
       <div class="offroad-message" id="offroad-message"><h2>Внедорожная перевозка оружия</h2><p>Газ и тормоз удерживают грузовик на колёсах</p><button id="offroad-start">Начать</button><button id="offroad-back">В меню</button></div>
     </div>
   </section>
-  <section id="supply-maze-mode" class="hidden" aria-label="Поиск припасов">
+  <section id="supply-maze-mode" class="hidden" aria-label="В заложниках">
     <canvas id="supply-maze-canvas" width="1100" height="700"></canvas>
     <div class="maze-hud">
-      <div class="maze-title">Поиск припасов · лесной склад Майами</div>
+      <div class="maze-title">В заложниках · лесной склад Майами</div>
       <div class="maze-crates"><span><img src="weapon-crate.png" alt="Оружие"><b data-maze-crate="weapon">0</b></span><span><img src="grenade-crate.png" alt="Гранаты"><b data-maze-crate="grenade">0</b></span><span><img src="ammo-crate.png" alt="Пули"><b data-maze-crate="ammo">0</b></span></div>
       <div class="maze-exit-distance" id="maze-exit-distance">Выход потерян в лесу</div>
       <button class="maze-back" id="maze-back">← В меню</button>
       <div class="maze-help">WASD · движение · мышь / ← → обзор</div>
-      <div class="maze-overlay" id="maze-overlay"><h2 id="maze-message">Поиск припасов</h2><p id="maze-description">Заброшенный склад в лесах за Майами. Собирай три вида ящиков и найди выход из большого лабиринта.</p><button id="maze-start">Войти в лабиринт</button></div>
+      <div class="maze-overlay" id="maze-overlay"><h2 id="maze-message">В заложниках</h2><p id="maze-description">Заброшенный склад в лесах за Майами. Собирай три вида ящиков и найди выход из большого лабиринта.</p><button id="maze-start">Войти в лабиринт</button><button class="hidden" id="maze-menu">Вернуться в меню</button></div>
     </div>
   </section>
   <div id="game-wrap">
@@ -502,7 +502,7 @@
   <script src="assets/core.js"></script>
   <script src="vendor/three.min.js?v=6"></script>
   <script src="transport3d.js?v=46"></script>
-  <script src="maze3d.js?v=5"></script>
+  <script src="maze3d.js?v=6"></script>
   <script>
     let selectedMode = "";
     let selectedCharacter = "";
@@ -794,6 +794,12 @@
       updateWarehouseStock();
       document.getElementById("active-player").textContent = `Игрок: ${selectedCharacter}`;
       showIncomingCall();
+    }
+
+    function openHostageMode() {
+      mainMenu.classList.add("hidden");
+      supplyMazeMode.classList.remove("hidden");
+      window.SupplyMaze.prepare();
     }
 
     function playModeIntro(videoFile, openMode = openSaleMode) {
@@ -1295,8 +1301,10 @@
           if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openOffroadMode);
           else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openOffroadMode);
           else openOffroadMode();
-        } else if(selectedMode === "Поиск припасов") {
-          mainMenu.classList.add("hidden");supplyMazeMode.classList.remove("hidden");window.SupplyMaze.prepare();
+        } else if(selectedMode === "В заложниках") {
+          if (selectedCharacter === "Рэй") playModeIntro("ray-hostage-intro.mp4", openHostageMode);
+          else if (selectedCharacter === "Дэвид") playModeIntro("david-hostage-intro.mp4", openHostageMode);
+          else openHostageMode();
         } else {
           if (selectedCharacter === "Дэвид") playModeIntro("david-air-transport-intro.mp4", openAirMode);
           else if (selectedCharacter === "Рэй") playModeIntro("ray-air-transport-intro.mp4", openAirMode);
@@ -1338,6 +1346,7 @@
     document.getElementById("offroad-back").addEventListener("click",()=>{offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
     document.getElementById("maze-start").addEventListener("click",()=>window.SupplyMaze.start());
     document.getElementById("maze-back").addEventListener("click",()=>{window.SupplyMaze.stop();supplyMazeMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
+    document.getElementById("maze-menu").addEventListener("click",()=>document.getElementById("maze-back").click());
     window.addEventListener("supply-maze-win",event=>{walletBalance+=50000;localStorage.setItem("notWeaponWallet",String(walletBalance));updateWallet();const stock=JSON.parse(localStorage.getItem("notWeaponStock")||'{"weapon":0,"grenade":0,"ammo":0}');Object.keys(event.detail).forEach(type=>stock[type]=(stock[type]||0)+event.detail[type]);localStorage.setItem("notWeaponStock",JSON.stringify(stock));updateWarehouseStock()});
     [["offroad-gas","gas"],["offroad-brake","brake"]].forEach(([id,key])=>{const el=document.getElementById(id);const set=value=>{offroadKeys[key]=value;el.classList.toggle("active",value)};el.addEventListener("pointerdown",()=>set(true));el.addEventListener("pointerup",()=>set(false));el.addEventListener("pointerleave",()=>set(false))});
     window.addEventListener("keydown",event=>{if(event.code==="ArrowRight"||event.code==="KeyD")offroadKeys.gas=true;if(event.code==="ArrowLeft"||event.code==="KeyA")offroadKeys.brake=true});
