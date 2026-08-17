@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <!--
   projects/game/index.html — игра ребёнка. Открывается во вкладке «Игра» курса
   (iframe) и двойным кликом — без сервера, автономна. Конфиг — config.js
@@ -505,6 +505,7 @@
 
   <script src="assets/core.js"></script>
   <script src="vendor/three.min.js?v=6"></script>
+  <script src="audio.js"></script>
   <script src="transport3d.js?v=46"></script>
   <script src="maze3d.js?v=12"></script>
   <script>
@@ -761,14 +762,15 @@
         offroadFuel=Math.max(0,offroadFuel-.006); offroadCans=offroadCans.filter(cx=>{if(Math.abs(cx-offroadX)<70){offroadFuel=Math.min(100,offroadFuel+42);return false}return true});
         if(offroadCans.length<3)offroadCans.push(Math.max(...offroadCans,offroadX)+2600+Math.random()*1200);
         document.getElementById("offroad-fuel-fill").style.transform=`scaleX(${offroadFuel/100})`;document.getElementById("offroad-distance").textContent=Math.floor(offroadX/10);
+        window.GameAudio?.setTruckSpeed(Math.abs(offroadSpeed) / 7.2);
         if(offroadFuel<=0&&Math.abs(offroadSpeed)<.08){offroadRunning=false;document.getElementById("offroad-message").classList.remove("hidden");document.querySelector("#offroad-message h2").textContent="Топливо закончилось";document.getElementById("offroad-start").textContent="Ещё раз"}
       }
       drawOffroad();offroadAnimation=requestAnimationFrame(offroadLoop);
     }
 
-    function startOffroad(){offroadX=0;offroadSpeed=0;offroadFuel=100;offroadAngle=0;offroadAngular=0;offroadTruckY=offroadGround(0);offroadVerticalSpeed=0;offroadGrounded=true;offroadPreviousSlope=0;offroadCans=[1900,4600,7600,10800];offroadPaused=false;offroadRunning=true;document.getElementById("offroad-message").classList.add("hidden");cancelAnimationFrame(offroadAnimation);offroadLoop()}
+    function startOffroad(){offroadX=0;offroadSpeed=0;offroadFuel=100;offroadAngle=0;offroadAngular=0;offroadTruckY=offroadGround(0);offroadVerticalSpeed=0;offroadGrounded=true;offroadPreviousSlope=0;offroadCans=[1900,4600,7600,10800];offroadPaused=false;offroadRunning=true;window.GameAudio?.playMode("offroad");document.getElementById("offroad-message").classList.add("hidden");cancelAnimationFrame(offroadAnimation);offroadLoop()}
 
-    function openOffroadMode(){mainMenu.classList.add("hidden");offroadMode.classList.remove("hidden");offroadTruckY=offroadGround(offroadX);document.querySelector("#offroad-message h2").textContent="Внедорожная перевозка оружия";drawOffroad()}
+    function openOffroadMode(){mainMenu.classList.add("hidden");offroadMode.classList.remove("hidden");window.GameAudio?.playMode("offroad");offroadTruckY=offroadGround(offroadX);document.querySelector("#offroad-message h2").textContent="Внедорожная перевозка оружия";drawOffroad()}
 
     function updateMenuStatus() {
       status.textContent = selectedCharacter && selectedMode
@@ -795,6 +797,7 @@
       mainMenu.classList.add("hidden");
       saleMode.classList.add("mac-desktop");
       saleMode.classList.remove("hidden");
+      window.GameAudio?.playMode("sale");
       updateWarehouseStock();
       document.getElementById("active-player").textContent = `Игрок: ${selectedCharacter}`;
       showIncomingCall();
@@ -803,10 +806,12 @@
     function openHostageMode() {
       mainMenu.classList.add("hidden");
       supplyMazeMode.classList.remove("hidden");
+      window.GameAudio?.playMode("hostage");
       window.SupplyMaze.prepare();
     }
 
     function playModeIntro(videoFile, openMode = openSaleMode) {
+      window.GameAudio?.stop();
       mainMenu.classList.add("hidden");
       saleIntro.classList.remove("hidden");
       saleIntroVideo.src = videoFile;
@@ -869,6 +874,7 @@
       routeChoice.classList.remove("hidden");
       transportResult.classList.add("hidden");
       transportLives.textContent = "❤️❤️❤️";
+      window.GameAudio?.playMode("transport");
       drawTransportScene();
     }
 
@@ -881,6 +887,7 @@
       document.getElementById("air-difficulty").classList.remove("hidden");
       document.getElementById("air-start").classList.add("hidden");
       airScore.textContent = "0";
+      window.GameAudio?.playMode("air");
       resetAirGame();
       drawAirGame();
     }
@@ -904,12 +911,16 @@
       document.getElementById("air-lives").textContent = difficulty === "normal" ? "❤️❤️❤️" : "☠️";
       airRunning = true;
       airOverlay.classList.add("hidden");
+      window.GameAudio?.playMode("air");
       cancelAnimationFrame(airAnimation);
       airAnimation = requestAnimationFrame(airLoop);
     }
 
     function airFlap() {
-      if (airRunning) jetVelocity = -7.8;
+      if (airRunning) {
+        jetVelocity = -7.8;
+        window.GameAudio?.pulseAirplane();
+      }
     }
 
     function drawAirGame() {
@@ -1319,10 +1330,12 @@
 
     document.getElementById("accept-call").addEventListener("click", showQuestion);
     document.getElementById("decline-call").addEventListener("click", () => {
+      window.GameAudio?.stop();
       saleMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
     });
     document.getElementById("back-to-menu").addEventListener("click", () => {
+      window.GameAudio?.stop();
       clearInterval(cooldownTimer);
       clearTimeout(feedbackTimer);
       callerIndex = 0;
@@ -1332,6 +1345,7 @@
     document.querySelectorAll(".route-button").forEach((button) => button.addEventListener("click", () => startTransport(button.dataset.route)));
     document.getElementById("transport-retry").addEventListener("click", () => startTransport(transportRoute));
     document.getElementById("transport-back").addEventListener("click", () => {
+      window.GameAudio?.stop();
       transportRunning = false;
       if (window.Transport3D) window.Transport3D.stop();
       cancelAnimationFrame(transportAnimation);
@@ -1341,15 +1355,16 @@
     document.querySelectorAll("[data-air-difficulty]").forEach((button) => button.addEventListener("click", () => startAirGame(button.dataset.airDifficulty)));
     document.getElementById("air-start").addEventListener("click", () => startAirGame(airDifficulty));
     document.getElementById("air-back").addEventListener("click", () => {
+      window.GameAudio?.stop();
       airRunning = false;
       cancelAnimationFrame(airAnimation);
       airMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
     });
     document.getElementById("offroad-start").addEventListener("click", startOffroad);
-    document.getElementById("offroad-back").addEventListener("click",()=>{offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
+    document.getElementById("offroad-back").addEventListener("click",()=>{window.GameAudio?.stop();offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
     document.getElementById("maze-start").addEventListener("click",()=>window.SupplyMaze.start());
-    document.getElementById("maze-back").addEventListener("click",()=>{window.SupplyMaze.stop();supplyMazeMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
+    document.getElementById("maze-back").addEventListener("click",()=>{window.GameAudio?.stop();window.SupplyMaze.stop();supplyMazeMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
     document.getElementById("maze-menu").addEventListener("click",()=>document.getElementById("maze-back").click());
     window.addEventListener("supply-maze-win",event=>{walletBalance+=50000;localStorage.setItem("notWeaponWallet",String(walletBalance));updateWallet();const stock=JSON.parse(localStorage.getItem("notWeaponStock")||'{"weapon":0,"grenade":0,"ammo":0}');Object.keys(event.detail).forEach(type=>stock[type]=(stock[type]||0)+event.detail[type]);localStorage.setItem("notWeaponStock",JSON.stringify(stock));updateWarehouseStock()});
     [["offroad-gas","gas"],["offroad-brake","brake"]].forEach(([id,key])=>{const el=document.getElementById(id);const set=value=>{offroadKeys[key]=value;el.classList.toggle("active",value)};el.addEventListener("pointerdown",()=>set(true));el.addEventListener("pointerup",()=>set(false));el.addEventListener("pointerleave",()=>set(false))});

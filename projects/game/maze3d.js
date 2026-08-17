@@ -6,7 +6,7 @@
   const WALL_THICKNESS = 0.72;
   const EYE_HEIGHT = 1.78;
   const MAX_HEALTH = 5;
-  const ENEMY_COUNT = 10;
+  const ENEMY_COUNT = 25;
   const START = { x: 1, y: 1 };
   const EXIT = { x: SIZE - 2, y: SIZE - 2 };
 
@@ -1349,7 +1349,7 @@
     updateHealthHud();
     document.getElementById("maze-menu").classList.add("hidden");
     document.getElementById("maze-message").textContent = "В заложниках";
-    document.getElementById("maze-description").textContent = "Внутри комплекса тебя ждут десять вооружённых террористов. Избегай огня, собирай припасы и доберись до ворот эвакуации. Награда: $50,000.";
+    document.getElementById("maze-description").textContent = "Внутри комплекса тебя ждут 25 вооружённых террористов. Избегай огня, собирай припасы и доберись до ворот эвакуации. Награда: $50,000.";
     document.getElementById("maze-start").textContent = "Войти в лабиринт";
   }
 
@@ -1409,6 +1409,7 @@
     resizeRenderer();
     overlay.classList.add("hidden");
     running = true;
+    window.GameAudio?.playMode("hostage");
     lastTime = performance.now();
     help.textContent = "Клик · обзор мышью · WASD · бег Shift · Esc курсор";
     lockPointer();
@@ -1417,6 +1418,7 @@
 
   function win() {
     running = false;
+    window.GameAudio?.stop();
     cancelAnimationFrame(animationFrame);
     document.exitPointerLock?.();
     window.dispatchEvent(new CustomEvent("supply-maze-win", { detail: { ...collected } }));
@@ -1429,6 +1431,7 @@
 
   function lose() {
     running = false;
+    window.GameAudio?.stop();
     cancelAnimationFrame(animationFrame);
     document.exitPointerLock?.();
     damageFlash.classList.remove("active");
@@ -1441,6 +1444,7 @@
 
   function stop() {
     running = false;
+    window.GameAudio?.stop();
     if (animationFrame) cancelAnimationFrame(animationFrame);
     animationFrame = 0;
     Object.keys(keys).forEach(code => { keys[code] = false; });

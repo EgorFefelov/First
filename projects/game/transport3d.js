@@ -265,17 +265,20 @@ function animate(now=0) {
   damageCooldown=Math.max(0,damageCooldown-dt); shotClock+=dt; bonusClock+=dt; if(shotClock>1.65){shoot();shotClock=0;} if(bonusClock>2.8){spawnBonus();bonusClock=0;}
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];b.position.addScaledVector(b.userData.velocity,dt);if(b.position.z>3){if(Math.abs(b.position.x-truck.position.x)<1.7&&damageCooldown===0){lives=Math.max(0,lives-1);damageCooldown=.7;updateLives();}scene.remove(b);bullets.splice(i,1);}}
   for(let i=bonuses.length-1;i>=0;i--){const b=bonuses[i];b.position.z+=visualSpeed*dt;b.rotation.y+=dt*1.35;b.position.y=b.userData.baseY+Math.sin(now*.003+b.userData.phase)*.16;if(b.position.z>1){if(Math.abs(b.position.x-truck.position.x)<2){if(b.userData.kind==="life")lives=Math.min(3,lives+1);if(b.userData.kind==="speed"){speedBoostCount+=1;speedBoostUntil=now+5000;speed=Math.min(42+speedBoostCount*2,speed+2);}if(b.userData.kind==="fuel")fuel=Math.min(1,fuel+1/3);if(crateCounts[b.userData.kind]!==undefined){crateCounts[b.userData.kind]++;const counter=document.querySelector(`[data-crate-count="${b.userData.kind}"]`);if(counter)counter.textContent=String(crateCounts[b.userData.kind]);const stock=JSON.parse(localStorage.getItem("notWeaponStock")||'{"weapon":0,"grenade":0,"ammo":0}');stock[b.userData.kind]=(stock[b.userData.kind]||0)+1;localStorage.setItem("notWeaponStock",JSON.stringify(stock));}updateLives();}scene.remove(b);bonuses.splice(i,1);}}
-  const kmh=Math.round(speed*5);const speedDial=Math.max(0,Math.min(1,(kmh-100)/150));document.getElementById("speed-value").firstChild.nodeValue=String(kmh);document.getElementById("speed-needle").style.transform=`rotate(${speedDial*180}deg)`;document.getElementById("fuel-needle").style.transform=`rotate(${-180+fuel*180}deg)`;document.getElementById("fuel-arc").style.setProperty("--fuel-angle",`${fuel*180}deg`); renderer.render(scene,camera); frame=requestAnimationFrame(animate);
+  const kmh=Math.round(speed*5);const speedDial=Math.max(0,Math.min(1,(kmh-100)/150));document.getElementById("speed-value").firstChild.nodeValue=String(kmh);document.getElementById("speed-needle").style.transform=`rotate(${speedDial*180}deg)`;document.getElementById("fuel-needle").style.transform=`rotate(${-180+fuel*180}deg)`;document.getElementById("fuel-arc").style.setProperty("--fuel-angle",`${fuel*180}deg`);
+  window.GameAudio?.setTruckSpeed(speed / 42);
+  renderer.render(scene,camera); frame=requestAnimationFrame(animate);
 }
 function updateLives(){
   document.getElementById("transport-lives").textContent="❤️".repeat(Math.max(0,lives))+"🖤".repeat(Math.max(0,3-lives));
   if(lives<=0&&running){
     running=false;
+    window.GameAudio?.stop();
     if(frame)cancelAnimationFrame(frame);
     document.getElementById("transport-result-title").textContent="Груз потерян";
     document.getElementById("transport-result").classList.remove("hidden");
   }
 }
 window.addEventListener("keydown",e=>{keys[e.code]=true;if(running&&e.code.startsWith("Arrow"))e.preventDefault();}); window.addEventListener("keyup",e=>keys[e.code]=false);
-window.Transport3D={start(route){this.stop();bullets.length=0;bonuses.length=0;activeRoute=route;resetCanvas();buildWorld(route);running=true;speed=15;playerX=0;lives=3;shotClock=0;bonusClock=0;damageCooldown=0;speedBoostCount=0;speedBoostUntil=0;fuel=1;crateCounts={ammo:0,weapon:0,grenade:0};document.querySelectorAll("[data-crate-count]").forEach(el=>el.textContent="0");spawnBonus("fuel");bonuses[0].position.z=-42;updateLives();animate.last=performance.now();frame=requestAnimationFrame(animate);},stop(){running=false;if(frame)cancelAnimationFrame(frame);if(renderer)renderer.dispose();},isRunning(){return running;}};
+window.Transport3D={start(route){this.stop();bullets.length=0;bonuses.length=0;activeRoute=route;resetCanvas();buildWorld(route);running=true;speed=15;playerX=0;lives=3;shotClock=0;bonusClock=0;damageCooldown=0;speedBoostCount=0;speedBoostUntil=0;fuel=1;crateCounts={ammo:0,weapon:0,grenade:0};document.querySelectorAll("[data-crate-count]").forEach(el=>el.textContent="0");spawnBonus("fuel");bonuses[0].position.z=-42;updateLives();window.GameAudio?.playMode("transport");animate.last=performance.now();frame=requestAnimationFrame(animate);},stop(){running=false;window.GameAudio?.stop();if(frame)cancelAnimationFrame(frame);if(renderer)renderer.dispose();},isRunning(){return running;}};
 })();
