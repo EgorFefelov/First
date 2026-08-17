@@ -919,7 +919,7 @@
     function airFlap() {
       if (airRunning) {
         jetVelocity = -7.8;
-        window.GameAudio?.pulseAirplane();
+        window.GameAudio?.playAirFlap();
       }
     }
 
@@ -976,6 +976,7 @@
       ammoCrates = ammoCrates.filter((crate) => {
         const collected = 245 + 50 > crate.x && 245 - 50 < crate.x + 58 && jetY + 22 > crate.y && jetY - 22 < crate.y + 58;
         if (collected) {
+          window.GameAudio?.playAirPickup();
           airCrateCounts[crate.type] += 1;
           warehouseStock[crate.type] += 1;
           localStorage.setItem("notWeaponStock", JSON.stringify(warehouseStock));
@@ -1003,6 +1004,7 @@
       }
       if (jetY < 20 || jetY > 675 || fatalHit) {
         airRunning = false;
+        window.GameAudio?.playAirGameOver();
         const totalCrates = airCrateCounts.ammo + airCrateCounts.weapon + airCrateCounts.grenade;
         document.getElementById("air-message").textContent = `Полёт окончен · ящиков ${totalCrates}`;
         document.getElementById("air-start").textContent = "Ещё раз";

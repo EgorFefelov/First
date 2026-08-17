@@ -103,9 +103,103 @@
   }
 
   // ----------------------------------------------------
-  // 1. ВОЗДУШНАЯ ПЕРЕВОЗКА: Звук самолёта изнутри (салон / кабина)
+  // 1. ВОЗДУШНАЯ ПЕРЕВОЗКА: Аркадная музыка (Flappy/Retro Arcade) + звуки взмаха и поражения
   // ----------------------------------------------------
-  let airState = { jetFlapGain: null, jetSpeedGain: null, jetFilter: null };
+  let airSequenceTimer = null;
+
+  function playAirFlap() {
+    const c = getContext();
+    if (!c) return;
+    try {
+      const now = c.currentTime;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(680, now + 0.11);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.linearRampToValueAtTime(0.18, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(masterGain);
+
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } catch (_) {}
+  }
+
+  function playAirGameOver() {
+    const c = getContext();
+    if (!c) return;
+    try {
+      const now = c.currentTime;
+      // Классический аркадный нисходящий звук проигрыша (8-bit Defeat)
+      const notes = [311.13, 293.66, 277.18, 261.63, 220.0]; // Eb4, D4, C#4, C4, A3
+      notes.forEach((freq, i) => {
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = "triangle";
+        const noteTime = now + i * 0.11;
+        osc.frequency.setValueAtTime(freq, noteTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.88, noteTime + 0.1);
+
+        gain.gain.setValueAtTime(0.0001, noteTime);
+        gain.gain.linearRampToValueAtTime(0.22, noteTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(noteTime);
+        osc.stop(noteTime + 0.13);
+      });
+
+      // Финальный шум затухания
+      const noise = c.createBufferSource();
+      noise.buffer = createNoiseBuffer(0.4, "pink");
+      const noiseFilter = c.createBiquadFilter();
+      noiseFilter.type = "lowpass";
+      noiseFilter.frequency.setValueAtTime(600, now + 0.45);
+      noiseFilter.frequency.exponentialRampToValueAtTime(80, now + 0.85);
+
+      const noiseGain = c.createGain();
+      noiseGain.gain.setValueAtTime(0.0001, now + 0.45);
+      noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.48);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.88);
+
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noise.start(now + 0.45);
+      noise.stop(now + 0.9);
+    } catch (_) {}
+  }
+
+  function playAirPickup() {
+    const c = getContext();
+    if (!c) return;
+    try {
+      const now = c.currentTime;
+      const pitches = [587.33, 880.0]; // D5 -> A5
+      pitches.forEach((freq, i) => {
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = "square";
+        const t = now + i * 0.06;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.linearRampToValueAtTime(0.08, t + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.1);
+      });
+    } catch (_) {}
+  }
 
   function startAirMode() {
     stopCurrent();
@@ -113,78 +207,94 @@
     if (!c) return;
     currentMode = "air";
 
-    const airGain = c.createGain();
-    airGain.gain.setValueAtTime(0.01, c.currentTime);
-    airGain.gain.exponentialRampToValueAtTime(0.85, c.currentTime + 1.2);
-    airGain.connect(masterGain);
-    activeNodes.push(airGain);
+    const arcadeMaster = c.createGain();
+    arcadeMaster.gain.setValueAtTime(0.01, c.currentTime);
+    arcadeMaster.gain.exponentialRampToValueAtTime(0.62, c.currentTime + 0.5);
+    arcadeMaster.connect(masterGain);
+    activeNodes.push(arcadeMaster);
 
-    // Низкочастотный рокот турбин и фюзеляжа (60-120 Гц)
-    const rumbleNoise = c.createBufferSource();
-    rumbleNoise.buffer = createNoiseBuffer(6, "brown");
-    rumbleNoise.loop = true;
-    const rumbleFilter = c.createBiquadFilter();
-    rumbleFilter.type = "lowpass";
-    rumbleFilter.frequency.setValueAtTime(95, c.currentTime);
-    const rumbleGain = c.createGain();
-    rumbleGain.gain.setValueAtTime(0.72, c.currentTime);
-    rumbleNoise.connect(rumbleFilter);
-    rumbleFilter.connect(rumbleGain);
-    rumbleGain.connect(airGain);
-    rumbleNoise.start();
-    activeNodes.push(rumbleNoise, rumbleGain);
+    // Весёлая аркадная мелодия и басс (132 BPM, 8-bit / Chiptune стиль)
+    const bpm = 132;
+    const stepDuration = 60 / bpm / 2; // 16-е доли (~0.114 сек)
 
-    // Гармоники гула двигателей самолёта
-    const freqs = [58, 116, 232, 464];
-    freqs.forEach((freq, i) => {
-      const osc = c.createOscillator();
-      osc.type = i === 0 ? "sawtooth" : "sine";
-      osc.frequency.setValueAtTime(freq, c.currentTime);
-      const oscGain = c.createGain();
-      oscGain.gain.setValueAtTime(0.09 / (i + 1), c.currentTime);
-      const oscFilter = c.createBiquadFilter();
-      oscFilter.type = "lowpass";
-      oscFilter.frequency.setValueAtTime(450, c.currentTime);
-      osc.connect(oscFilter);
-      oscFilter.connect(oscGain);
-      oscGain.connect(airGain);
-      osc.start();
-      activeNodes.push(osc, oscGain);
-    });
+    // Аркадные аккорды: C -> G -> Am -> F
+    const bassline = [
+      130.81, 130.81, 196.0, 130.81, 164.81, 130.81, 196.0, 164.81, // C
+      98.0, 98.0, 146.83, 98.0, 123.47, 98.0, 146.83, 123.47,        // G
+      110.0, 110.0, 164.81, 110.0, 130.81, 110.0, 164.81, 130.81,    // Am
+      87.31, 87.31, 130.81, 87.31, 110.0, 87.31, 130.81, 110.0       // F
+    ];
 
-    // Шум системы герметизации, кондиционирования и набегающего воздуха за бортом
-    const cabinAir = c.createBufferSource();
-    cabinAir.buffer = createNoiseBuffer(7, "pink");
-    cabinAir.loop = true;
-    const cabinFilter = c.createBiquadFilter();
-    cabinFilter.type = "bandpass";
-    cabinFilter.frequency.setValueAtTime(680, c.currentTime);
-    cabinFilter.Q.setValueAtTime(0.85, c.currentTime);
-    const cabinGain = c.createGain();
-    cabinGain.gain.setValueAtTime(0.38, c.currentTime);
-    cabinAir.connect(cabinFilter);
-    cabinFilter.connect(cabinGain);
-    cabinGain.connect(airGain);
-    cabinAir.start();
-    activeNodes.push(cabinAir, cabinGain);
+    const leadMelody = [
+      523.25, 0, 659.25, 0, 783.99, 659.25, 523.25, 0,
+      392.0, 0, 493.88, 0, 587.33, 493.88, 392.0, 0,
+      440.0, 0, 523.25, 0, 659.25, 523.25, 440.0, 0,
+      349.23, 0, 440.0, 0, 523.25, 440.0, 392.0, 523.25
+    ];
 
-    // Дополнительный отклик на закрылки/подъём высоты
-    const flapGain = c.createGain();
-    flapGain.gain.setValueAtTime(0, c.currentTime);
-    cabinAir.connect(flapGain);
-    flapGain.connect(airGain);
-    airState.jetFlapGain = flapGain;
-    airState.jetFilter = cabinFilter;
-  }
-
-  function pulseAirplane() {
-    if (currentMode !== "air" || !ctx || !airState.jetFlapGain) return;
-    try {
+    let tick = 0;
+    function playArcadeTick() {
+      if (currentMode !== "air" || !ctx) return;
       const now = ctx.currentTime;
-      airState.jetFlapGain.gain.cancelScheduledValues(now);
-      airState.jetFlapGain.gain.setValueAtTime(0.22, now);
-      airState.jetFlapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-    } catch (_) {}
+      const stepIdx = tick % bassline.length;
+
+      // Басовая 8-битная нота (Triangle)
+      const bFreq = bassline[stepIdx];
+      if (bFreq > 0) {
+        const bOsc = ctx.createOscillator();
+        const bGain = ctx.createGain();
+        bOsc.type = "triangle";
+        bOsc.frequency.setValueAtTime(bFreq, now);
+
+        bGain.gain.setValueAtTime(0.0001, now);
+        bGain.gain.linearRampToValueAtTime(0.24, now + 0.008);
+        bGain.gain.exponentialRampToValueAtTime(0.0001, now + stepDuration * 0.9);
+
+        bOsc.connect(bGain);
+        bGain.connect(arcadeMaster);
+        bOsc.start(now);
+        bOsc.stop(now + stepDuration);
+      }
+
+      // Мелодическая 8-битная нота (Square)
+      const mFreq = leadMelody[stepIdx];
+      if (mFreq > 0) {
+        const mOsc = ctx.createOscillator();
+        const mGain = ctx.createGain();
+        mOsc.type = "pulse" in mOsc ? "pulse" : "square";
+        mOsc.frequency.setValueAtTime(mFreq, now);
+
+        mGain.gain.setValueAtTime(0.0001, now);
+        mGain.gain.linearRampToValueAtTime(0.09, now + 0.01);
+        mGain.gain.exponentialRampToValueAtTime(0.0001, now + stepDuration * 0.85);
+
+        mOsc.connect(mGain);
+        mGain.connect(arcadeMaster);
+        mOsc.start(now);
+        mOsc.stop(now + stepDuration);
+      }
+
+      // Аркадный шумовой хэт/снэр на каждую 4-ю долю
+      if (stepIdx % 4 === 2) {
+        const hat = ctx.createBufferSource();
+        hat.buffer = createNoiseBuffer(0.05, "pink");
+        const hFilter = ctx.createBiquadFilter();
+        hFilter.type = "highpass";
+        hFilter.frequency.setValueAtTime(3500, now);
+        const hGain = ctx.createGain();
+        hGain.gain.setValueAtTime(0.05, now);
+        hGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+        hat.connect(hFilter);
+        hFilter.connect(hGain);
+        hGain.connect(arcadeMaster);
+        hat.start(now);
+        hat.stop(now + 0.05);
+      }
+
+      tick++;
+    }
+
+    schedulerTimer = setInterval(playArcadeTick, stepDuration * 1000);
   }
 
   // ----------------------------------------------------
@@ -412,7 +522,7 @@
   }
 
   // ----------------------------------------------------
-  // 4. ПРОДАЖА ОРУЖИЯ (Mac / Браузер): Спокойная офисная фоновая музыка
+  // 4. ПРОДАЖА ОРУЖИЯ (Mac / Браузер): Ультра-спокойный, тёплый Lo-Fi джаз
   // ----------------------------------------------------
   function startSaleOfficeMode() {
     stopCurrent();
@@ -420,112 +530,168 @@
     if (!c) return;
     currentMode = "sale";
 
-    const officeGain = c.createGain();
-    officeGain.gain.setValueAtTime(0.01, c.currentTime);
-    officeGain.gain.exponentialRampToValueAtTime(0.65, c.currentTime + 1.2);
-    officeGain.connect(masterGain);
-    activeNodes.push(officeGain);
+    const lofiMaster = c.createGain();
+    lofiMaster.gain.setValueAtTime(0.01, c.currentTime);
+    lofiMaster.gain.exponentialRampToValueAtTime(0.68, c.currentTime + 1.2);
+    lofiMaster.connect(masterGain);
+    activeNodes.push(lofiMaster);
 
-    // Легкая реверберация/эхо для мягкого звучания клавиш
-    const delay = c.createDelay(1.0);
-    delay.delayTime.setValueAtTime(0.38, c.currentTime);
+    // Уютный лёгкий шум винила и теплоты плёнки
+    const vinylNoise = c.createBufferSource();
+    vinylNoise.buffer = createNoiseBuffer(8, "pink");
+    vinylNoise.loop = true;
+    const vinylFilter = c.createBiquadFilter();
+    vinylFilter.type = "bandpass";
+    vinylFilter.frequency.setValueAtTime(1200, c.currentTime);
+    vinylFilter.Q.setValueAtTime(0.6, c.currentTime);
+    const vinylGain = c.createGain();
+    vinylGain.gain.setValueAtTime(0.045, c.currentTime);
+    vinylNoise.connect(vinylFilter);
+    vinylFilter.connect(vinylGain);
+    vinylGain.connect(lofiMaster);
+    vinylNoise.start();
+    activeNodes.push(vinylNoise, vinylGain);
+
+    // Мягкий стерео-дилэй для объёмного звучания клавиш
+    const delay = c.createDelay(1.2);
+    delay.delayTime.setValueAtTime(0.44, c.currentTime);
+    const delayFilter = c.createBiquadFilter();
+    delayFilter.type = "lowpass";
+    delayFilter.frequency.setValueAtTime(1100, c.currentTime);
     const delayGain = c.createGain();
-    delayGain.gain.setValueAtTime(0.28, c.currentTime);
-    delay.connect(delayGain);
+    delayGain.gain.setValueAtTime(0.32, c.currentTime);
+    delay.connect(delayFilter);
+    delayFilter.connect(delayGain);
     delayGain.connect(delay);
-    delay.connect(officeGain);
+    delay.connect(lofiMaster);
     activeNodes.push(delay, delayGain);
 
-    // Спокойная джазовая / lofi последовательность аккордов (72 BPM)
-    // Cmaj9 -> Am9 -> Fmaj7 -> Em7 -> Dm9 -> G7sus4
-    const officeChords = [
-      { notes: [261.63, 329.63, 392.0, 493.88, 587.33], bass: 65.41 },  // Cmaj9 (C2 bass)
-      { notes: [220.0, 261.63, 329.63, 392.0, 493.88], bass: 55.0 },    // Am9 (A1 bass)
-      { notes: [174.61, 220.0, 261.63, 329.63, 392.0], bass: 43.65 },   // Fmaj7 (F1 bass)
-      { notes: [164.81, 196.0, 246.94, 293.66, 329.63], bass: 41.2 },   // Em7 (E1 bass)
-      { notes: [146.83, 174.61, 220.0, 261.63, 329.63], bass: 73.42 },   // Dm9 (D2 bass)
-      { notes: [196.0, 261.63, 293.66, 349.23, 440.0], bass: 49.0 }     // G7sus4 (G1 bass)
+    // Очень мягкая, успокаивающая гармония Lo-Fi Jazz (Dbmaj9 -> Abmaj7 -> Bbm9 -> Gbmaj7 -> Fm7 -> Ebm9 -> Ab13)
+    const lofiChords = [
+      { notes: [277.18, 349.23, 415.30, 523.25, 622.25], bass: 69.30 }, // Dbmaj9 (Db2)
+      { notes: [207.65, 261.63, 311.13, 392.00, 523.25], bass: 51.91 }, // Abmaj7 (Ab1)
+      { notes: [233.08, 277.18, 349.23, 415.30, 523.25], bass: 58.27 }, // Bbm9 (Bb1)
+      { notes: [185.00, 233.08, 277.18, 349.23, 466.16], bass: 46.25 }, // Gbmaj7 (Gb1)
+      { notes: [174.61, 207.65, 261.63, 311.13, 392.00], bass: 43.65 }, // Fm7 (F1)
+      { notes: [155.56, 185.00, 233.08, 277.18, 349.23], bass: 77.78 }, // Ebm9 (Eb2)
+      { notes: [207.65, 261.63, 311.13, 369.99, 440.00], bass: 51.91 }  // Ab13 (Ab1)
     ];
 
-    let step = 0;
-    const barDuration = 4.2; // ~4.2 секунды на аккорд (спокойный темп)
+    let chordIndex = 0;
+    const chordDuration = 4.8; // ~4.8 секунды на аккорд (очень спокойный чилловый темп)
 
-    function playRhodesNote(freq, time, velocity = 0.5) {
+    function playWarmRhodes(freq, time, velocity = 0.5) {
       if (!ctx || currentMode !== "sale") return;
-      // FM синтез мягкого электропианино Rhodes
       const carrier = ctx.createOscillator();
       carrier.type = "sine";
       carrier.frequency.setValueAtTime(freq, time);
+
+      // Микро-детонация / flutter плёнки
+      const lfo = ctx.createOscillator();
+      lfo.frequency.setValueAtTime(4.2, time);
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.setValueAtTime(freq * 0.003, time);
+      lfo.connect(lfoGain);
+      lfoGain.connect(carrier.frequency);
 
       const mod = ctx.createOscillator();
       mod.type = "sine";
       mod.frequency.setValueAtTime(freq * 2, time);
       const modGain = ctx.createGain();
-      modGain.gain.setValueAtTime(freq * 0.45 * velocity, time);
-      modGain.gain.exponentialRampToValueAtTime(1, time + 2.2);
+      modGain.gain.setValueAtTime(freq * 0.35 * velocity, time);
+      modGain.gain.exponentialRampToValueAtTime(1, time + 2.6);
       mod.connect(modGain);
       modGain.connect(carrier.frequency);
 
       const noteGain = ctx.createGain();
-      noteGain.gain.setValueAtTime(0.001, time);
-      noteGain.gain.exponentialRampToValueAtTime(0.09 * velocity, time + 0.03);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, time + 3.8);
+      noteGain.gain.setValueAtTime(0.0001, time);
+      noteGain.gain.linearRampToValueAtTime(0.085 * velocity, time + 0.04);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, time + 4.4);
 
       carrier.connect(noteGain);
-      noteGain.connect(officeGain);
+      noteGain.connect(lofiMaster);
       noteGain.connect(delay);
 
+      lfo.start(time);
       mod.start(time);
       carrier.start(time);
-      mod.stop(time + 4.0);
-      carrier.stop(time + 4.0);
+      lfo.stop(time + 4.5);
+      mod.stop(time + 4.5);
+      carrier.stop(time + 4.5);
     }
 
-    function playBassNote(freq, time) {
+    function playWarmBass(freq, time) {
       if (!ctx || currentMode !== "sale") return;
       const bass = ctx.createOscillator();
       bass.type = "triangle";
       bass.frequency.setValueAtTime(freq, time);
+
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
-      filter.frequency.setValueAtTime(160, time);
+      filter.frequency.setValueAtTime(130, time);
+
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.001, time);
-      gain.gain.exponentialRampToValueAtTime(0.24, time + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + 3.2);
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.linearRampToValueAtTime(0.26, time + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 3.8);
 
       bass.connect(filter);
       filter.connect(gain);
-      gain.connect(officeGain);
+      gain.connect(lofiMaster);
       bass.start(time);
-      bass.stop(time + 3.4);
+      bass.stop(time + 4.0);
     }
 
-    function scheduleOfficeBar() {
+    function playLoFiBell(freq, time) {
+      if (!ctx || currentMode !== "sale") return;
+      const bell = ctx.createOscillator();
+      bell.type = "sine";
+      bell.frequency.setValueAtTime(freq, time);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.linearRampToValueAtTime(0.045, time + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 1.8);
+
+      bell.connect(gain);
+      gain.connect(lofiMaster);
+      gain.connect(delay);
+      bell.start(time);
+      bell.stop(time + 1.9);
+    }
+
+    function scheduleLoFiBar() {
       if (!ctx || currentMode !== "sale") return;
       const now = ctx.currentTime;
-      const chord = officeChords[step % officeChords.length];
-      step++;
+      const chord = lofiChords[chordIndex % lofiChords.length];
+      chordIndex++;
 
-      // Бас-нота на первую долю
-      playBassNote(chord.bass, now + 0.05);
+      // Тёплый бас
+      playWarmBass(chord.bass, now + 0.05);
 
-      // Аккорд Rhodes (мягко арпеджирован с микросдвигом 0.025с)
+      // Мягкий джазовый аккорд
       chord.notes.forEach((f, i) => {
-        playRhodesNote(f, now + 0.05 + i * 0.028, 0.7 - i * 0.08);
+        playWarmRhodes(f, now + 0.05 + i * 0.035, 0.65 - i * 0.07);
       });
 
-      // Мягкое дополнение во второй половине такта
+      // Нежные одиночные ноты на заднем плане
       setTimeout(() => {
         if (currentMode === "sale" && ctx) {
-          const compNote = chord.notes[Math.floor(Math.random() * chord.notes.length)];
-          playRhodesNote(compNote, ctx.currentTime, 0.45);
+          const highNote = chord.notes[Math.floor(Math.random() * chord.notes.length)] * 1.5;
+          playLoFiBell(highNote, ctx.currentTime);
         }
-      }, 2100);
+      }, 1600);
+
+      setTimeout(() => {
+        if (currentMode === "sale" && ctx) {
+          const secondNote = chord.notes[2];
+          playWarmRhodes(secondNote, ctx.currentTime, 0.4);
+        }
+      }, 2900);
     }
 
-    scheduleOfficeBar();
-    schedulerTimer = setInterval(scheduleOfficeBar, barDuration * 1000);
+    scheduleLoFiBar();
+    schedulerTimer = setInterval(scheduleLoFiBar, chordDuration * 1000);
   }
 
   // ----------------------------------------------------
@@ -542,7 +708,10 @@
       else stopCurrent();
     },
     stop: stopCurrent,
-    pulseAirplane,
+    playAirFlap,
+    playAirGameOver,
+    playAirPickup,
+    pulseAirplane: playAirFlap,
     setTruckSpeed,
     getCurrentMode: () => currentMode
   };
