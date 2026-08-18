@@ -149,18 +149,16 @@
     .route-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .route-button { padding: 20px 28px; border: 1px solid rgba(255,255,255,.3); border-radius: 15px; color: white; background: rgba(20,85,120,.86); font: inherit; font-size: 19px; font-weight: 900; cursor: pointer; }
     #transport-result button { justify-self: center; padding: 15px 24px; border: 0; border-radius: 12px; background: #16834f; color: white; font: inherit; font-weight: 900; cursor: pointer; }
+
+    #air-mode { position: relative; width: 100%; height: 100vh; overflow: hidden; background: #050d18; }
     #air-canvas { width: 100%; height: 100%; display: block; }
-    #air-score { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); color: white; font-size: 34px; font-weight: 900; text-shadow: 0 3px 5px #000; }
-    #air-ammo-score { position: absolute; top: 18px; left: 24px; display: flex; align-items: center; gap: 9px; color: white; font-size: 22px; font-weight: 900; text-shadow: 0 3px 5px #000; }
-    #air-ammo-score .crate-counter img { width:42px;height:42px; }
-    #air-lives { position: absolute; top: 22px; right: 26px; color: white; font-size: 28px; filter: drop-shadow(0 2px 4px #000); }
-    #air-back { position: absolute; left: 24px; bottom: 22px; pointer-events: auto; padding: 11px 16px; border: 0; border-radius: 12px; background: rgba(3,12,25,.8); color: white; font: inherit; font-weight: 800; cursor: pointer; }
-    #air-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; text-align: center; color: white; background: rgba(35,18,10,.45); pointer-events: auto; }
-    #air-overlay h2 { margin: 0; font-size: clamp(36px,6vw,64px); }
-    #air-overlay p { margin: 0; font-size: 20px; font-weight: 800; }
-    #air-start { justify-self: center; margin-top: 10px; padding: 15px 26px; border: 0; border-radius: 13px; background: #d47a24; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; }
-    .air-difficulty { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .air-difficulty button { padding: 16px 22px; border: 1px solid rgba(255,255,255,.3); border-radius: 13px; color: white; background: rgba(46,34,27,.86); font: inherit; font-weight: 900; cursor: pointer; }
+    #air3d-cam-mode { position: absolute; top: 20px; right: 24px; pointer-events: auto; padding: 10px 18px; border: 1px solid rgba(0,255,100,.35); border-radius: 12px; background: rgba(3,15,28,.85); color: #77ffaa; font: 900 14px Arial, sans-serif; cursor: pointer; text-shadow: 0 0 8px rgba(0,255,100,.5); box-shadow: 0 4px 16px rgba(0,0,0,.6); }
+    #air3d-controls-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 10px 22px; border-radius: 14px; background: rgba(2,9,20,.85); color: #cde6ff; font: 900 13px Arial, sans-serif; text-align: center; pointer-events: none; text-shadow: 0 2px 4px #000; box-shadow: 0 6px 20px rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.15); }
+    #air3d-result { position: absolute; inset: 0; display: grid; place-content: center; gap: 16px; text-align: center; background: rgba(3,10,20,.85); backdrop-filter: blur(8px); pointer-events: auto; z-index: 100; color: #fff; }
+    #air3d-result h2 { margin: 0; font-size: clamp(34px, 5vw, 60px); color: #64ff96; text-shadow: 0 0 20px rgba(100,255,150,.6); }
+    #air3d-result-reward { font-size: 24px; font-weight: 900; color: #ffd644; }
+    #air3d-result button { justify-self: center; padding: 16px 30px; border: 0; border-radius: 12px; background: #16834f; color: white; font: 900 18px Arial; cursor: pointer; box-shadow: 0 6px 18px rgba(22,131,79,.6); }
+
     #supply-maze-canvas{width:100%;height:100%;display:block}.maze-hud{position:absolute;inset:0;pointer-events:none}.maze-hud::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;border:2px solid #fff9;border-radius:50%;box-shadow:0 0 4px #000;transform:translate(-50%,-50%)}.maze-title{position:absolute;top:18px;left:22px;font-size:20px;font-weight:950;text-shadow:0 3px 5px #000}.maze-crates{position:absolute;top:16px;right:20px;display:flex;gap:10px;padding:7px 12px;border-radius:7px;background:#111d;font-size:20px;font-weight:950;box-shadow:0 5px 18px #0007}.maze-crates span{display:flex;align-items:center;gap:5px}.maze-crates img{width:36px;height:30px;object-fit:contain}.maze-exit-distance{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-weight:900;text-shadow:0 2px 5px #000}.maze-back{position:absolute;left:20px;bottom:20px;pointer-events:auto;padding:12px 17px;border:0;border-radius:7px;background:#121a22dd;color:#fff;font:900 15px Arial;cursor:pointer}.maze-help{position:absolute;right:20px;bottom:20px;padding:10px 14px;border-radius:7px;background:#121a22dd;font-weight:800}.maze-overlay{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#07100ddd;color:#fff;pointer-events:auto}.maze-overlay h2{margin:0;font-size:clamp(38px,6vw,70px)}.maze-overlay p{max-width:640px;margin:0 auto;font-size:18px;line-height:1.45}.maze-overlay button{justify-self:center;padding:15px 25px;border:0;border-radius:7px;background:#d2a84b;color:#111;font:950 18px Arial;cursor:pointer}
     .maze-health{position:absolute;top:72px;right:20px;display:flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid #ffffff24;border-radius:9px;background:#101319df;box-shadow:0 5px 18px #0008;transition:.2s transform,.2s border-color}.maze-health span{display:grid;place-items:center;width:20px;height:20px;color:#ef334d;font:950 23px/1 Arial;text-shadow:0 0 8px #ff1e42aa;transition:.2s transform,.2s color}.maze-health span.lost{color:#414750;text-shadow:none;transform:scale(.82)}.maze-health.critical{border-color:#ff334dcc;animation:maze-heartbeat .72s infinite}.maze-health.critical span:not(.lost){animation:maze-heartbeat .72s infinite}.maze-damage-flash{position:absolute;inset:0;opacity:0;background:radial-gradient(circle,transparent 38%,rgba(190,0,22,.48));box-shadow:inset 0 0 90px 18px #b40028;transition:opacity .38s;pointer-events:none}.maze-damage-flash.active{opacity:1;transition:opacity .05s}.maze-threat{position:absolute;top:108px;right:20px;padding:5px 10px;border-radius:7px;background:#151014d9;color:#ffb2b2;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;box-shadow:0 4px 14px #0008}@keyframes maze-heartbeat{0%,100%{transform:scale(1)}45%{transform:scale(1.14)}}
     #offroad-canvas{width:100%;height:100%;display:block;background:#302b29}.offroad-hud{position:absolute;inset:0;pointer-events:none}.offroad-fuel{position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:9px;width:230px;font-weight:900;text-shadow:0 2px 4px #000}.offroad-fuel-icon{font-size:35px}.offroad-fuel-bar{height:27px;flex:1;border:4px solid #1b2228;background:#edf1f2}.offroad-fuel-fill{height:100%;width:100%;background:#a8ec18;transform-origin:left}.offroad-distance{position:absolute;top:64px;left:28px;font-size:28px;font-weight:950;text-shadow:0 3px 4px #000}.offroad-pedal{position:absolute;bottom:18px;width:160px;height:145px;border:2px solid #d9dde0;border-radius:12px;background:linear-gradient(#f3f4f5,#979da1);color:#24272a;font:950 22px Arial;pointer-events:auto;cursor:pointer;box-shadow:0 8px 0 #555b60}.offroad-pedal:active,.offroad-pedal.active{transform:translateY(6px);box-shadow:0 2px 0 #555b60}.offroad-brake{left:22px}.offroad-gas{right:22px}.offroad-message{position:absolute;inset:0;display:grid;place-content:center;gap:12px;text-align:center;background:#0008;color:#fff;pointer-events:auto}.offroad-message h2{margin:0;font-size:52px}.offroad-message button{justify-self:center;padding:14px 24px;border:0;border-radius:9px;background:#a7e51b;font:900 18px Arial;cursor:pointer}
@@ -430,22 +428,29 @@
       </div>
     </div>
   </section>
-  <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия">
+    <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия 3D">
     <canvas id="air-canvas" width="1100" height="700"></canvas>
     <div class="transport-hud">
-      <div id="air-score">0</div>
-      <div id="air-ammo-score"><div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-air-crate="ammo">0</span></div><div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air-crate="weapon">0</span></div><div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air-crate="grenade">0</span></div></div>
-      <div id="air-lives">❤️❤️❤️</div>
+      <div id="transport-title">✈️ 3D Авиаперевозка · Военный сектор</div>
+      <div id="transport-crates">
+        <div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air3d-crate="weapon">0</span></div>
+        <div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air3d-crate="grenade">0</span></div>
+        <div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-air3d-crate="ammo">0</span></div>
+      </div>
+      <button id="air3d-cam-mode">Камера [V]: 3-е лицо (Сзади)</button>
+      <div id="air3d-controls-bar">W газ · S тормоз / кабрирование · A D крен · Q E рыскание · Мышь штурвал · V вид · Shift/Space форсаж · F ловушки</div>
+      <div id="air3d-takeoff-banner" class="contract-country-banner hidden">🛫 ВЗЛЁТ ВЫПОЛНЕН! КУРС В ЗОНУ ОПЕРАЦИИ</div>
       <div id="air-country-banner" class="contract-country-banner hidden"></div>
-      <button id="air-back">← В меню</button>
+      <button id="air-back" style="position:absolute;left:24px;bottom:20px;z-index:20;">← В меню</button>
       <div id="air-overlay">
-        <h2 id="air-message">Воздушная перевозка</h2>
-        <p id="air-help">Выбери сложность</p>
-        <div class="air-difficulty" id="air-difficulty">
-          <button data-air-difficulty="normal">Обычный · 3 жизни</button>
-          <button data-air-difficulty="hardcore">Хардкор · 1 жизнь</button>
-        </div>
-        <button id="air-start" class="hidden">Ещё раз</button>
+        <h2 id="air-message">Воздушная перевозка 3D</h2>
+        <p id="air-help">Военная авиабаза. Разгоняйся по полосе (W), взлетай, собирай ящики на парашютах в небе и доставляй в точку назначения!</p>
+        <button id="air-start" style="padding:16px 32px;font-size:20px;font-weight:900;background:#16834f;border:0;border-radius:12px;color:white;cursor:pointer;">🚀 Взлёт с полосы</button>
+      </div>
+      <div id="air3d-result" class="hidden">
+        <h2 id="air3d-result-title">ГРУЗ ДОСТАВЛЕН!</h2>
+        <div id="air3d-result-reward">+$35,000</div>
+        <button id="air3d-finish-btn">В главное меню</button>
       </div>
     </div>
   </section>
@@ -508,6 +513,7 @@
   <script src="audio.js"></script>
   <script src="transport3d.js?v=46"></script>
   <script src="maze3d.js?v=12"></script>
+  <script src="air3d.js?v=48"></script>
   <script>
     let selectedMode = "";
     let selectedCharacter = "";
@@ -882,14 +888,10 @@
       mainMenu.classList.add("hidden");
       airMode.classList.remove("hidden");
       airOverlay.classList.remove("hidden");
-      document.getElementById("air-message").textContent = "Воздушная перевозка";
-      document.getElementById("air-help").textContent = "Выбери сложность";
-      document.getElementById("air-difficulty").classList.remove("hidden");
-      document.getElementById("air-start").classList.add("hidden");
-      airScore.textContent = "0";
-      window.GameAudio?.playMode("air");
-      resetAirGame();
-      drawAirGame();
+      document.getElementById("air-message").textContent = "Воздушная перевозка 3D";
+      document.getElementById("air-help").textContent = "Военная авиабаза. Разгоняйся по полосе (W), взлетай, собирай ящики на парашютах в небе и доставляй в точку назначения!";
+      const res = document.getElementById("air3d-result");
+      if (res) res.classList.add("hidden");
     }
 
     function resetAirGame() {
@@ -903,17 +905,14 @@
       lastAmmo = performance.now();
     }
 
-    function startAirGame(difficulty = airDifficulty) {
-      airDifficulty = difficulty;
-      resetAirGame();
-      airLivesCount = difficulty === "normal" ? 3 : 1;
-      airInvulnerableUntil = 0;
-      document.getElementById("air-lives").textContent = difficulty === "normal" ? "❤️❤️❤️" : "☠️";
+    function startAirGame() {
       airRunning = true;
       airOverlay.classList.add("hidden");
-      window.GameAudio?.playMode("air");
-      cancelAnimationFrame(airAnimation);
-      airAnimation = requestAnimationFrame(airLoop);
+      const res = document.getElementById("air3d-result");
+      if (res) res.classList.add("hidden");
+      if (window.Air3D) {
+        window.Air3D.start();
+      }
     }
 
     function airFlap() {
@@ -1359,10 +1358,25 @@
     document.getElementById("air-back").addEventListener("click", () => {
       window.GameAudio?.stop();
       airRunning = false;
+      if (window.Air3D) window.Air3D.stop();
       cancelAnimationFrame(airAnimation);
       airMode.classList.add("hidden");
       mainMenu.classList.remove("hidden");
+      updateWarehouseStock();
+      updateWallet();
     });
+    const camBtn = document.getElementById("air3d-cam-mode");
+    if (camBtn) {
+      camBtn.addEventListener("click", () => {
+        if (window.Air3D) window.Air3D.toggleCamera();
+      });
+    }
+    const finishBtn = document.getElementById("air3d-finish-btn");
+    if (finishBtn) {
+      finishBtn.addEventListener("click", () => {
+        document.getElementById("air-back").click();
+      });
+    }
     document.getElementById("offroad-start").addEventListener("click", startOffroad);
     document.getElementById("offroad-back").addEventListener("click",()=>{window.GameAudio?.stop();offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
     document.getElementById("maze-start").addEventListener("click",()=>window.SupplyMaze.start());
