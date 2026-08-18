@@ -331,6 +331,347 @@
     .dock-icon:hover { transform:translateY(-8px) scale(1.22); }
     .dock-whatsapp{background:#25d366}.dock-telegram{background:#229ed9}.dock-instagram{background:radial-gradient(circle at 70% 70%,#ffd600 0 12%,#ff7a00 25%,#ff0169 48%,#d300c5 70%,#7638fa)}.dock-safari{background:radial-gradient(circle,#fff 0 43%,#28aaf3 45%)}.dock-camera{background:linear-gradient(#c8ced6,#707784);color:#222}.dock-calendar{background:linear-gradient(#ec5555 34%,#fff 34%);color:#222;font-size:14px}.dock-notes{background:repeating-linear-gradient(#fff9ad 0 7px,#e1d66b 8px);color:#333}.dock-chatgpt{background:#101b1a}.dock-gemini{background:linear-gradient(135deg,#3175f6,#b56df2)}.dock-claude{background:#d97757}.dock-phone{background:#34c759}.dock-mail{background:#2589e8}.dock-soundcloud{background:linear-gradient(#ff9d18,#f65b0a)}.dock-uber{background:#050505}.dock-settings{background:#737b87}
     @media (max-width:760px){.mac-dock{gap:3px}.dock-icon{width:32px;height:32px;border-radius:8px;font-size:17px}}
+  
+    /* --- Премиальный дизайн кнопок и интерфейса во всех режимах --- */
+    .menu-button, .character-option, .mode-button, .back-button, .route-button, .air-btn, .maze-back, .offroad-pedal, #transport-back, #air-back, #offroad-back {
+      font-family: inherit;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    /* Главное меню */
+    .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 16px 22px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(116, 216, 255, 0.28);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(8, 26, 48, 0.85), rgba(4, 14, 28, 0.92));
+      color: #e2f4ff;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+    }
+    .menu-button:hover, .menu-button:focus-visible {
+      border-color: #55d6ff;
+      background: linear-gradient(135deg, rgba(16, 46, 80, 0.92), rgba(8, 26, 48, 0.95));
+      box-shadow: 0 8px 25px rgba(0, 180, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      color: #ffffff;
+    }
+    .menu-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #mode-options, #character-options {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 8px;
+      background: rgba(3, 10, 20, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      backdrop-filter: blur(14px);
+    }
+    #mode-options.open, #character-options.open {
+      display: flex;
+    }
+    .mode-button, .character-option {
+      padding: 12px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #b8d9f5;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+    .mode-button:hover, .character-option:hover {
+      background: rgba(45, 120, 200, 0.3);
+      border-color: rgba(85, 214, 255, 0.4);
+      color: #fff;
+      transform: translateX(4px);
+    }
+    .mode-button.active, .character-option.active {
+      background: linear-gradient(90deg, rgba(22, 131, 79, 0.8), rgba(16, 95, 58, 0.8));
+      border-color: #4ade80;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(74, 222, 128, 0.35);
+    }
+
+    /* Универсальные кнопки "В меню" */
+    #transport-back, #air-back, #offroad-back, #maze-back, .back-button {
+      position: absolute;
+      left: 22px;
+      bottom: 22px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(15, 25, 38, 0.88), rgba(5, 12, 20, 0.92));
+      color: #cce6ff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+    #transport-back:hover, #air-back:hover, #offroad-back:hover, #maze-back:hover, .back-button:hover {
+      border-color: #55d6ff;
+      background: linear-gradient(135deg, rgba(25, 45, 70, 0.95), rgba(10, 25, 40, 0.98));
+      color: #ffffff;
+      box-shadow: 0 8px 25px rgba(0, 180, 255, 0.35);
+      transform: translateY(-2px);
+    }
+    #transport-back:active, #air-back:active, #offroad-back:active, #maze-back:active, .back-button:active {
+      transform: translateY(1px);
+    }
+
+    /* Карточки маршрутов Россия / Афганистан */
+    #route-choice {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 20px;
+      text-align: center;
+      background: radial-gradient(circle at center, rgba(8, 20, 36, 0.85), rgba(2, 6, 14, 0.95));
+      backdrop-filter: blur(14px);
+      pointer-events: auto;
+      z-index: 40;
+    }
+    #route-choice h2 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 54px);
+      font-weight: 950;
+      color: #ffffff;
+      text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+      letter-spacing: -0.02em;
+    }
+    .route-hint {
+      margin: -6px 0 10px;
+      color: #ffd85c;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .route-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .route-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 24px 28px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      color: white;
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    .route-button[data-route="russia"] {
+      background: linear-gradient(145deg, rgba(20, 70, 45, 0.88), rgba(10, 38, 25, 0.95));
+      border-color: rgba(74, 222, 128, 0.35);
+    }
+    .route-button[data-route="russia"]:hover {
+      background: linear-gradient(145deg, rgba(28, 95, 62, 0.95), rgba(15, 52, 34, 0.98));
+      border-color: #4ade80;
+      box-shadow: 0 14px 40px rgba(74, 222, 128, 0.4);
+      transform: translateY(-4px);
+    }
+    .route-button[data-route="afghanistan"] {
+      background: linear-gradient(145deg, rgba(95, 65, 20, 0.88), rgba(52, 35, 10, 0.95));
+      border-color: rgba(251, 191, 36, 0.35);
+    }
+    .route-button[data-route="afghanistan"]:hover {
+      background: linear-gradient(145deg, rgba(125, 86, 28, 0.95), rgba(70, 48, 15, 0.98));
+      border-color: #fbbf24;
+      box-shadow: 0 14px 40px rgba(251, 191, 36, 0.4);
+      transform: translateY(-4px);
+    }
+    .route-subtext {
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.85;
+      color: #e2e8f0;
+    }
+
+    /* 3D Авиасимулятор Оверлей Брифинга */
+    #air-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at center, rgba(6, 16, 28, 0.72), rgba(2, 6, 12, 0.9));
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      z-index: 40;
+    }
+    .air-briefing-card {
+      max-width: 580px;
+      padding: 32px 36px;
+      border: 1px solid rgba(85, 214, 255, 0.35);
+      border-radius: 24px;
+      background: linear-gradient(160deg, rgba(10, 24, 42, 0.92), rgba(4, 12, 22, 0.96));
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 180, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      text-align: center;
+      color: #ffffff;
+    }
+    .air-badge {
+      display: inline-block;
+      padding: 5px 14px;
+      margin-bottom: 12px;
+      border-radius: 20px;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      color: #55d6ff;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .air-briefing-card h2 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 950;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+    .air-briefing-card p {
+      margin: 0 0 20px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #c2dcf2;
+    }
+    .air-tasks-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .air-task-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2f0ff;
+    }
+    .air-task-item strong {
+      display: block;
+      color: #ffd85c;
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    #air-start {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 18px 28px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 19px;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #air-start:hover {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      box-shadow: 0 14px 45px rgba(16, 185, 129, 0.65);
+      transform: translateY(-3px) scale(1.02);
+    }
+    #air-start:active {
+      transform: translateY(1px);
+    }
+
+    /* Кнопка переключения вида камеры */
+    #air3d-cam-mode {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      z-index: 30;
+      pointer-events: auto;
+      padding: 11px 20px;
+      border: 1px solid rgba(85, 214, 255, 0.4);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(8, 24, 44, 0.85), rgba(4, 12, 24, 0.92));
+      color: #74d8ff;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      text-shadow: 0 0 10px rgba(85, 214, 255, 0.5);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+    #air3d-cam-mode:hover {
+      border-color: #55d6ff;
+      background: linear-gradient(135deg, rgba(16, 42, 74, 0.95), rgba(8, 22, 40, 0.98));
+      color: #ffffff;
+      box-shadow: 0 8px 30px rgba(0, 200, 255, 0.45);
+      transform: translateY(-2px);
+    }
+
+    /* Нижняя панель подсказок */
+    #air3d-controls-bar {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 16px;
+      background: rgba(3, 10, 22, 0.82);
+      color: #cbe6ff;
+      font-size: 13px;
+      font-weight: 800;
+      pointer-events: none;
+      text-shadow: 0 2px 4px #000;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(12px);
+    }
+    #air3d-controls-bar span.key-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffd85c;
+      font-size: 12px;
+    }
+
   </style>
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
@@ -414,13 +755,20 @@
       <div id="transport-controls">W / ↑ газ · S / ↓ тормоз · A D / ← → руль</div>
       <div id="transport-country-banner" class="contract-country-banner hidden"></div>
       <button id="transport-back">← В меню</button>
-      <div id="route-choice">
-        <h2>Куда везём груз?</h2>
-        <p class="route-hint">Уклоняйся от пуль!</p>
+            <div id="route-choice">
+        <h2>Куда везём военный груз?</h2>
+        <p class="route-hint">Выбери маршрут и уклоняйся от пуль</p>
         <div class="route-actions">
-          <button class="route-button" data-route="russia">🌲 В Россию</button>
-          <button class="route-button" data-route="afghanistan">🏜️ В Афганистан</button>
+          <button class="route-button" data-route="russia">
+            <span>🌲 Маршрут: Россия</span>
+            <span class="route-subtext">Лесная трасса · Патрули на дороге</span>
+          </button>
+          <button class="route-button" data-route="afghanistan">
+            <span>🏜️ Маршрут: Афганистан</span>
+            <span class="route-subtext">Пустынные каньоны · Высокая опасность</span>
+          </button>
         </div>
+      </div>
       </div>
       <div id="transport-result" class="hidden">
         <h2 id="transport-result-title">Груз потерян</h2>
@@ -428,24 +776,48 @@
       </div>
     </div>
   </section>
-    <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия 3D">
+      <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия 3D">
     <canvas id="air-canvas" width="1100" height="700"></canvas>
     <div class="transport-hud">
-      <div id="transport-title">✈️ 3D Авиаперевозка · Военный сектор</div>
       <div id="transport-crates">
         <div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air3d-crate="weapon">0</span></div>
         <div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air3d-crate="grenade">0</span></div>
         <div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-air3d-crate="ammo">0</span></div>
       </div>
       <button id="air3d-cam-mode">Камера [V]: 3-е лицо (Сзади)</button>
-      <div id="air3d-controls-bar">W газ · S тормоз / кабрирование · A D крен · Q E рыскание · Мышь штурвал · V вид · Shift/Space форсаж · F ловушки</div>
+      <div id="air3d-controls-bar">
+        <span><span class="key-pill">W</span> тяга</span> ·
+        <span><span class="key-pill">S</span> кабрирование</span> ·
+        <span><span class="key-pill">A D</span> крен</span> ·
+        <span><span class="key-pill">Мышь</span> штурвал</span> ·
+        <span><span class="key-pill">V</span> вид</span> ·
+        <span><span class="key-pill">Shift</span> форсаж</span> ·
+        <span><span class="key-pill">F</span> ловушки</span>
+      </div>
       <div id="air3d-takeoff-banner" class="contract-country-banner hidden">🛫 ВЗЛЁТ ВЫПОЛНЕН! КУРС В ЗОНУ ОПЕРАЦИИ</div>
       <div id="air-country-banner" class="contract-country-banner hidden"></div>
-      <button id="air-back" style="position:absolute;left:24px;bottom:20px;z-index:20;">← В меню</button>
+      <button id="air-back">← В меню</button>
       <div id="air-overlay">
-        <h2 id="air-message">Воздушная перевозка 3D</h2>
-        <p id="air-help">Военная авиабаза. Разгоняйся по полосе (W), взлетай, собирай ящики на парашютах в небе и доставляй в точку назначения!</p>
-        <button id="air-start" style="padding:16px 32px;font-size:20px;font-weight:900;background:#16834f;border:0;border-radius:12px;color:white;cursor:pointer;">🚀 Взлёт с полосы</button>
+        <div class="air-briefing-card">
+          <div class="air-badge">МИССИЯ · БОЕВОЙ ВЫЛЕТ 3D</div>
+          <h2>Воздушная перевозка оружия</h2>
+          <p>Военный сектор Майами. Разгоняйся по взлётной полосе, набирай скорость отрыва, перехватывай парящие военные ящики и доставляй в точку назначения!</p>
+          <div class="air-tasks-grid">
+            <div class="air-task-item">
+              <strong>1. Разгон и отрыв</strong>
+              Клавиша W для тяги, S / мышь вверх на 120 км/ч
+            </div>
+            <div class="air-task-item">
+              <strong>2. Сбор ящиков</strong>
+              24 контейнера с оружием на парашютах
+            </div>
+            <div class="air-task-item">
+              <strong>3. Две камеры</strong>
+              Клавиша V переключает вид из кабины и сзади
+            </div>
+          </div>
+          <button id="air-start">🚀 Взлёт с полосы</button>
+        </div>
       </div>
       <div id="air3d-result" class="hidden">
         <h2 id="air3d-result-title">ГРУЗ ДОСТАВЛЕН!</h2>
@@ -888,10 +1260,12 @@
       mainMenu.classList.add("hidden");
       airMode.classList.remove("hidden");
       airOverlay.classList.remove("hidden");
-      document.getElementById("air-message").textContent = "Воздушная перевозка 3D";
-      document.getElementById("air-help").textContent = "Военная авиабаза. Разгоняйся по полосе (W), взлетай, собирай ящики на парашютах в небе и доставляй в точку назначения!";
       const res = document.getElementById("air3d-result");
       if (res) res.classList.add("hidden");
+      // Мгновенный предпросмотр полосы в 3D (без чёрного экрана)
+      if (window.Air3D) {
+        window.Air3D.initPreview();
+      }
     }
 
     function resetAirGame() {
@@ -911,7 +1285,7 @@
       const res = document.getElementById("air3d-result");
       if (res) res.classList.add("hidden");
       if (window.Air3D) {
-        window.Air3D.start();
+        window.Air3D.takeoff();
       }
     }
 
