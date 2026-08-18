@@ -1,6 +1,6 @@
 // projects/game/air3d.js — Полноценный 3D Авиасимулятор «Воздушная перевозка оружия».
-// Three.js: Мгновенный рендеринг без чёрного экрана, взлёт с военной полосы,
-// физика 6-DOF, сбор ящиков в воздухе, смена видов (V), военное небо и HUD.
+// Three.js: Мгновенный рендеринг, взлёт с военной полосы, физика 6-DOF,
+// сбор ящиков в воздухе, смена видов (V), военное небо, HUD и звуки.
 
 (() => {
   const THREE = window.THREE;
@@ -12,15 +12,15 @@
   let canvas, renderer, scene, camera;
   let animId = null;
   let isRunning = false;
-  let isPreviewMode = true; // true = самолёт ждёт взлёта на полосе (кинематографичный предпросмотр)
+  let isPreviewMode = true; // true = самолёт ждёт взлёта на полосе
   let isPaused = false;
   let cameraMode = 0; // 0 = 3-е лицо (сзади), 1 = 1-е лицо (кокпит)
 
   // Состояние самолета и физика
   const planeState = {
-    pos: new THREE.Vector3(0, 1.8, 280),
+    pos: new THREE.Vector3(0, 1.8, 550), // старт в начале ВПП (ВПП от +600 до -600, полет в сторону -Z)
     vel: new THREE.Vector3(0, 0, 0),
-    rot: new THREE.Euler(0, Math.PI, 0, "YXZ"),
+    rot: new THREE.Euler(0, 0, 0, "YXZ"), // rot.y = 0 (направлен строго вперед в сторону -Z)
     quat: new THREE.Quaternion(),
     speed: 0,
     throttle: 0.0,
@@ -76,9 +76,8 @@
       if (!audioCtx) audioCtx = new AudioEngine();
       if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
 
-      if (turbineOsc) return; // уже инициализирован
+      if (turbineOsc) return;
 
-      // 1. Свист турбины
       turbineOsc = audioCtx.createOscillator();
       turbineOsc.type = "sawtooth";
       turbineOsc.frequency.setValueAtTime(140, audioCtx.currentTime);
@@ -96,7 +95,6 @@
       turbineGain.connect(audioCtx.destination);
       turbineOsc.start();
 
-      // 2. Гул тяги
       const bufferSize = audioCtx.sampleRate * 2;
       const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
@@ -118,7 +116,6 @@
       roarGain.connect(audioCtx.destination);
       roarSource.start();
 
-      // 3. Форсажный бас
       const abFilter = audioCtx.createBiquadFilter();
       abFilter.type = "lowpass";
       abFilter.frequency.setValueAtTime(180, audioCtx.currentTime);
@@ -128,7 +125,6 @@
       abFilter.connect(afterburnerGain);
       afterburnerGain.connect(audioCtx.destination);
 
-      // 4. Шум ветра
       windFilter = audioCtx.createBiquadFilter();
       windFilter.type = "bandpass";
       windFilter.frequency.setValueAtTime(400, audioCtx.currentTime);
@@ -140,9 +136,7 @@
       roarSource.connect(windFilter);
       windFilter.connect(windGain);
       windGain.connect(audioCtx.destination);
-    } catch (e) {
-      console.warn("Audio init error:", e);
-    }
+    } catch (e) {}
   }
 
   function updateAudio() {
@@ -252,81 +246,79 @@
   }
 
   function initMaterials() {
-    matLib.camoDark = new THREE.MeshStandardMaterial({ color: 0x1f272e, roughness: 0.6, metalness: 0.4 });
-    matLib.camoGrey = new THREE.MeshStandardMaterial({ color: 0x424d57, roughness: 0.55, metalness: 0.45 });
-    matLib.camoSand = new THREE.MeshStandardMaterial({ color: 0x6e6b5a, roughness: 0.7, metalness: 0.2 });
-    matLib.darkMetal = new THREE.MeshStandardMaterial({ color: 0x111315, roughness: 0.4, metalness: 0.85 });
-    matLib.chrome = new THREE.MeshStandardMaterial({ color: 0xd4d8db, roughness: 0.2, metalness: 0.95 });
-    matLib.rubber = new THREE.MeshStandardMaterial({ color: 0x111112, roughness: 0.95, metalness: 0.05 });
+    matLib.camoDark = new THREE.MeshStandardMaterial({ color: 0x222a32, roughness: 0.55, metalness: 0.45 });
+    matLib.camoGrey = new THREE.MeshStandardMaterial({ color: 0x485562, roughness: 0.5, metalness: 0.5 });
+    matLib.camoSand = new THREE.MeshStandardMaterial({ color: 0x7a7462, roughness: 0.7, metalness: 0.2 });
+    matLib.darkMetal = new THREE.MeshStandardMaterial({ color: 0x141618, roughness: 0.35, metalness: 0.85 });
+    matLib.chrome = new THREE.MeshStandardMaterial({ color: 0xd8dde0, roughness: 0.18, metalness: 0.95 });
+    matLib.rubber = new THREE.MeshStandardMaterial({ color: 0x151618, roughness: 0.92, metalness: 0.08 });
     matLib.canopy = new THREE.MeshPhysicalMaterial({
-      color: 0x68a0b5, transparent: true, opacity: 0.4, roughness: 0.1, metalness: 0.15, transmission: 0.85, ior: 1.45
+      color: 0x7ab5cc, transparent: true, opacity: 0.45, roughness: 0.1, metalness: 0.2, transmission: 0.8, ior: 1.45
     });
-    matLib.glowOrange = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+    matLib.glowOrange = new THREE.MeshBasicMaterial({ color: 0xff7700 });
     matLib.glowCyan = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
     matLib.glowGreen = new THREE.MeshBasicMaterial({ color: 0x00ff66 });
     matLib.glowRed = new THREE.MeshBasicMaterial({ color: 0xff1122 });
-    matLib.runway = new THREE.MeshStandardMaterial({ color: 0x222428, roughness: 0.92, metalness: 0.08 });
+    matLib.runway = new THREE.MeshStandardMaterial({ color: 0x26292d, roughness: 0.9, metalness: 0.1 });
     matLib.runwayLine = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    matLib.runwayYellow = new THREE.MeshBasicMaterial({ color: 0xffbb00 });
   }
 
   function buildAirplane() {
     airplaneGroup = new THREE.Group();
 
-    // Нос
-    const noseGeo = new THREE.ConeGeometry(0.7, 4.2, 7);
-    noseGeo.rotateX(Math.PI / 2);
+    // 1. Нос (направлен в сторону -Z)
+    const noseGeo = new THREE.ConeGeometry(0.75, 4.4, 8);
+    noseGeo.rotateX(-Math.PI / 2);
     const nose = new THREE.Mesh(noseGeo, matLib.camoDark);
-    nose.position.set(0, 0, -4.6);
+    nose.position.set(0, 0, -4.5);
     airplaneGroup.add(nose);
 
     // ПВД
-    const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.9, 6), matLib.chrome);
+    const pitot = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.1, 6), matLib.chrome);
     pitot.rotation.x = Math.PI / 2;
     pitot.position.set(0, 0, -6.8);
     airplaneGroup.add(pitot);
 
-    // Корпус
-    const bodyGeo = new THREE.BoxGeometry(1.65, 1.15, 7.8);
+    // Фюзеляж
+    const bodyGeo = new THREE.BoxGeometry(1.7, 1.2, 7.8);
     airplaneBody = new THREE.Mesh(bodyGeo, matLib.camoGrey);
     airplaneBody.position.set(0, 0, -0.6);
     airplaneGroup.add(airplaneBody);
 
     // Воздухозаборники
-    [-1.05, 1.05].forEach(x => {
-      const intake = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.8, 3.2), matLib.camoDark);
+    [-1.08, 1.08].forEach(x => {
+      const intake = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.85, 3.2), matLib.camoDark);
       intake.position.set(x, -0.15, -1.2);
       airplaneGroup.add(intake);
 
-      const intakeHole = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.7), new THREE.MeshBasicMaterial({ color: 0x050505 }));
+      const intakeHole = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.75), new THREE.MeshBasicMaterial({ color: 0x050505 }));
       intakeHole.position.set(x, -0.15, -2.81);
-      intakeHole.rotation.y = Math.PI;
       airplaneGroup.add(intakeHole);
     });
 
-    // Фонарь
-    const canopyGeo = new THREE.BoxGeometry(0.85, 0.65, 3.2);
+    // Фонарь кабины
+    const canopyGeo = new THREE.BoxGeometry(0.88, 0.7, 3.2);
     canopyMesh = new THREE.Mesh(canopyGeo, matLib.canopy);
-    canopyMesh.position.set(0, 0.72, -2.2);
+    canopyMesh.position.set(0, 0.75, -2.2);
     airplaneGroup.add(canopyMesh);
 
     // Пилот
-    const pilotHead = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), new THREE.MeshStandardMaterial({ color: 0x1f3020, roughness: 0.8 }));
-    pilotHead.position.set(0, 0.65, -2.1);
+    const pilotHead = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), new THREE.MeshStandardMaterial({ color: 0x223525, roughness: 0.8 }));
+    pilotHead.position.set(0, 0.68, -2.1);
     airplaneGroup.add(pilotHead);
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.15), new THREE.MeshStandardMaterial({ color: 0x0f1510, metalness: 0.9, roughness: 0.1 }));
-    visor.position.set(0, 0.67, -2.25);
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.15), new THREE.MeshStandardMaterial({ color: 0x111612, metalness: 0.95, roughness: 0.05 }));
+    visor.position.set(0, 0.7, -2.25);
     airplaneGroup.add(visor);
 
-    // Крылья
+    // Стреловидные крылья
     const wingShape = new THREE.Shape();
     wingShape.moveTo(0, 0);
-    wingShape.lineTo(6.4, 2.2);
-    wingShape.lineTo(6.2, 3.4);
-    wingShape.lineTo(0, 2.1);
+    wingShape.lineTo(6.6, 2.3);
+    wingShape.lineTo(6.4, 3.5);
+    wingShape.lineTo(0, 2.2);
     wingShape.closePath();
 
-    const extrudeSettings = { depth: 0.12, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.03, bevelThickness: 0.03 };
+    const extrudeSettings = { depth: 0.14, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.03, bevelThickness: 0.03 };
     const wingGeo = new THREE.ExtrudeGeometry(wingShape, extrudeSettings);
     wingGeo.rotateX(Math.PI / 2);
 
@@ -340,16 +332,16 @@
     rightWing.position.set(-0.7, -0.05, -2.2);
     airplaneGroup.add(rightWing);
 
-    // Огни крыльев
-    const leftNavLight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), matLib.glowGreen);
-    leftNavLight.position.set(7.1, 0, 0.5);
+    // Навигационные огни на законцовках крыльев
+    const leftNavLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), matLib.glowGreen);
+    leftNavLight.position.set(7.3, 0, 0.6);
     airplaneGroup.add(leftNavLight);
 
-    const rightNavLight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), matLib.glowRed);
-    rightNavLight.position.set(-7.1, 0, 0.5);
+    const rightNavLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), matLib.glowRed);
+    rightNavLight.position.set(-7.3, 0, 0.6);
     airplaneGroup.add(rightNavLight);
 
-    // Ракеты
+    // Ракетные пилоны
     [-3.8, 3.8, -2.2, 2.2].forEach(x => {
       const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 1.4), matLib.darkMetal);
       pylon.position.set(x, -0.25, -0.2);
@@ -361,42 +353,43 @@
       airplaneGroup.add(missile);
     });
 
-    // Хвост
-    [-0.85, 0.85].forEach((x, i) => {
-      const tailFinGeo = new THREE.BoxGeometry(0.12, 2.1, 1.9);
+    // Хвостовые кили
+    [-0.88, 0.88].forEach((x, i) => {
+      const tailFinGeo = new THREE.BoxGeometry(0.12, 2.2, 2.0);
       const fin = new THREE.Mesh(tailFinGeo, matLib.camoGrey);
-      fin.position.set(x, 1.05, 3.2);
+      fin.position.set(x, 1.1, 3.2);
       fin.rotation.z = (i === 0 ? 1 : -1) * 0.22;
       airplaneGroup.add(fin);
     });
 
-    [-1.7, 1.7].forEach(x => {
-      const elev = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.4), matLib.camoDark);
+    // Рули высоты
+    [-1.75, 1.75].forEach(x => {
+      const elev = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.09, 1.45), matLib.camoDark);
       elev.position.set(x, 0.1, 3.5);
       airplaneGroup.add(elev);
     });
 
-    // Сопла
+    // Сопла и пламя форсажа
     [-0.52, 0.52].forEach(x => {
-      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.8, 14), matLib.darkMetal);
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.5, 0.85, 16), matLib.darkMetal);
       nozzle.rotation.x = Math.PI / 2;
       nozzle.position.set(x, 0.05, 3.4);
       airplaneGroup.add(nozzle);
 
-      const coreGlow = new THREE.Mesh(new THREE.CircleGeometry(0.38, 12), matLib.glowOrange);
-      coreGlow.position.set(x, 0.05, 3.81);
+      const coreGlow = new THREE.Mesh(new THREE.CircleGeometry(0.4, 14), matLib.glowOrange);
+      coreGlow.position.set(x, 0.05, 3.84);
       airplaneGroup.add(coreGlow);
 
-      const flameGeo = new THREE.ConeGeometry(0.4, 2.8, 10);
+      const flameGeo = new THREE.ConeGeometry(0.42, 3.2, 12);
       flameGeo.rotateX(-Math.PI / 2);
       const flameMat = new THREE.MeshBasicMaterial({
-        color: 0x3399ff,
+        color: 0x38bdf8,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending
       });
       const flame = new THREE.Mesh(flameGeo, flameMat);
-      flame.position.set(x, 0.05, 5.2);
+      flame.position.set(x, 0.05, 5.4);
       flame.visible = false;
       airplaneGroup.add(flame);
       afterburnerFlames.push(flame);
@@ -404,25 +397,25 @@
 
     // Шасси
     const frontGear = new THREE.Group();
-    const frontStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8), matLib.chrome);
+    const frontStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.25, 8), matLib.chrome);
     frontStrut.position.y = -0.6;
     frontGear.add(frontStrut);
-    const frontWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 12), matLib.rubber);
+    const frontWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.16, 12), matLib.rubber);
     frontWheel.rotation.z = Math.PI / 2;
-    frontWheel.position.y = -1.15;
+    frontWheel.position.y = -1.18;
     frontGear.add(frontWheel);
     frontGear.position.set(0, -0.3, -3.2);
     airplaneGroup.add(frontGear);
     landingGears.push(frontGear);
 
-    [-1.2, 1.2].forEach(x => {
+    [-1.25, 1.25].forEach(x => {
       const mainGear = new THREE.Group();
-      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.2, 8), matLib.chrome);
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 1.25, 8), matLib.chrome);
       strut.position.y = -0.6;
       mainGear.add(strut);
-      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.22, 14), matLib.rubber);
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.24, 14), matLib.rubber);
       wheel.rotation.z = Math.PI / 2;
-      wheel.position.y = -1.15;
+      wheel.position.y = -1.18;
       mainGear.add(wheel);
       mainGear.position.set(x, -0.3, 0.6);
       airplaneGroup.add(mainGear);
@@ -432,7 +425,7 @@
     buildCockpitInterior();
 
     airplaneGroup.scale.set(1.4, 1.4, 1.4);
-    airplaneGroup.position.set(0, 1.8, 280);
+    airplaneGroup.position.copy(planeState.pos);
     scene.add(airplaneGroup);
   }
 
@@ -561,7 +554,7 @@
     ctx.font = "bold 18px 'Courier New', monospace";
     if (planeState.isGrounded) {
       ctx.fillStyle = yellow;
-      ctx.fillText("RUNWAY TAKEOFF · PRESS [W] TO SPOOL UP", 256, 420);
+      ctx.fillText("RUNWAY TAKEOFF · PRESS [W] FOR THRUST", 256, 420);
     } else if (planeState.altitude < 15 && planeState.speed > 100) {
       ctx.fillStyle = red;
       ctx.fillText("⚠️ PULL UP · TERRAIN WARNING", 256, 420);
@@ -585,18 +578,18 @@
   }
 
   function buildWorld() {
-    // 1. Военное небо (градиент)
+    // Небо и атмосфера
     const skyGeo = new THREE.SphereGeometry(6000, 32, 20);
     const canvasSky = document.createElement("canvas");
     canvasSky.width = 512;
     canvasSky.height = 512;
     const sCtx = canvasSky.getContext("2d");
     const grad = sCtx.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0, "#08101e");
-    grad.addColorStop(0.35, "#182b45");
-    grad.addColorStop(0.65, "#7a3e26");
-    grad.addColorStop(0.82, "#d66c28");
-    grad.addColorStop(1.0, "#2c1c14");
+    grad.addColorStop(0, "#0c1b30");
+    grad.addColorStop(0.35, "#1e3654");
+    grad.addColorStop(0.65, "#82462e");
+    grad.addColorStop(0.82, "#df7630");
+    grad.addColorStop(1.0, "#36241b");
     sCtx.fillStyle = grad;
     sCtx.fillRect(0, 0, 512, 512);
 
@@ -605,18 +598,17 @@
     const sky = new THREE.Mesh(skyGeo, skyMat);
     scene.add(sky);
 
-    // 2. Свет
-    ambientLight = new THREE.AmbientLight(0xdde5ee, 0.85);
+    ambientLight = new THREE.AmbientLight(0xdde8f4, 0.95);
     scene.add(ambientLight);
 
-    sunLight = new THREE.DirectionalLight(0xffaa55, 2.4);
-    sunLight.position.set(-800, 1200, -1500);
+    sunLight = new THREE.DirectionalLight(0xffb366, 2.5);
+    sunLight.position.set(-800, 1200, 1500);
     scene.add(sunLight);
 
-    hemiLight = new THREE.HemisphereLight(0x7090b0, 0x403020, 0.9);
+    hemiLight = new THREE.HemisphereLight(0x759ac0, 0x483626, 0.95);
     scene.add(hemiLight);
 
-    // 3. Ландшафт
+    // Ландшафт
     const terrainGeo = new THREE.PlaneGeometry(12000, 12000, 80, 80);
     terrainGeo.rotateX(-Math.PI / 2);
 
@@ -640,7 +632,7 @@
     groundTex.repeat.set(64, 64);
     const terrainMat = new THREE.MeshStandardMaterial({
       map: groundTex,
-      color: 0x735c46,
+      color: 0x7a634d,
       roughness: 0.95,
       metalness: 0.05,
       flatShading: true
@@ -649,13 +641,14 @@
     terrainMesh.position.y = -0.5;
     scene.add(terrainMesh);
 
-    // 4. Взлётная полоса
+    // Взлётно-посадочная полоса (ВПП) вдоль оси Z от +650 до -650
     runwayGroup = new THREE.Group();
     const runwayMesh = new THREE.Mesh(new THREE.PlaneGeometry(55, 1400), matLib.runway);
     runwayMesh.rotation.x = -Math.PI / 2;
     runwayMesh.position.set(0, 0.05, 0);
     runwayGroup.add(runwayMesh);
 
+    // Разметка осевой линии
     for (let z = -650; z <= 650; z += 35) {
       const line = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 20), matLib.runwayLine);
       line.rotation.x = -Math.PI / 2;
@@ -663,6 +656,7 @@
       runwayGroup.add(line);
     }
 
+    // Боковые полосы
     [-24, 24].forEach(x => {
       const edge = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1400), matLib.runwayLine);
       edge.rotation.x = -Math.PI / 2;
@@ -670,19 +664,21 @@
       runwayGroup.add(edge);
     });
 
+    // Огни ВПП
     for (let z = -680; z <= 680; z += 40) {
       [-26, 26].forEach(x => {
         let col = matLib.glowCyan;
-        if (z > 580) col = matLib.glowGreen;
-        if (z < -580) col = matLib.glowRed;
-        const light = new THREE.Mesh(new THREE.SphereGeometry(0.35, 6, 6), col);
+        if (z > 580) col = matLib.glowGreen; // Торец старта
+        if (z < -580) col = matLib.glowRed;   // Торец конца
+        const light = new THREE.Mesh(new THREE.SphereGeometry(0.38, 6, 6), col);
         light.position.set(x, 0.4, z);
         runwayGroup.add(light);
       });
     }
 
+    // Ангары
     [-65, 65].forEach(x => {
-      for (let z = 100; z <= 400; z += 120) {
+      for (let z = 100; z <= 500; z += 120) {
         const hangar = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 45, 16, 1, false, 0, Math.PI), matLib.camoGrey);
         hangar.rotation.z = Math.PI / 2;
         hangar.rotation.y = Math.PI / 2;
@@ -691,16 +687,17 @@
       }
     });
 
+    // Вышка КДП
     const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(4, 6, 35, 8), matLib.camoDark);
-    towerBase.position.set(-85, 17.5, 250);
+    towerBase.position.set(-85, 17.5, 350);
     runwayGroup.add(towerBase);
     const towerTop = new THREE.Mesh(new THREE.CylinderGeometry(8, 7, 8, 10), matLib.canopy);
-    towerTop.position.set(-85, 38, 250);
+    towerTop.position.set(-85, 38, 350);
     runwayGroup.add(towerTop);
 
     scene.add(runwayGroup);
 
-    // 5. Зона доставки
+    // Зона доставки груза на финише (Drop Zone) на z = -4500
     targetDropZone = new THREE.Group();
     const zoneRing = new THREE.Mesh(new THREE.RingGeometry(25, 32, 32), matLib.glowGreen);
     zoneRing.rotation.x = -Math.PI / 2;
@@ -720,11 +717,11 @@
 
   function buildClouds() {
     const cloudMat = new THREE.MeshStandardMaterial({
-      color: 0xdfd8d0,
+      color: 0xe5ded6,
       roughness: 1,
       metalness: 0,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.75,
       flatShading: true
     });
 
@@ -740,7 +737,7 @@
       cluster.position.set(
         (Math.random() - 0.5) * 3500,
         180 + Math.random() * 420,
-        -Math.random() * 4600 + 300
+        -Math.random() * 4600 + 400
       );
       scene.add(cluster);
       cloudsGroup.push(cluster);
@@ -786,7 +783,7 @@
         crateObj.add(line);
       }
 
-      const zPos = -180 - i * 175 - Math.random() * 40;
+      const zPos = 100 - i * 190 - Math.random() * 40;
       const xPos = (Math.sin(i * 0.8) * 220) + (Math.random() - 0.5) * 80;
       const yPos = 60 + Math.sin(i * 1.2) * 45 + Math.random() * 30;
 
@@ -972,7 +969,7 @@
     airplaneGroup.quaternion.copy(s.quat);
 
     s.distanceToTarget = Math.max(0, -4500 - s.pos.z);
-    s.traveledDistance = Math.abs(s.pos.z - 280);
+    s.traveledDistance = Math.abs(s.pos.z - 550);
 
     updateCrateCollisions();
 
@@ -1052,10 +1049,9 @@
     const s = planeState;
 
     if (isPreviewMode) {
-      // Кинематографичный ракурс на самолёт перед взлётом
       cockpitInterior.visible = false;
       canopyMesh.visible = true;
-      const angle = Date.now() * 0.0003;
+      const angle = Date.now() * 0.0004;
       const camX = Math.sin(angle) * 22;
       const camZ = s.pos.z + Math.cos(angle) * 22;
       camera.position.set(camX, 4.5, camZ);
@@ -1067,19 +1063,20 @@
       cockpitInterior.visible = true;
       canopyMesh.visible = false;
 
-      const headPos = s.pos.clone().add(new THREE.Vector3(0, 0.65, -2.1).applyQuaternion(s.quat));
+      const headPos = s.pos.clone().add(new THREE.Vector3(0, 0.72, -2.1).applyQuaternion(s.quat));
       camera.position.copy(headPos);
       camera.quaternion.copy(s.quat);
     } else {
       cockpitInterior.visible = false;
       canopyMesh.visible = true;
 
-      const offsetDist = 14 + (s.speed / 400) * 6;
-      const offsetHeight = 3.8 + (s.speed / 400) * 1.5;
+      // 3-е лицо сзади самолёта (направлен в сторону -Z)
+      const offsetDist = 15 + (s.speed / 400) * 6;
+      const offsetHeight = 4.0 + (s.speed / 400) * 1.5;
       const desiredPos = s.pos.clone().add(new THREE.Vector3(0, offsetHeight, offsetDist).applyQuaternion(s.quat));
 
-      camera.position.lerp(desiredPos, 0.15);
-      const lookTarget = s.pos.clone().add(new THREE.Vector3(0, 0.5, -25).applyQuaternion(s.quat));
+      camera.position.lerp(desiredPos, 0.2);
+      const lookTarget = s.pos.clone().add(new THREE.Vector3(0, 0.8, -30).applyQuaternion(s.quat));
       camera.lookAt(lookTarget);
     }
 
@@ -1132,48 +1129,40 @@
   }
 
   function initEngine() {
-    canvas = document.getElementById("air-canvas");
-    if (!canvas) return;
+    const old = document.getElementById("air-canvas");
+    if (!old) return;
+    canvas = old.cloneNode(false);
+    old.replaceWith(canvas);
 
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-    const rect = canvas.parentElement.getBoundingClientRect();
-    const w = rect.width || window.innerWidth || 1100;
-    const h = rect.height || window.innerHeight || 700;
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const width = 1100;
+    const height = 700;
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
 
     scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x223348);
     scene.fog = new THREE.FogExp2(0x3a2c22, 0.00035);
 
-    camera = new THREE.PerspectiveCamera(70, w / h, 0.2, 8000);
-    camera.position.set(0, 4.5, 305);
+    camera = new THREE.PerspectiveCamera(70, width / height, 0.2, 8000);
+    camera.position.set(0, 4.5, 575);
 
     initMaterials();
     buildWorld();
     buildAirplane();
     setupInput();
-
-    window.addEventListener("resize", () => {
-      if (!canvas || !renderer || !camera) return;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const rw = rect.width || window.innerWidth || 1100;
-      const rh = rect.height || window.innerHeight || 700;
-      camera.aspect = rw / rh;
-      camera.updateProjectionMatrix();
-      renderer.setSize(rw, rh);
-    });
   }
 
   window.Air3D = {
-    // Вызывается при открытии вкладки (мгновенно показывает полосу и 3D мир)
     initPreview: () => {
-      if (!renderer) initEngine();
+      initEngine();
       initAudio();
 
-      planeState.pos.set(0, 1.8, 280);
-      planeState.rot.set(0, Math.PI, 0);
+      planeState.pos.set(0, 1.8, 550);
+      planeState.rot.set(0, 0, 0);
       planeState.quat.setFromEuler(planeState.rot);
       planeState.speed = 0;
       planeState.throttle = 0.0;
@@ -1194,13 +1183,12 @@
       animId = requestAnimationFrame(loop);
     },
 
-    // Вызывается при клике «Взлёт с полосы»
     takeoff: () => {
       if (!renderer) initEngine();
       initAudio();
 
       isPreviewMode = false;
-      planeState.throttle = 0.5; // стартовая тяга
+      planeState.throttle = 0.6;
       playSfx("takeoff");
     },
 

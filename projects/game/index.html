@@ -1014,7 +1014,8 @@
     let truckPosition = 0;
     const transportKeys = Object.create(null);
     const airCanvas = document.getElementById("air-canvas");
-    const airCtx = airCanvas.getContext("2d");
+    // 3D flight mode replaces airCanvas with WebGL
+    let airCtx = null;
     const airBackground = new Image();
     airBackground.src = "air-battlefield-bg.png";
     const fighterJet = new Image();
