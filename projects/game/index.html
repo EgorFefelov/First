@@ -1400,6 +1400,47 @@
       <div class="maze-overlay" id="maze-overlay"><h2 id="maze-message">В заложниках</h2><p id="maze-description">Заброшенный склад в лесах за Майами. Собирай три вида ящиков и найди выход из большого лабиринта.</p><button id="maze-start">Войти в лабиринт</button><button class="hidden" id="maze-menu">Вернуться в меню</button></div>
     </div>
   </section>
+  
+  <!-- СЕКЦИЯ 3D АВТОСИМУЛЯТОРА В ОТКРЫТОМ ГОРОДЕ (NEED FOR SPEED FREE ROAM) -->
+  <section id="city3d-mode" class="hidden" aria-label="3D Автосимулятор в открытом городе">
+    <canvas id="city3d-canvas" width="1100" height="700"></canvas>
+
+    <div class="city3d-hud">
+      <!-- Верхний левый угол: Бейдж открытого мира -->
+      <div class="city3d-top-bar">
+        <span id="city3d-level-badge">🔥 СВОБОДНЫЙ ГОРОД (NFS)</span>
+      </div>
+
+      <!-- Верхний правый угол: Переключение камеры -->
+      <button id="city3d-cam-btn">Камера [V]: Сзади</button>
+
+      <!-- Центр экрана: Очки за дрифт -->
+      <div id="city3d-drift-score" class="hidden">🔥 DRIFT +0 (x1)</div>
+
+      <!-- Правый нижний угол: Спидометр и нитро -->
+      <div class="city3d-gauge-panel">
+        <div id="city3d-speed-value">0</div>
+        <div class="city3d-speed-unit">КМ/Ч</div>
+        <div class="city3d-nitro-bar-wrap">
+          <div id="city3d-nitro-fill"></div>
+        </div>
+      </div>
+
+      <!-- Нижний центр: Подсказки управления -->
+      <div class="city3d-controls-bar">
+        <span><span class="key-pill">W</span> газ</span> ·
+        <span><span class="key-pill">S</span> тормоз</span> ·
+        <span><span class="key-pill">A D</span> руль</span> ·
+        <span><span class="key-pill">Пробел / Shift</span> дрифт</span> ·
+        <span><span class="key-pill">N / Shift+W</span> нитро</span> ·
+        <span><span class="key-pill">V</span> камера</span>
+      </div>
+
+      <!-- Нижний левый угол: Выход в меню -->
+      <button id="city3d-back">← В меню</button>
+    </div>
+  </section>
+
   <div id="game-wrap">
     <canvas id="game" tabindex="0"></canvas>
     <!-- оверлеи старта/финала создаёт модуль overlays.js (DOM в его setup) -->
