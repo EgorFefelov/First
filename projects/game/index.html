@@ -1675,7 +1675,9 @@
 
     <div class="real-flight-hud">
       <div class="real-flight-top-bar">
-        <span id="real-flight-badge">✈️ НАСТОЯЩИЙ АВИАСИМУЛЯТОР</span>
+        <span id="real-flight-badge">✈️ АВИАСИМУЛЯТОР</span>
+        <button id="real-flight-submode-civil" class="city3d-btn-primary" style="padding:6px 12px;font-size:12px;cursor:pointer;pointer-events:auto;">🛫 Гражданский</button>
+        <button id="real-flight-submode-military" class="city3d-btn-secondary" style="padding:6px 12px;font-size:12px;cursor:pointer;pointer-events:auto;">🚀 Военный</button>
         <span id="real-flight-status-text">ПОДГОТОВКА К ПОЛЕТУ...</span>
       </div>
 
@@ -2145,9 +2147,25 @@
       if (city3dMode) city3dMode.classList.add("hidden");
 
       if (realFlightMode) realFlightMode.classList.remove("hidden");
-      if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.remove("hidden");
+      if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
       document.getElementById("real-flight-victory")?.classList.add("hidden");
+
+      if (window.RealFlight3D) {
+        window.RealFlight3D.start("civil");
+      }
     }
+
+    document.getElementById("real-flight-submode-civil")?.addEventListener("click", () => {
+      document.getElementById("real-flight-submode-civil").className = "city3d-btn-primary";
+      document.getElementById("real-flight-submode-military").className = "city3d-btn-secondary";
+      if (window.RealFlight3D) window.RealFlight3D.start("civil");
+    });
+
+    document.getElementById("real-flight-submode-military")?.addEventListener("click", () => {
+      document.getElementById("real-flight-submode-military").className = "city3d-btn-primary";
+      document.getElementById("real-flight-submode-civil").className = "city3d-btn-secondary";
+      if (window.RealFlight3D) window.RealFlight3D.start("military");
+    });
 
     document.getElementById("btn-select-flight-civil")?.addEventListener("click", () => {
       if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
