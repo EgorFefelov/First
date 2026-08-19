@@ -672,6 +672,129 @@
       font-size: 12px;
     }
 
+  
+    /* Окно выбора режима 2D / 3D */
+    #air-choice-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at center, rgba(6, 18, 32, 0.88), rgba(2, 6, 14, 0.96));
+      backdrop-filter: blur(16px);
+      z-index: 60;
+      color: white;
+      text-align: center;
+    }
+    .air-choice-container {
+      max-width: 820px;
+    }
+    .air-choice-container h2 {
+      margin: 0 0 6px;
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 950;
+      text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+      letter-spacing: -0.02em;
+    }
+    .air-choice-container p.subtitle {
+      margin: 0 0 28px;
+      color: #93c5fd;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .air-choice-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      text-align: left;
+    }
+    .air-card {
+      display: flex;
+      flex-direction: column;
+      padding: 28px 24px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      background: linear-gradient(160deg, rgba(15, 30, 50, 0.85), rgba(6, 15, 28, 0.95));
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .air-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(0, 180, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    .air-card.card-3d:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 20px 50px rgba(56, 189, 248, 0.35);
+    }
+    .air-card.card-2d:hover {
+      border-color: #fbbf24;
+      box-shadow: 0 20px 50px rgba(251, 191, 36, 0.35);
+    }
+    .air-card-badge {
+      align-self: flex-start;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .card-3d .air-card-badge {
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+    }
+    .card-2d .air-card-badge {
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      color: #fbbf24;
+    }
+    .air-card h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+    .air-card p {
+      margin: 0 0 20px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      flex: 1;
+    }
+    .air-card-btn {
+      padding: 14px 20px;
+      border: 0;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 900;
+      color: #ffffff;
+      text-align: center;
+      cursor: pointer;
+    }
+    .card-3d .air-card-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+    }
+    .card-2d .air-card-btn {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      box-shadow: 0 6px 18px rgba(217, 119, 6, 0.45);
+    }
+
+    /* 2D HUD Элементы */
+    #air-2d-hud { position: absolute; inset: 0; pointer-events: none; }
+    #air-score { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); color: white; font-size: 34px; font-weight: 900; text-shadow: 0 3px 5px #000; }
+    #air-lives { position: absolute; top: 22px; right: 26px; color: white; font-size: 28px; filter: drop-shadow(0 2px 4px #000); }
+    #air-2d-overlay { position: absolute; inset: 0; display: grid; place-content: center; gap: 14px; text-align: center; color: white; background: rgba(10, 18, 28, 0.75); backdrop-filter: blur(10px); pointer-events: auto; z-index: 45; }
+    #air-2d-overlay h2 { margin: 0; font-size: clamp(32px, 5vw, 56px); }
+    #air-2d-overlay p { margin: 0; font-size: 18px; font-weight: 700; color: #bae6fd; }
+    .air-difficulty { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .air-difficulty button { padding: 16px 22px; border: 1px solid rgba(255,255,255,.25); border-radius: 14px; color: white; background: rgba(30, 45, 65, 0.85); font: inherit; font-size: 16px; font-weight: 900; cursor: pointer; }
+    .air-difficulty button:hover { background: rgba(56, 189, 248, 0.4); border-color: #38bdf8; }
+    #air-2d-retry { padding: 15px 30px; border: 0; border-radius: 14px; background: #d97706; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; justify-self: center; }
+
   </style>
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
@@ -776,9 +899,34 @@
       </div>
     </div>
   </section>
-      <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия 3D">
+        <section id="air-mode" class="hidden" aria-label="Воздушная перевозка оружия">
     <canvas id="air-canvas" width="1100" height="700"></canvas>
-    <div class="transport-hud">
+
+    <!-- Экран выбора формата: 2D или 3D -->
+    <div id="air-choice-overlay">
+      <div class="air-choice-container">
+        <h2>✈️ Воздушная перевозка оружия</h2>
+        <p class="subtitle">Выберите желаемый формат игры:</p>
+        <div class="air-choice-cards">
+          <div class="air-card card-3d" id="btn-select-air-3d">
+            <span class="air-card-badge">3D Симулятор</span>
+            <h3>🚀 3D Авиасимулятор</h3>
+            <p>Полноценный 3D полёт на Three.js: взлёт с военной полосы, кабина пилота с HUD (вид от 1 и 3 лица по клавише V), управление WASD + мышь, форсаж и сбор ящиков на парашютах.</p>
+            <button class="air-card-btn" type="button">Играть в 3D ▸</button>
+          </div>
+
+          <div class="air-card card-2d" id="btn-select-air-2d">
+            <span class="air-card-badge">2D Аркада</span>
+            <h3>🛩️ 2D Flappy Jet</h3>
+            <p>Классическая 2D аркада: лети вперёд, уклоняйся от вышек, собирай ящики с боеприпасами и удерживай высоту нажатием пробела или кликом мыши.</p>
+            <button class="air-card-btn" type="button">Играть в 2D ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD для 3D Режима -->
+    <div id="air-3d-hud" class="transport-hud hidden">
       <div id="transport-crates">
         <div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air3d-crate="weapon">0</span></div>
         <div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air3d-crate="grenade">0</span></div>
@@ -795,25 +943,23 @@
         <span><span class="key-pill">F</span> ловушки</span>
       </div>
       <div id="air3d-takeoff-banner" class="contract-country-banner hidden">🛫 ВЗЛЁТ ВЫПОЛНЕН! КУРС В ЗОНУ ОПЕРАЦИИ</div>
-      <div id="air-country-banner" class="contract-country-banner hidden"></div>
-      <button id="air-back">← В меню</button>
       <div id="air-overlay">
         <div class="air-briefing-card">
           <div class="air-badge">МИССИЯ · БОЕВОЙ ВЫЛЕТ 3D</div>
-          <h2>Воздушная перевозка оружия</h2>
-          <p>Военный сектор Майами. Разгоняйся по взлётной полосе, набирай скорость отрыва, перехватывай парящие военные ящики и доставляй в точку назначения!</p>
+          <h2>3D Авиасимулятор</h2>
+          <p>Военный сектор. Разгоняйся по взлётной полосе (W), набирай скорость отрыва, перехватывай парящие военные ящики и доставляй в точку назначения!</p>
           <div class="air-tasks-grid">
             <div class="air-task-item">
               <strong>1. Разгон и отрыв</strong>
-              Клавиша W для тяги, S / мышь вверх на 120 км/ч
+              W тяга, S / мышь вверх на 120 км/ч
             </div>
             <div class="air-task-item">
               <strong>2. Сбор ящиков</strong>
-              24 контейнера с оружием на парашютах
+              24 контейнера на парашютах
             </div>
             <div class="air-task-item">
               <strong>3. Две камеры</strong>
-              Клавиша V переключает вид из кабины и сзади
+              Клавиша V: кокпит / сзади
             </div>
           </div>
           <button id="air-start">🚀 Взлёт с полосы</button>
@@ -825,6 +971,29 @@
         <button id="air3d-finish-btn">В главное меню</button>
       </div>
     </div>
+
+    <!-- HUD для 2D Режима -->
+    <div id="air-2d-hud" class="transport-hud hidden">
+      <div id="air-score">0</div>
+      <div id="air-ammo-score" style="position:absolute;top:18px;left:24px;display:flex;align-items:center;gap:9px;color:white;font-size:22px;font-weight:900;text-shadow:0 3px 5px #000;">
+        <div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-air-crate="ammo">0</span></div>
+        <div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-air-crate="weapon">0</span></div>
+        <div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-air-crate="grenade">0</span></div>
+      </div>
+      <div id="air-lives">❤️❤️❤️</div>
+      <div id="air-2d-overlay" class="hidden">
+        <h2 id="air-2d-message">Воздушная перевозка 2D</h2>
+        <p id="air-2d-help">Выбери сложность вылета</p>
+        <div class="air-difficulty" id="air-2d-difficulty">
+          <button data-air-difficulty="normal">Обычный · 3 жизни</button>
+          <button data-air-difficulty="hardcore">Хардкор · 1 жизнь</button>
+        </div>
+        <button id="air-2d-retry" class="hidden">Ещё раз</button>
+      </div>
+    </div>
+
+    <div id="air-country-banner" class="contract-country-banner hidden"></div>
+    <button id="air-back">← В меню</button>
   </section>
   <section id="offroad-mode" class="hidden" aria-label="Внедорожная перевозка оружия">
     <canvas id="offroad-canvas" width="1100" height="700"></canvas>
@@ -1257,10 +1426,85 @@
       drawTransportScene();
     }
 
+    
+    let selectedAirMode = "choice"; // "choice", "3d", "2d"
+    const airChoiceOverlay = document.getElementById("air-choice-overlay");
+    const air3dHud = document.getElementById("air-3d-hud");
+    const air2dHud = document.getElementById("air-2d-hud");
+    const air2dOverlay = document.getElementById("air-2d-overlay");
+
     function openAirMode() {
       mainMenu.classList.add("hidden");
       airMode.classList.remove("hidden");
-      airOverlay.classList.remove("hidden");
+      
+      // Показываем экран выбора 2D / 3D
+      selectedAirMode = "choice";
+      if (airChoiceOverlay) airChoiceOverlay.classList.remove("hidden");
+      if (air3dHud) air3dHud.classList.add("hidden");
+      if (air2dHud) air2dHud.classList.add("hidden");
+      if (window.Air3D) window.Air3D.stop();
+      airRunning = false;
+      cancelAnimationFrame(airAnimation);
+    }
+
+    function startAir3DMode() {
+      selectedAirMode = "3d";
+      if (airChoiceOverlay) airChoiceOverlay.classList.add("hidden");
+      if (air2dHud) air2dHud.classList.add("hidden");
+      if (air3dHud) air3dHud.classList.remove("hidden");
+      
+      const res = document.getElementById("air3d-result");
+      if (res) res.classList.add("hidden");
+      const overlay = document.getElementById("air-overlay");
+      if (overlay) overlay.classList.remove("hidden");
+
+      // Запуск 3D движка и превью полосы
+      if (window.Air3D) {
+        window.Air3D.initPreview();
+      }
+    }
+
+    function startAir2DMode(difficulty = "normal") {
+      selectedAirMode = "2d";
+      if (airChoiceOverlay) airChoiceOverlay.classList.add("hidden");
+      if (air3dHud) air3dHud.classList.add("hidden");
+      if (air2dHud) air2dHud.classList.remove("hidden");
+      if (window.Air3D) window.Air3D.stop();
+
+      // Чистим холст для 2D контекста
+      const oldCanvas = document.getElementById("air-canvas");
+      const cleanCanvas = oldCanvas.cloneNode(false);
+      oldCanvas.replaceWith(cleanCanvas);
+      airCtx = cleanCanvas.getContext("2d");
+
+      airDifficulty = difficulty;
+      resetAirGame();
+      airLivesCount = difficulty === "normal" ? 3 : 1;
+      airInvulnerableUntil = 0;
+      document.getElementById("air-lives").textContent = difficulty === "normal" ? "❤️❤️❤️" : "☠️";
+      airRunning = true;
+      if (air2dOverlay) air2dOverlay.classList.add("hidden");
+      window.GameAudio?.playMode("air");
+      cancelAnimationFrame(airAnimation);
+      airAnimation = requestAnimationFrame(airLoop);
+
+      cleanCanvas.addEventListener("pointerdown", airFlap);
+    }
+
+    document.getElementById("btn-select-air-3d").addEventListener("click", startAir3DMode);
+    document.getElementById("btn-select-air-2d").addEventListener("click", () => {
+      if (air2dOverlay) {
+        air2dOverlay.classList.remove("hidden");
+        document.getElementById("air-2d-difficulty").classList.remove("hidden");
+        document.getElementById("air-2d-retry").classList.add("hidden");
+      }
+      startAir2DMode("normal");
+    });
+
+    function openAirModeOld() {
+      mainMenu.classList.add("hidden");
+      airMode.classList.remove("hidden");
+      if (air2dOverlay) air2dOverlay.classList.remove("hidden");
       const res = document.getElementById("air3d-result");
       if (res) res.classList.add("hidden");
       // Мгновенный предпросмотр полосы в 3D (без чёрного экрана)
@@ -1380,12 +1624,12 @@
         airRunning = false;
         window.GameAudio?.playAirGameOver();
         const totalCrates = airCrateCounts.ammo + airCrateCounts.weapon + airCrateCounts.grenade;
-        document.getElementById("air-message").textContent = `Полёт окончен · ящиков ${totalCrates}`;
-        document.getElementById("air-start").textContent = "Ещё раз";
+        const msgEl = document.getElementById("air-2d-message"); if (msgEl) msgEl.textContent = `Полёт окончен · ящиков ${totalCrates}`;
+        const rtr = document.getElementById("air-2d-retry"); if (rtr) rtr.classList.remove("hidden");
         document.getElementById("air-start").classList.remove("hidden");
         document.getElementById("air-difficulty").classList.add("hidden");
         document.getElementById("air-help").textContent = "Пробел или клик — поднять истребитель";
-        airOverlay.classList.remove("hidden");
+        if (air2dOverlay) air2dOverlay.classList.remove("hidden");
       }
       drawAirGame();
       if (airRunning) airAnimation = requestAnimationFrame(airLoop);
@@ -1752,6 +1996,13 @@
         document.getElementById("air-back").click();
       });
     }
+    
+    document.querySelectorAll("#air-2d-difficulty [data-air-difficulty]").forEach((button) => {
+      button.addEventListener("click", () => startAir2DMode(button.dataset.airDifficulty));
+    });
+    const rtrBtn = document.getElementById("air-2d-retry");
+    if (rtrBtn) rtrBtn.addEventListener("click", () => startAir2DMode(airDifficulty));
+
     document.getElementById("offroad-start").addEventListener("click", startOffroad);
     document.getElementById("offroad-back").addEventListener("click",()=>{window.GameAudio?.stop();offroadRunning=false;cancelAnimationFrame(offroadAnimation);offroadMode.classList.add("hidden");mainMenu.classList.remove("hidden")});
     document.getElementById("maze-start").addEventListener("click",()=>window.SupplyMaze.start());
