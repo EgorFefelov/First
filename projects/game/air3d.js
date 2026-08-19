@@ -927,13 +927,23 @@
 
       if (keyGas) pitchInput = 1.0;   // W = нос вниз (пикирование)
       if (keyPull) pitchInput = -1.2; // S = нос вверх (кабрирование/подъём)
-      if (keyLeft) rollInput = 1.5;   // A = крен влево
-      if (keyRight) rollInput = -1.5; // D = крен вправо
-      if (keyYawL) yawInput = 1.0;    // Q = рыскание влево
-      if (keyYawR) yawInput = -1.0;   // E = рыскание вправо
 
-      // Плавное автовыравнивание крыльев, если A/D не зажаты
-      if (!keyLeft && !keyRight) {
+      // A / D — поворот носа влево / вправо (руль направления)
+      if (keyLeft) {
+        yawInput = 1.4;
+        rollInput = 0.7; // сопутствующий естественный наклон при повороте
+      }
+      if (keyRight) {
+        yawInput = -1.4;
+        rollInput = -0.7;
+      }
+
+      // Q / E — крен крыльев влево / вправо
+      if (keyYawL) rollInput = 2.2;  // Q = крен влево
+      if (keyYawR) rollInput = -2.2; // E = крен вправо
+
+      // Плавное автовыравнивание крена крыльев, когда руль отпущен
+      if (!keyYawL && !keyYawR && !keyLeft && !keyRight) {
         s.rot.z *= Math.pow(0.04, dt);
       }
 
