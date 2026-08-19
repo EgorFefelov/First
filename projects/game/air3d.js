@@ -911,51 +911,55 @@
         }
       }
     } else {
-      // В ВОЗДУХЕ: управление исключительно на WASD
-      // W — пикирование (нос вниз), S — кабрирование (нос вверх / подъём)
-      // A / D — крен и плавный поворот влево / вправо
-      s.throttle = Math.max(0.7, Math.min(1.0, s.throttle + (keyGas ? 0.3 : 0) * dt));
+      // В ВОЗДУХЕ: Управление WASD
+      // W — пикирование (нос вниз), S — подъём / кабрирование (нос вверх)
+      // A — активный полёт и поворот влево, D — активный полёт и поворот вправо
+      s.throttle = Math.max(0.75, Math.min(1.0, s.throttle + (keyGas ? 0.35 : 0) * dt));
 
-      const maxSpeed = s.afterburner ? 680 : 440;
-      const baseAccel = s.throttle * 80 + (s.afterburner ? 180 : 0);
-      const drag = (s.speed / 400) * (s.speed / 400) * 40;
-      s.speed = Math.max(120, Math.min(maxSpeed, s.speed + (baseAccel - drag) * dt));
+      const maxSpeed = s.afterburner ? 680 : 450;
+      const baseAccel = s.throttle * 85 + (s.afterburner ? 180 : 0);
+      const drag = (s.speed / 400) * (s.speed / 400) * 35;
+      s.speed = Math.max(130, Math.min(maxSpeed, s.speed + (baseAccel - drag) * dt));
 
       let pitchInput = 0;
-      let rollInput = 0;
-      let yawInput = 0;
+      let targetRoll = 0;
+      let lateralShift = 0;
 
       if (keyGas) pitchInput = 1.0;   // W = нос вниз (пикирование)
       if (keyPull) pitchInput = -1.2; // S = нос вверх (кабрирование/подъём)
 
-      // A / D — поворот носа влево / вправо (руль направления)
+      // A — летим и поворачиваем влево
       if (keyLeft) {
-        yawInput = 1.4;
-        rollInput = 0.7; // сопутствующий естественный наклон при повороте
+        s.rot.y += dt * 1.6;        // поворот курса влево
+        targetRoll = 0.55;           // наклон крыльев влево
+        lateralShift = -45;          // прямое боковое смещение влево (м/с)
       }
+      // D — летим и поворачиваем вправо
       if (keyRight) {
-        yawInput = -1.4;
-        rollInput = -0.7;
+        s.rot.y -= dt * 1.6;        // поворот курса вправо
+        targetRoll = -0.55;          // наклон крыльев вправо
+        lateralShift = 45;           // прямое боковое смещение вправо (м/с)
       }
 
-      // Q / E — крен крыльев влево / вправо
-      if (keyYawL) rollInput = 2.2;  // Q = крен влево
-      if (keyYawR) rollInput = -2.2; // E = крен вправо
+      // Q / E — усиленный крен крыльев
+      if (keyYawL) targetRoll = 1.2;
+      if (keyYawR) targetRoll = -1.2;
 
-      // Плавное автовыравнивание крена крыльев, когда руль отпущен
-      if (!keyYawL && !keyYawR && !keyLeft && !keyRight) {
-        s.rot.z *= Math.pow(0.04, dt);
-      }
+      // Плавный наклон крыльев к целевому углу
+      s.rot.z += (targetRoll - s.rot.z) * dt * 5.0;
 
       s.rot.x += pitchInput * dt * 1.5;
-      s.rot.z += rollInput * dt * 2.4;
-      s.rot.y += (yawInput * 0.8 - Math.sin(s.rot.z) * 1.2) * dt;
-
-      s.rot.x = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, s.rot.x));
+      s.rot.x = Math.max(-Math.PI * 0.42, Math.min(Math.PI * 0.42, s.rot.x));
       s.quat.setFromEuler(s.rot);
 
+      // Вектор движения: вперед по курсу + боковой вираж влево/вправо
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(s.quat);
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(s.quat);
       const velocity = forward.clone().multiplyScalar((s.speed / 3.6) * dt);
+
+      if (lateralShift !== 0) {
+        velocity.add(right.clone().multiplyScalar(lateralShift * dt));
+      }
 
       s.pos.add(velocity);
       s.altitude = Math.max(1.8, s.pos.y);
