@@ -795,6 +795,45 @@
     .air-difficulty button:hover { background: rgba(56, 189, 248, 0.4); border-color: #38bdf8; }
     #air-2d-retry { padding: 15px 30px; border: 0; border-radius: 14px; background: #d97706; color: white; font: inherit; font-size: 18px; font-weight: 900; cursor: pointer; justify-self: center; }
 
+  
+    #transport-choice-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      padding: 24px;
+      background: radial-gradient(circle at center, rgba(6, 18, 32, 0.88), rgba(2, 6, 14, 0.96));
+      backdrop-filter: blur(16px);
+      z-index: 60;
+      color: white;
+      text-align: center;
+    }
+    #transport-cam-mode {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      z-index: 30;
+      pointer-events: auto;
+      padding: 11px 20px;
+      border: 1px solid rgba(85, 214, 255, 0.4);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(8, 24, 44, 0.85), rgba(4, 12, 24, 0.92));
+      color: #74d8ff;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      text-shadow: 0 0 10px rgba(85, 214, 255, 0.5);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+    }
+    #transport-cam-mode:hover {
+      border-color: #55d6ff;
+      background: linear-gradient(135deg, rgba(16, 42, 74, 0.95), rgba(8, 22, 40, 0.98));
+      color: #ffffff;
+      box-shadow: 0 8px 30px rgba(0, 200, 255, 0.45);
+      transform: translateY(-2px);
+    }
+
   </style>
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
@@ -811,7 +850,6 @@
           <button class="menu-button mode-button" data-mode="Продажа оружия">Продажа оружия</button>
           <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
-          <button class="menu-button mode-button" data-mode="Внедорожная перевозка оружия">Внедорожная перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="В заложниках">В заложниках</button>
         </div>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
@@ -867,18 +905,43 @@
       </main>
     </div>
   </section>
-  <section id="transport-mode" class="hidden" aria-label="Режим перевозки">
+    <section id="transport-mode" class="hidden" aria-label="Режим перевозки">
     <canvas id="transport-canvas" width="1100" height="700"></canvas>
+
+    <!-- Экран выбора формата наземной перевозки: 3D или 2D -->
+    <div id="transport-choice-overlay">
+      <div class="air-choice-container">
+        <h2>🚚 Перевозка оружия</h2>
+        <p class="subtitle">Выберите желаемый формат игры:</p>
+        <div class="air-choice-cards">
+          <div class="air-card card-3d" id="btn-select-transport-3d">
+            <span class="air-card-badge">3D Шоссе</span>
+            <h3>🚚 3D Перевозка (Трасса)</h3>
+            <p>Полноценная 3D гонка по шоссе (Россия/Афганистан): уклоняйся от патрулей и пуль, собирай ящики, вид из кабины с интерактивным рулём и спидометром (клавиша V).</p>
+            <button class="air-card-btn" type="button">Играть в 3D ▸</button>
+          </div>
+
+          <div class="air-card card-2d" id="btn-select-transport-2d">
+            <span class="air-card-badge">2D Внедорожье</span>
+            <h3>🚙 2D Внедорожная перевозка</h3>
+            <p>Преодолевай крутые холмы и горы Майами: управляй педалями ГАЗ и ТОРМОЗ, балансируй грузовик на склонах и следи за уровнем топлива.</p>
+            <button class="air-card-btn" type="button">Играть в 2D ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="transport-hud">
-      <div id="transport-title">Перевозка</div>
-      <div id="transport-camera">Камера сзади · дорожная перспектива</div>
+      <div id="transport-title">Перевозка 3D</div>
+      <div id="transport-camera">Камера [V]: 3-е лицо (Сзади)</div>
+      <button id="transport-cam-mode">Камера [V]: 3-е лицо</button>
       <div id="transport-lives">❤️❤️❤️</div>
       <div id="transport-crates"><div class="crate-counter"><img src="ammo-crate.png" alt="Патроны"><span data-crate-count="ammo">0</span></div><div class="crate-counter"><img src="weapon-crate.png" alt="Оружие"><span data-crate-count="weapon">0</span></div><div class="crate-counter"><img src="grenade-crate.png" alt="Гранаты"><span data-crate-count="grenade">0</span></div></div>
       <div id="transport-speed"><div id="fuel-arc"></div><span class="dial-number n100">100</span><span class="dial-number n125">125</span><span class="dial-number n150">150</span><span class="dial-number n175">175</span><span class="dial-number n200">200</span><span class="dial-number n225">225</span><div id="fuel-icon">⛽</div><div id="fuel-needle"></div><div id="speed-needle"></div><div id="speed-value">0<span id="speed-unit">КМ/Ч</span></div></div>
-      <div id="transport-controls">W / ↑ газ · S / ↓ тормоз · A D / ← → руль</div>
+      <div id="transport-controls">W / ↑ газ · S / ↓ тормоз · A D / ← → руль · V камера (кабина)</div>
       <div id="transport-country-banner" class="contract-country-banner hidden"></div>
       <button id="transport-back">← В меню</button>
-            <div id="route-choice">
+      <div id="route-choice" class="hidden">
         <h2>Куда везём военный груз?</h2>
         <p class="route-hint">Выбери маршрут и уклоняйся от пуль</p>
         <div class="route-actions">
@@ -891,7 +954,6 @@
             <span class="route-subtext">Пустынные каньоны · Высокая опасность</span>
           </button>
         </div>
-      </div>
       </div>
       <div id="transport-result" class="hidden">
         <h2 id="transport-result-title">Груз потерян</h2>
@@ -1416,7 +1478,38 @@
       else contractIntro(()=>{openTransportMode();startTransport(["Афганистан","ОАЭ","Египет"].includes(country)?"afghanistan":"russia");showContractCountry("transport")},false);
     }
 
+    
+    const transportChoiceOverlay = document.getElementById("transport-choice-overlay");
+
     function openTransportMode() {
+      mainMenu.classList.add("hidden");
+      transportMode.classList.remove("hidden");
+      if (transportChoiceOverlay) transportChoiceOverlay.classList.remove("hidden");
+      routeChoice.classList.add("hidden");
+      transportResult.classList.add("hidden");
+      transportLives.textContent = "❤️❤️❤️";
+    }
+
+    function startTransport3DChoice() {
+      if (transportChoiceOverlay) transportChoiceOverlay.classList.add("hidden");
+      routeChoice.classList.remove("hidden");
+    }
+
+    function startTransport2DMode() {
+      if (transportChoiceOverlay) transportChoiceOverlay.classList.add("hidden");
+      transportMode.classList.add("hidden");
+      offroadMode.classList.remove("hidden");
+      offroadMessage.classList.remove("hidden");
+    }
+
+    document.getElementById("btn-select-transport-3d")?.addEventListener("click", startTransport3DChoice);
+    document.getElementById("btn-select-transport-2d")?.addEventListener("click", startTransport2DMode);
+    
+    document.getElementById("transport-cam-mode")?.addEventListener("click", () => {
+      if (window.Transport3D) window.Transport3D.toggleCamera();
+    });
+
+    function openTransportModeOld() {
       mainMenu.classList.add("hidden");
       transportMode.classList.remove("hidden");
       routeChoice.classList.remove("hidden");
