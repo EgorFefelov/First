@@ -868,7 +868,348 @@
       transform: scale(1.05);
     }
 
+  
+    /* --- СТИЛИ ДЛЯ 3D ПОГОНИ В РАЗРУШЕННОМ ГОРОДЕ (NFS) --- */
+    #city3d-mode {
+      position: relative;
+      width: min(1100px, 94vw);
+      height: min(700px, 88vh);
+      overflow: hidden;
+      border-radius: 24px;
+      color: white;
+      background: #14121a;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.7);
+    }
+    #city3d-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .city3d-hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-family: inherit;
+    }
+    .city3d-top-bar {
+      position: absolute;
+      top: 18px;
+      left: 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 30;
+    }
+    #city3d-level-badge {
+      padding: 7px 15px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(235, 30, 45, 0.85), rgba(140, 10, 20, 0.9));
+      font-size: 15px;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      box-shadow: 0 4px 18px rgba(235, 30, 45, 0.45);
+      border: 1px solid rgba(255, 120, 120, 0.4);
+    }
+    #city3d-enemy-dist {
+      padding: 7px 15px;
+      border-radius: 12px;
+      background: rgba(15, 20, 30, 0.75);
+      backdrop-filter: blur(10px);
+      font-size: 14px;
+      font-weight: 900;
+      color: #ffca36;
+      border: 1px solid rgba(255, 202, 54, 0.35);
+      text-shadow: 0 0 10px rgba(255, 202, 54, 0.5);
+    }
+    .city3d-enemy-hp-container {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(360px, 35vw);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      z-index: 30;
+    }
+    .city3d-enemy-hp-title {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #ff4a36;
+      text-shadow: 0 0 10px rgba(255, 74, 54, 0.6);
+    }
+    .city3d-enemy-hp-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(20, 25, 35, 0.8);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 74, 54, 0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    #city3d-enemy-hp-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff2200, #ff8800);
+      box-shadow: 0 0 12px #ff4400;
+      transition: width 0.15s ease-out;
+    }
+    #city3d-cam-btn {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      z-index: 35;
+      pointer-events: auto;
+      padding: 10px 18px;
+      border: 1px solid rgba(255, 180, 50, 0.4);
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(30, 20, 10, 0.85), rgba(15, 10, 5, 0.92));
+      color: #ffb84d;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s;
+    }
+    #city3d-cam-btn:hover {
+      border-color: #ffb84d;
+      background: linear-gradient(135deg, rgba(45, 30, 15, 0.95), rgba(20, 12, 5, 0.98));
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 184, 77, 0.4);
+    }
+    #city3d-drift-score {
+      position: absolute;
+      top: 28%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      font-weight: 950;
+      color: #ffb020;
+      text-shadow: 0 0 20px rgba(255, 176, 32, 0.8), 0 4px 10px #000;
+      letter-spacing: 0.08em;
+      animation: driftPulse 0.3s infinite alternate;
+      z-index: 25;
+    }
+    @keyframes driftPulse {
+      from { transform: translate(-50%, -50%) scale(1.0); }
+      to { transform: translate(-50%, -50%) scale(1.08); }
+    }
+    .city3d-gauge-panel {
+      position: absolute;
+      right: 24px;
+      bottom: 22px;
+      width: 175px;
+      height: 175px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(20, 24, 32, 0.85) 0%, rgba(10, 12, 18, 0.95) 70%, rgba(235, 45, 30, 0.35) 100%);
+      border: 2px solid rgba(255, 100, 70, 0.45);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+    #city3d-speed-value {
+      font-size: 46px;
+      font-weight: 950;
+      line-height: 1;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+    }
+    .city3d-speed-unit {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      color: #ff5533;
+      margin-top: 2px;
+    }
+    .city3d-nitro-bar-wrap {
+      width: 90px;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 240, 255, 0.5);
+      margin-top: 8px;
+    }
+    #city3d-nitro-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #00b4d8, #00f0ff);
+      box-shadow: 0 0 8px #00f0ff;
+    }
+    .city3d-controls-bar {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 16px;
+      background: rgba(10, 14, 22, 0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #d6e2ed;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 30;
+      white-space: nowrap;
+      text-shadow: 0 2px 4px #000;
+    }
+    #city3d-back {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      pointer-events: auto;
+      padding: 11px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(12, 16, 25, 0.85);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      z-index: 30;
+      transition: all 0.2s;
+    }
+    #city3d-back:hover {
+      background: rgba(235, 30, 45, 0.85);
+      border-color: #ff4a36;
+      transform: scale(1.05);
+    }
+    #city3d-result {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(15, 8, 12, 0.92), rgba(4, 2, 6, 0.98));
+      backdrop-filter: blur(16px);
+      display: grid;
+      place-content: center;
+      gap: 18px;
+      text-align: center;
+      z-index: 50;
+      pointer-events: auto;
+      padding: 30px;
+    }
+    #city3d-result h2 {
+      margin: 0;
+      font-size: clamp(28px, 4.5vw, 44px);
+      color: #ff3322;
+      text-shadow: 0 0 25px rgba(255, 51, 34, 0.8);
+      font-weight: 950;
+    }
+    #city3d-result-sub {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffd166;
+    }
+    .city3d-result-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .city3d-btn-primary {
+      padding: 15px 32px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #ff2a2a, #d41414);
+      color: white;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 42, 42, 0.5);
+      transition: all 0.2s;
+    }
+    .city3d-btn-primary:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 12px 35px rgba(255, 42, 42, 0.7);
+    }
+    .city3d-btn-secondary {
+      padding: 15px 26px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(25, 30, 42, 0.85);
+      color: #e2e8f0;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .city3d-btn-secondary:hover {
+      background: rgba(40, 48, 65, 0.95);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
   </style>
+  
+  <!-- СЕКЦИЯ 3D ПОГОНИ В РАЗРУШЕННОМ ГОРОДЕ (NFS OPEN WORLD) -->
+  <section id="city3d-mode" class="hidden" aria-label="3D Погоня в разрушенном городе">
+    <canvas id="city3d-canvas" width="1100" height="700"></canvas>
+
+    <div class="city3d-hud">
+      <!-- Верхний левый угол: Уровень и дистанция -->
+      <div class="city3d-top-bar">
+        <span id="city3d-level-badge">УРОВЕНЬ 1</span>
+        <span id="city3d-enemy-dist">🎯 ЦЕЛЬ: 75м</span>
+      </div>
+
+      <!-- Верхний центр: Прочность брони террориста -->
+      <div class="city3d-enemy-hp-container">
+        <span class="city3d-enemy-hp-title">БРОНЯ ТЕРРОРИСТА</span>
+        <div class="city3d-enemy-hp-track">
+          <div id="city3d-enemy-hp-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Верхний правый угол: Переключение камеры -->
+      <button id="city3d-cam-btn">Камера [V]: Сзади</button>
+
+      <!-- Центр экрана: Очки дрифта -->
+      <div id="city3d-drift-score" class="hidden">🔥 DRIFT +0</div>
+
+      <!-- Правый нижний угол: Спидометр и нитро -->
+      <div class="city3d-gauge-panel">
+        <div id="city3d-speed-value">0</div>
+        <div class="city3d-speed-unit">КМ/Ч</div>
+        <div class="city3d-nitro-bar-wrap">
+          <div id="city3d-nitro-fill"></div>
+        </div>
+      </div>
+
+      <!-- Нижний центр: Подсказки управления -->
+      <div class="city3d-controls-bar">
+        <span><span class="key-pill">W</span> газ</span> ·
+        <span><span class="key-pill">S</span> тормоз</span> ·
+        <span><span class="key-pill">A D</span> руль</span> ·
+        <span><span class="key-pill">Shift / Пробел</span> дрифт</span> ·
+        <span><span class="key-pill">N / Shift+W</span> нитро</span> ·
+        <span><span class="key-pill">V</span> камера</span>
+      </div>
+
+      <!-- Нижний левый угол: Выход в меню -->
+      <button id="city3d-back">← В меню</button>
+
+      <!-- Модальное окно победы (Таран выполнен) -->
+      <div id="city3d-result" class="hidden">
+        <h2 id="city3d-result-title">🎯 ТАРАН УСПЕШЕН! УРОВЕНЬ 1 ПРОЙДЕН</h2>
+        <p id="city3d-result-sub">Награда: +$45,000 | Трофеи зачислены на склад</p>
+        <div class="city3d-result-actions">
+          <button id="city3d-next-btn" class="city3d-btn-primary">Следующий уровень ▸</button>
+          <button id="city3d-menu-btn" class="city3d-btn-secondary">В главное меню</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
 <body>
@@ -884,6 +1225,7 @@
           <button class="menu-button mode-button" data-mode="Продажа оружия">Продажа оружия</button>
           <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
+          <button class="menu-button mode-button" data-mode="Погоня в городе (3D NFS)">Погоня в городе (3D NFS)</button>
           <button class="menu-button mode-button" data-mode="В заложниках">В заложниках</button>
         </div>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
@@ -1151,6 +1493,7 @@
   <script src="transport3d.js?v=46"></script>
   <script src="maze3d.js?v=12"></script>
   <script src="air3d.js?v=48"></script>
+  <script src="city3d.js?v=1"></script>
   <script>
     let selectedMode = "";
     let selectedCharacter = "";
@@ -1530,6 +1873,44 @@
     const transportChoiceOverlay = document.getElementById("transport-choice-overlay");
 
     
+    
+    const city3dMode = document.getElementById("city3d-mode");
+
+    function openCity3DMode() {
+      mainMenu.classList.add("hidden");
+      if (airMode) airMode.classList.add("hidden");
+      if (transportMode) transportMode.classList.add("hidden");
+      if (offroadMode) offroadMode.classList.add("hidden");
+      if (supplyMazeMode) supplyMazeMode.classList.add("hidden");
+      if (saleMode) saleMode.classList.add("hidden");
+
+      city3dMode.classList.remove("hidden");
+      document.getElementById("city3d-result").classList.add("hidden");
+      window.GameAudio?.playMode("transport");
+      if (window.City3D) window.City3D.start();
+    }
+
+    document.getElementById("city3d-cam-btn")?.addEventListener("click", () => {
+      if (window.City3D) window.City3D.toggleCamera();
+    });
+
+    document.getElementById("city3d-back")?.addEventListener("click", () => {
+      if (window.City3D) window.City3D.stop();
+      window.GameAudio?.stop();
+      city3dMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+      updateWarehouseStock();
+      updateWallet();
+    });
+
+    document.getElementById("city3d-menu-btn")?.addEventListener("click", () => {
+      document.getElementById("city3d-back").click();
+    });
+
+    document.getElementById("city3d-next-btn")?.addEventListener("click", () => {
+      if (window.City3D) window.City3D.nextLevel();
+    });
+
     function openTransportMode() {
       mainMenu.classList.add("hidden");
       transportMode.classList.remove("hidden");
@@ -2112,6 +2493,9 @@
           else openHostageMode();
         } else if (selectedMode === "Воздушная перевозка оружия") {
           openAirMode();
+        } else if (selectedMode === "Погоня в городе (3D NFS)") {
+          const video = selectedCharacter === "Рэй" ? "ray-ground-transport-intro.mp4" : "david-ground-transport-intro.mp4";
+          playModeIntro(video, openCity3DMode);
         }
       });
     });
