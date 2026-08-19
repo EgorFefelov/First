@@ -1158,7 +1158,7 @@
       overflow: hidden;
       border-radius: 24px;
       color: white;
-      background: #0284c7;
+      background: #0b1329;
       box-shadow: 0 28px 80px rgba(0, 0, 0, 0.7);
     }
     #real-flight-canvas {
@@ -2151,18 +2151,12 @@
 
     document.getElementById("btn-select-flight-civil")?.addEventListener("click", () => {
       if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
-      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
-      playModeIntro(video, () => {
-        if (window.RealFlight3D) window.RealFlight3D.start("civil");
-      });
+      if (window.RealFlight3D) window.RealFlight3D.start("civil");
     });
 
     document.getElementById("btn-select-flight-military")?.addEventListener("click", () => {
       if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
-      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
-      playModeIntro(video, () => {
-        if (window.RealFlight3D) window.RealFlight3D.start("military");
-      });
+      if (window.RealFlight3D) window.RealFlight3D.start("military");
     });
 
     document.getElementById("real-flight-cam-btn")?.addEventListener("click", () => {
