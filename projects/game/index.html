@@ -835,11 +835,44 @@
       transform: translateY(-2px);
     }
 
+  
+    #sale-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+    .skip-video-btn {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      z-index: 10000;
+      padding: 12px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 14px;
+      background: rgba(10, 15, 25, 0.75);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s ease;
+    }
+    .skip-video-btn:hover {
+      background: rgba(20, 140, 255, 0.85);
+      border-color: #55d6ff;
+      transform: scale(1.05);
+    }
+
   </style>
   <!-- overlays.css подключается на шаге курса 2.5 вместе с модулем overlays -->
 </head>
 <body>
-  <div id="sale-intro" class="hidden"><video id="sale-intro-video" src="source-new-video.mp4" playsinline preload="auto"></video></div>
+  <div id="sale-intro" class="hidden"><video id="sale-intro-video" src="source-new-video.mp4" playsinline preload="auto"></video><button id="skip-video-btn" class="skip-video-btn" type="button">Пропустить видео ⏭️</button></div>
   <section id="main-menu" aria-label="Главное меню">
     <div class="menu-content">
       <div class="eyebrow">Майами · новая история</div>
@@ -1421,20 +1454,34 @@
       window.SupplyMaze.prepare();
     }
 
-    function playModeIntro(videoFile, openMode = openSaleMode) {
+        function playModeIntro(videoFile, openMode = openSaleMode) {
       window.GameAudio?.stop();
       mainMenu.classList.add("hidden");
+      if (airMode) airMode.classList.add("hidden");
+      if (transportMode) transportMode.classList.add("hidden");
+      if (offroadMode) offroadMode.classList.add("hidden");
+      
       saleIntro.classList.remove("hidden");
       saleIntroVideo.src = videoFile;
       saleIntroVideo.currentTime = 0;
       saleIntroVideo.muted = false;
+
+      let isFinished = false;
       const finish = () => {
+        if (isFinished) return;
+        isFinished = true;
         saleIntroVideo.pause();
         saleIntro.classList.add("hidden");
         openMode();
       };
+
       saleIntroVideo.onended = finish;
       saleIntroVideo.onerror = finish;
+      
+      const skipBtn = document.getElementById("skip-video-btn");
+      if (skipBtn) skipBtn.onclick = (e) => { e.stopPropagation(); finish(); };
+      saleIntro.onclick = finish;
+
       const attempt = saleIntroVideo.play();
       if (attempt) {
         attempt.catch(() => {
@@ -1482,6 +1529,7 @@
     
     const transportChoiceOverlay = document.getElementById("transport-choice-overlay");
 
+    
     function openTransportMode() {
       mainMenu.classList.add("hidden");
       transportMode.classList.remove("hidden");
@@ -1491,20 +1539,28 @@
       transportLives.textContent = "❤️❤️❤️";
     }
 
-    function startTransport3DChoice() {
+    function onSelectTransport3D() {
       if (transportChoiceOverlay) transportChoiceOverlay.classList.add("hidden");
-      routeChoice.classList.remove("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-ground-transport-intro.mp4" : "david-ground-transport-intro.mp4";
+      playModeIntro(video, () => {
+        transportMode.classList.remove("hidden");
+        routeChoice.classList.remove("hidden");
+      });
     }
 
-    function startTransport2DMode() {
+    function onSelectTransport2D() {
       if (transportChoiceOverlay) transportChoiceOverlay.classList.add("hidden");
       transportMode.classList.add("hidden");
-      offroadMode.classList.remove("hidden");
-      offroadMessage.classList.remove("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-ground-transport-intro.mp4" : "david-ground-transport-intro.mp4";
+      playModeIntro(video, () => {
+        offroadMode.classList.remove("hidden");
+        offroadMessage.classList.remove("hidden");
+      });
     }
 
-    document.getElementById("btn-select-transport-3d")?.addEventListener("click", startTransport3DChoice);
-    document.getElementById("btn-select-transport-2d")?.addEventListener("click", startTransport2DMode);
+    document.getElementById("btn-select-transport-3d")?.addEventListener("click", onSelectTransport3D);
+    document.getElementById("btn-select-transport-2d")?.addEventListener("click", onSelectTransport2D);
+
     
     document.getElementById("transport-cam-mode")?.addEventListener("click", () => {
       if (window.Transport3D) window.Transport3D.toggleCamera();
@@ -1585,7 +1641,33 @@
       cleanCanvas.addEventListener("pointerdown", airFlap);
     }
 
-    document.getElementById("btn-select-air-3d").addEventListener("click", startAir3DMode);
+    
+    function onSelectAir3D() {
+      if (airChoiceOverlay) airChoiceOverlay.classList.add("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
+      playModeIntro(video, () => {
+        airMode.classList.remove("hidden");
+        startAir3DMode();
+      });
+    }
+
+    function onSelectAir2D() {
+      if (airChoiceOverlay) airChoiceOverlay.classList.add("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
+      playModeIntro(video, () => {
+        airMode.classList.remove("hidden");
+        if (air2dOverlay) {
+          air2dOverlay.classList.remove("hidden");
+          document.getElementById("air-2d-difficulty").classList.remove("hidden");
+          document.getElementById("air-2d-retry").classList.add("hidden");
+        }
+      });
+    }
+
+    document.getElementById("btn-select-air-3d")?.addEventListener("click", onSelectAir3D);
+    document.getElementById("btn-select-air-2d")?.addEventListener("click", onSelectAir2D);
+
+    // old air listener
     document.getElementById("btn-select-air-2d").addEventListener("click", () => {
       if (air2dOverlay) {
         air2dOverlay.classList.remove("hidden");
@@ -2023,21 +2105,13 @@
           else if (selectedCharacter === "Дэвид") playModeIntro("david-sale-intro.mp4");
           else openSaleMode();
         } else if (selectedMode === "Перевозка оружия") {
-          if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openTransportMode);
-          else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openTransportMode);
-          else openTransportMode();
-        } else if (selectedMode === "Внедорожная перевозка оружия") {
-          if (selectedCharacter === "Рэй") playModeIntro("ray-ground-transport-intro.mp4", openOffroadMode);
-          else if (selectedCharacter === "Дэвид") playModeIntro("david-ground-transport-intro.mp4", openOffroadMode);
-          else openOffroadMode();
-        } else if(selectedMode === "В заложниках") {
+          openTransportMode();
+        } else if (selectedMode === "В заложниках") {
           if (selectedCharacter === "Рэй") playModeIntro("ray-hostage-intro.mp4", openHostageMode);
           else if (selectedCharacter === "Дэвид") playModeIntro("david-hostage-intro.mp4", openHostageMode);
           else openHostageMode();
-        } else {
-          if (selectedCharacter === "Дэвид") playModeIntro("david-air-transport-intro.mp4", openAirMode);
-          else if (selectedCharacter === "Рэй") playModeIntro("ray-air-transport-intro.mp4", openAirMode);
-          else openAirMode();
+        } else if (selectedMode === "Воздушная перевозка оружия") {
+          openAirMode();
         }
       });
     });
