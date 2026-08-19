@@ -1,0 +1,890 @@
+// projects/game/real_flight3d.js — «Настоящий авиасимулятор» (Three.js Flight Simulator)
+// 1. Гражданская авиация: посадка пассажиров, озвучка пилота/диспетчера, полет сквозь облака, посадка, заправка, мойка.
+// 2. Военная миссия: ракетный прицел, уничтожение баз/истребителей, боевая прогрессия.
+// 3. Бесконечный террейн: горы, реки, озера, облака.
+// 4. Детализированная кабина с приборами и кнопочками.
+// 5. Раздельное управление: WASD — строго полет, МЫШЬ — исключительно свободный обзор (Freelook).
+(() => {
+  const THREE = window.THREE;
+  if (!THREE) return;
+
+  // --- СОСТОЯНИЕ РЕЖИМА ---
+  let renderer = null, scene = null, camera = null, frame = null;
+  let running = false, isPaused = false;
+  let submode = "civil"; // "civil" | "military"
+  let cameraMode = 1; // 0 = Сзади, 1 = Кокпит (1-е лицо)
+
+  // Обзор мышью (Freelook) — НЕ влияет на курс самолета!
+  let lookYaw = 0, lookPitch = 0;
+  let isPointerLocked = false;
+
+  // Объекты мира
+  let aircraft = null, cockpitGroup = null;
+  let terrainChunks = [];
+  let clouds = [];
+  let airports = [];
+  let militaryTargets = [];
+  let missiles = [];
+  let explosions = [];
+
+  // Гражданский цикл: "boarding" | "flight" | "landed" | "service_fuel" | "service_wash" | "service_boarding"
+  let civilState = "boarding";
+  let civilTimer = 0;
+  let distanceToNextAirport = 5000; // метры
+
+  // Военный цикл
+  let militaryScore = 0;
+  let militaryTarget = null;
+  let missileCooldown = 0;
+
+  const keys = Object.create(null);
+
+  // Физика полета
+  const flight = {
+    pos: new THREE.Vector3(0, 35, 0),
+    vel: new THREE.Vector3(0, 0, -80),
+    rot: new THREE.Euler(0, 0, 0, "YXZ"),
+    quat: new THREE.Quaternion(),
+    throttle: 0.7, // 0.0 .. 1.0
+    speed: 180, // узлы / км/ч
+    altitude: 450, // метры
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    verticalSpeed: 0,
+    isGrounded: false
+  };
+
+  // --- ЗВУКОВОЙ ДВИЖОК И СИНТЕЗ ГОЛОСА ПИЛОТА / ДИСПЕТЧЕРА ---
+  let audioCtx = null;
+  let turbineGain = null, turbineOsc = null, jetNoise = null, jetGain = null;
+
+  function initFlightAudio() {
+    if (audioCtx) return;
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioCtx = new AudioContext();
+
+      // Гул турбины
+      turbineOsc = audioCtx.createOscillator();
+      turbineOsc.type = "sawtooth";
+      turbineOsc.frequency.setValueAtTime(110, audioCtx.currentTime);
+
+      const tFilter = audioCtx.createBiquadFilter();
+      tFilter.type = "lowpass";
+      tFilter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+      turbineGain = audioCtx.createGain();
+      turbineGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+      turbineOsc.connect(tFilter);
+      tFilter.connect(turbineGain);
+      turbineGain.connect(audioCtx.destination);
+      turbineOsc.start();
+
+      // Шум ветра и реактивной струи
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+      jetNoise = audioCtx.createBufferSource();
+      jetNoise.buffer = noiseBuffer;
+      jetNoise.loop = true;
+
+      const nFilter = audioCtx.createBiquadFilter();
+      nFilter.type = "bandpass";
+      nFilter.frequency.setValueAtTime(600, audioCtx.currentTime);
+      nFilter.Q.setValueAtTime(1.8, audioCtx.currentTime);
+
+      jetGain = audioCtx.createGain();
+      jetGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+
+      jetNoise.connect(nFilter);
+      nFilter.connect(jetGain);
+      jetGain.connect(audioCtx.destination);
+      jetNoise.start();
+    } catch (e) {}
+  }
+
+  function speakVoice(text) {
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ru-RU";
+      utter.rate = 1.05;
+      utter.pitch = 0.95;
+      window.speechSynthesis.speak(utter);
+    } catch (e) {}
+  }
+
+  function playMissileSound() {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.6);
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.61);
+    } catch (e) {}
+  }
+
+  function playExplosionSound() {
+    if (!audioCtx) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.8);
+
+      gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.81);
+    } catch (e) {}
+  }
+
+  // --- ПРОЦЕДУРНАЯ ГЕНЕРАЦИЯ ТЕРРЕЙНА С ГОРАМИ И РЕКАМИ ---
+  function getTerrainHeight(x, z) {
+    // Многооктавный ландшафт (Шум гор, холмов и русел рек)
+    const mountain = Math.sin(x * 0.0012) * Math.cos(z * 0.0012) * 220;
+    const hills = Math.sin(x * 0.004 + 1.2) * Math.cos(z * 0.004 + 0.8) * 65;
+    const detail = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 15;
+
+    // Русло реки (понижение высоты)
+    const riverBed = Math.sin(x * 0.002 + z * 0.001) * 35;
+
+    let h = mountain + hills + detail - riverBed;
+    // Оставляем взлетную полосу и аэропорт плоскими на высоте 10м
+    if (Math.hypot(x, z) < 450) {
+      h = Math.min(h, 10);
+    }
+    return Math.max(0, h);
+  }
+
+  function createTerrainChunk(cx, cz) {
+    const size = 1200;
+    const segs = 48;
+    const geo = new THREE.PlaneGeometry(size, size, segs, segs);
+    geo.rotateX(-Math.PI / 2);
+
+    const pos = geo.attributes.position;
+    const colors = [];
+    const color = new THREE.Color();
+
+    for (let i = 0; i < pos.count; i++) {
+      const vx = pos.getX(i) + cx;
+      const vz = pos.getZ(i) + cz;
+      const vy = getTerrainHeight(vx, vz);
+      pos.setY(i, vy);
+
+      // Окраска по высоте (Вода/зелень/скалы/снег)
+      if (vy < 25) {
+        color.setHex(0x2d6a4f); // Зеленые долины и леса
+      } else if (vy < 90) {
+        color.setHex(0x52796f); // Холмы
+      } else if (vy < 180) {
+        color.setHex(0x6c757d); // Скалы
+      } else {
+        color.setHex(0xf8f9fa); // Заснеженные горные пики
+      }
+      colors.push(color.r, color.g, color.b);
+    }
+
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.85,
+      metalness: 0.15,
+      flatShading: true
+    });
+
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(cx, 0, cz);
+    mesh.receiveShadow = true;
+
+    // Водная гладь озер и рек
+    const waterGeo = new THREE.PlaneGeometry(size, size);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0077b6,
+      metalness: 0.9,
+      roughness: 0.1,
+      transmission: 0.6,
+      transparent: true,
+      opacity: 0.85
+    });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.position.set(cx, 18, cz);
+
+    const group = new THREE.Group();
+    group.add(mesh, water);
+    group.userData = { cx, cz };
+    return group;
+  }
+
+  function updateTerrain(playerX, playerZ) {
+    const chunkSize = 1200;
+    const centerChunkX = Math.floor(playerX / chunkSize) * chunkSize;
+    const centerChunkZ = Math.floor(playerZ / chunkSize) * chunkSize;
+
+    const neededChunks = [];
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        neededChunks.push({ x: centerChunkX + dx * chunkSize, z: centerChunkZ + dz * chunkSize });
+      }
+    }
+
+    // Удаляем старые чанки
+    for (let i = terrainChunks.length - 1; i >= 0; i--) {
+      const c = terrainChunks[i];
+      const stillNeeded = neededChunks.some(nc => nc.x === c.userData.cx && nc.z === c.userData.cz);
+      if (!stillNeeded) {
+        scene.remove(c);
+        terrainChunks.splice(i, 1);
+      }
+    }
+
+    // Добавляем новые
+    neededChunks.forEach(nc => {
+      const exists = terrainChunks.some(c => c.userData.cx === nc.x && c.userData.cz === nc.z);
+      if (!exists) {
+        const chunk = createTerrainChunk(nc.x, nc.z);
+        scene.add(chunk);
+        terrainChunks.push(chunk);
+      }
+    });
+  }
+
+  // --- ОБЪЕМНЫЕ ОБЛАКА ---
+  function initClouds() {
+    clouds.forEach(c => scene.remove(c));
+    clouds.length = 0;
+
+    const cloudGeo = new THREE.DodecahedronGeometry(45, 1);
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.95,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    for (let i = 0; i < 40; i++) {
+      const cloudGroup = new THREE.Group();
+      for (let p = 0; p < 5; p++) {
+        const puff = new THREE.Mesh(cloudGeo, cloudMat);
+        puff.position.set((Math.random() - 0.5) * 70, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 70);
+        puff.scale.set(Math.random() * 0.8 + 0.6, Math.random() * 0.5 + 0.4, Math.random() * 0.8 + 0.6);
+        cloudGroup.add(puff);
+      }
+      cloudGroup.position.set((Math.random() - 0.5) * 6000, 350 + Math.random() * 300, (Math.random() - 0.5) * 6000);
+      scene.add(cloudGroup);
+      clouds.push(cloudGroup);
+    }
+  }
+
+  // --- АЭРОПОРТ И ВЗЛЕТНО-ПОСАДОЧНАЯ ПОЛОСА ---
+  function createAirport(x, z, angle = 0) {
+    const group = new THREE.Group();
+
+    // ВПП (Runway)
+    const runwayGeo = new THREE.BoxGeometry(60, 0.4, 600);
+    const runwayMat = new THREE.MeshStandardMaterial({ color: 0x1f2421, roughness: 0.8 });
+    const runway = new THREE.Mesh(runwayGeo, runwayMat);
+    runway.position.set(0, 10.2, 0);
+    group.add(runway);
+
+    // Огни ВПП (Runway lights)
+    const lightMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    for (let rz = -280; rz <= 280; rz += 30) {
+      [-28, 28].forEach(rx => {
+        const l = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), lightMat);
+        l.position.set(rx, 10.6, rz);
+        group.add(l);
+      });
+    }
+
+    // Терминал аэропорта и диспетчерская вышка
+    const termMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+    const terminal = new THREE.Mesh(new THREE.BoxGeometry(120, 24, 60), termMat);
+    terminal.position.set(80, 22, -80);
+    group.add(terminal);
+
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(6, 8, 55, 12), termMat);
+    tower.position.set(80, 37.5, -130);
+    group.add(tower);
+
+    group.position.set(x, 0, z);
+    group.rotation.y = angle;
+    return group;
+  }
+
+  // --- ДЕТАЛИЗИРОВАННАЯ КАБИНА САМОЛЕТА С ПРИБОРАМИ И КНОПОЧКАМИ ---
+  function createCockpitInterior() {
+    const group = new THREE.Group();
+
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.4, metalness: 0.8 });
+    const screenMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+    const buttonMatG = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x16a34a, emissiveIntensity: 1.5 });
+    const buttonMatR = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 1.5 });
+    const buttonMatY = new THREE.MeshStandardMaterial({ color: 0xeab308, emissive: 0xca8a04, emissiveIntensity: 1.5 });
+
+    // Главная приборная панель (Main Instrument Panel)
+    const mainPanel = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.7, 0.35), panelMat);
+    mainPanel.position.set(0, 0.1, -0.75);
+    mainPanel.rotation.x = -0.35;
+    group.add(mainPanel);
+
+    // Многофункциональные дисплеи (MFD Screens)
+    [-0.45, 0.45, 0].forEach((sx, idx) => {
+      const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.24), idx === 0 ? screenMat : new THREE.MeshBasicMaterial({ color: 0x059669 }));
+      scr.position.set(sx, 0.15, -0.56);
+      scr.rotation.x = -0.35;
+      group.add(scr);
+    });
+
+    // Десятки интерактивных кнопочек и тумблеров
+    for (let bx = -0.7; bx <= 0.7; bx += 0.08) {
+      for (let by = -0.15; by <= 0.02; by += 0.06) {
+        const mat = Math.random() > 0.6 ? buttonMatG : (Math.random() > 0.3 ? buttonMatY : buttonMatR);
+        const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 8), mat);
+        btn.rotation.x = Math.PI / 2 - 0.35;
+        btn.position.set(bx, by, -0.65);
+        group.add(btn);
+      }
+    }
+
+    // Штурвал / Ручка управления (Yoke / Flight Stick)
+    const stickMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8 });
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.45, 10), stickMat);
+    stick.position.set(-0.35, -0.1, -0.42);
+    stick.rotation.x = -0.2;
+
+    const yokeWheel = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 16, Math.PI * 1.5), stickMat);
+    yokeWheel.position.set(0, 0.22, 0);
+    yokeWheel.rotation.z = Math.PI / 4;
+    stick.add(yokeWheel);
+    group.add(stick);
+    group.userData.flightStick = stick;
+
+    // Рычаги тяги (Throttle Quadrant)
+    const throttleBase = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.3), panelMat);
+    throttleBase.position.set(0, -0.2, -0.4);
+    const lever1 = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.12, 0.02), buttonMatY);
+    lever1.position.set(-0.04, 0.1, 0);
+    const lever2 = lever1.clone();
+    lever2.position.x = 0.04;
+    throttleBase.add(lever1, lever2);
+    group.add(throttleBase);
+    group.userData.throttleLever = lever1;
+
+    // Остекление фонаря кабины (Windshield Canopy)
+    const canopyMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0284c7,
+      transmission: 0.92,
+      opacity: 0.25,
+      transparent: true,
+      roughness: 0.05
+    });
+    const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.8, 4), canopyMat);
+    canopy.rotation.set(-Math.PI / 2, 0, Math.PI / 4);
+    canopy.position.set(0, 0.35, -0.6);
+    group.add(canopy);
+
+    return group;
+  }
+
+  // --- ВНЕШНЯЯ 3D-МОДЕЛЬ САМОЛЕТА ---
+  function createAircraftModel(isMilitary = false) {
+    const group = new THREE.Group();
+
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: isMilitary ? 0x334155 : 0xf8fafc,
+      metalness: 0.7,
+      roughness: 0.25
+    });
+    const wingMat = new THREE.MeshStandardMaterial({
+      color: isMilitary ? 0x1e293b : 0x0284c7,
+      metalness: 0.8,
+      roughness: 0.3
+    });
+
+    // Фюзеляж
+    const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.75, 14, 18), bodyMat);
+    fuselage.rotation.x = Math.PI / 2;
+    fuselage.castShadow = true;
+    group.add(fuselage);
+
+    // Носовой обтекатель
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.85, 3.2, 18), bodyMat);
+    nose.rotation.x = -Math.PI / 2;
+    nose.position.set(0, 0, -8.6);
+    group.add(nose);
+
+    // Крылья (Swept Wings)
+    const wingGeo = new THREE.BoxGeometry(16, 0.18, 3.2);
+    const wings = new THREE.Mesh(wingGeo, wingMat);
+    wings.position.set(0, 0, -1);
+    wings.castShadow = true;
+    group.add(wings);
+
+    // Хвостовое оперение (Vertical Stabilizer & Elevators)
+    const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.2, 2.4), wingMat);
+    tailV.position.set(0, 1.8, 5.8);
+    tailV.rotation.x = -0.4;
+    group.add(tailV);
+
+    const tailH = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.14, 1.8), wingMat);
+    tailH.position.set(0, 0.4, 6.2);
+    group.add(tailH);
+
+    // Турбины под крыльями
+    [-3.8, 3.8].forEach(wx => {
+      const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 3.2, 16), bodyMat);
+      eng.rotation.x = Math.PI / 2;
+      eng.position.set(wx, -0.6, 0);
+      group.add(eng);
+    });
+
+    // Интегрированная кабина
+    cockpitGroup = createCockpitInterior();
+    cockpitGroup.position.set(0, 0.35, -3.2);
+    group.add(cockpitGroup);
+
+    return group;
+  }
+
+  // --- ВОЕННАЯ МИССИЯ: СПАВН ЦЕЛЕЙ И РАКЕТ ---
+  function spawnMilitaryTargets() {
+    militaryTargets.forEach(t => scene.remove(t.mesh));
+    militaryTargets.length = 0;
+
+    // Вражеский военный бункер / радарная станция
+    const targetGeo = new THREE.BoxGeometry(45, 25, 45);
+    const targetMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.9, roughness: 0.2 });
+    const targetMesh = new THREE.Mesh(targetGeo, targetMat);
+
+    const tx = flight.pos.x + (Math.random() > 0.5 ? 1 : -1) * (1800 + Math.random() * 800);
+    const tz = flight.pos.z - (2200 + Math.random() * 1200);
+    const ty = getTerrainHeight(tx, tz) + 12.5;
+
+    targetMesh.position.set(tx, ty, tz);
+    targetMesh.castShadow = true;
+    scene.add(targetMesh);
+
+    militaryTarget = {
+      mesh: targetMesh,
+      pos: new THREE.Vector3(tx, ty, tz),
+      hp: 100,
+      isDead: false
+    };
+    militaryTargets.push(militaryTarget);
+  }
+
+  function fireMissile() {
+    if (missileCooldown > 0) return;
+    missileCooldown = 1.2;
+    playMissileSound();
+
+    const mGeo = new THREE.CylinderGeometry(0.12, 0.12, 2.2, 8);
+    mGeo.rotateX(Math.PI / 2);
+    const mMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const mMesh = new THREE.Mesh(mGeo, mMat);
+
+    const spawnPos = flight.pos.clone().add(new THREE.Vector3(0, -1.2, -4).applyQuaternion(flight.quat));
+    mMesh.position.copy(spawnPos);
+    mMesh.quaternion.copy(flight.quat);
+    scene.add(mMesh);
+
+    const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(flight.quat);
+    missiles.push({
+      mesh: mMesh,
+      pos: spawnPos,
+      vel: fwd.multiplyScalar(450), // 450 м/с
+      life: 5.0
+    });
+  }
+
+  function updateMissiles(dt) {
+    if (missileCooldown > 0) missileCooldown -= dt;
+
+    for (let i = missiles.length - 1; i >= 0; i--) {
+      const m = missiles[i];
+      m.life -= dt;
+      m.pos.add(m.vel.clone().multiplyScalar(dt));
+      m.mesh.position.copy(m.pos);
+
+      // Проверка попадания по военной цели
+      if (militaryTarget && !militaryTarget.isDead) {
+        if (m.pos.distanceTo(militaryTarget.pos) < 35) {
+          militaryTarget.hp -= 55;
+          playExplosionSound();
+          createExplosion(militaryTarget.pos);
+
+          scene.remove(m.mesh);
+          missiles.splice(i, 1);
+
+          if (militaryTarget.hp <= 0) {
+            militaryTarget.isDead = true;
+            militaryScore++;
+            setTimeout(() => onMilitaryVictory(), 800);
+          }
+          continue;
+        }
+      }
+
+      if (m.life <= 0) {
+        scene.remove(m.mesh);
+        missiles.splice(i, 1);
+      }
+    }
+  }
+
+  function createExplosion(pos) {
+    const expGeo = new THREE.SphereGeometry(18, 12, 12);
+    const expMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.95 });
+    const mesh = new THREE.Mesh(expGeo, expMat);
+    mesh.position.copy(pos);
+    scene.add(mesh);
+    explosions.push({ mesh, life: 0.7 });
+  }
+
+  function onMilitaryVictory() {
+    isPaused = true;
+    const modal = document.getElementById("real-flight-victory");
+    if (modal) modal.classList.remove("hidden");
+  }
+
+  // --- УПРАВЛЕНИЕ ПОЛЕТОМ (WASD) И ОБЗОР МЫШЬЮ (FREELOOK) ---
+  function updateFlightPhysics(dt) {
+    const keyW = keys.KeyW || keys.ArrowUp;
+    const keyS = keys.KeyS || keys.ArrowDown;
+    const keyA = keys.KeyA || keys.ArrowLeft;
+    const keyD = keys.KeyD || keys.ArrowRight;
+    const keyThrottleUp = keys.ShiftLeft || keys.ShiftRight;
+    const keyThrottleDown = keys.ControlLeft || keys.ControlRight;
+    const keyFire = keys.Space;
+
+    if (submode === "military" && keyFire) {
+      fireMissile();
+    }
+
+    // Регулировка тяги
+    if (keyThrottleUp) flight.throttle = Math.min(1.0, flight.throttle + dt * 0.45);
+    if (keyThrottleDown) flight.throttle = Math.max(0.1, flight.throttle - dt * 0.45);
+
+    flight.speed = 120 + flight.throttle * 240; // 120 .. 360 км/ч
+
+    // Управление полетом СТРОГО на WASD (Тангаж и крен)
+    const pitchInput = (keyS ? 1 : 0) - (keyW ? 1 : 0); // S = Кабрирование (вверх), W = Пикирование (вниз)
+    const rollInput = (keyA ? 1 : 0) - (keyD ? 1 : 0);  // A/D = Крен влево/вправо
+
+    flight.pitch = THREE.MathUtils.lerp(flight.pitch, pitchInput * 0.85, dt * 4.5);
+    flight.roll = THREE.MathUtils.lerp(flight.roll, rollInput * 1.15, dt * 5.0);
+
+    // Автоматический разворот (Yaw) при крене
+    flight.yaw += -flight.roll * dt * 0.65;
+
+    // Итоговая ориентация самолета
+    flight.quat.setFromEuler(new THREE.Euler(flight.pitch, flight.yaw, flight.roll, "YXZ"));
+
+    // Движение вперед по вектору фюзеляжа
+    const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(flight.quat);
+    flight.vel.copy(fwd).multiplyScalar((flight.speed / 3.6) * dt);
+    flight.pos.add(flight.vel);
+
+    // Высота над поверхностью
+    const groundH = getTerrainHeight(flight.pos.x, flight.pos.z);
+    flight.altitude = Math.round(flight.pos.y - groundH);
+
+    // Защита от крушения
+    if (flight.pos.y <= groundH + 5) {
+      flight.pos.y = groundH + 5;
+      flight.pitch = Math.max(0, flight.pitch);
+    }
+
+    if (aircraft) {
+      aircraft.position.copy(flight.pos);
+      aircraft.quaternion.copy(flight.quat);
+    }
+
+    // Анимация штурвала в кабине
+    if (cockpitGroup && cockpitGroup.userData.flightStick) {
+      cockpitGroup.userData.flightStick.rotation.x = -0.2 + flight.pitch * 0.4;
+      cockpitGroup.userData.flightStick.rotation.z = -flight.roll * 0.6;
+    }
+  }
+
+  // --- КАМЕРА: ОБЗОР МЫШКОЙ (FREELOOK БЕЗ ВЛИЯНИЯ НА ПОЛЕТ) ---
+  function updateCamera() {
+    if (!camera || !aircraft) return;
+
+    if (cameraMode === 1) {
+      // 1-Е ЛИЦО: ИЗ КАБИНЫ (COCKPIT)
+      const eyePos = flight.pos.clone().add(
+        new THREE.Vector3(0, 0.72, -2.8).applyQuaternion(flight.quat)
+      );
+      camera.position.copy(eyePos);
+
+      // Свободный обзор мышью относительно кабины
+      const lookQuat = flight.quat.clone().multiply(
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(lookPitch, lookYaw, 0, "YXZ"))
+      );
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(lookQuat);
+      camera.lookAt(eyePos.clone().add(fwd));
+    } else {
+      // 3-Е ЛИЦО: СЗАДИ (CHASE CAMERA С ОБЗОРОМ МЫШЬЮ)
+      const orbitOffset = new THREE.Vector3(
+        Math.sin(lookYaw) * 26,
+        Math.max(2, 6 - Math.sin(lookPitch) * 12),
+        Math.cos(lookYaw) * 26
+      );
+      const desiredPos = flight.pos.clone().add(orbitOffset.applyQuaternion(flight.quat));
+      camera.position.lerp(desiredPos, 0.18);
+      camera.lookAt(flight.pos.clone().add(new THREE.Vector3(0, 2, -10).applyQuaternion(flight.quat)));
+    }
+  }
+
+  // --- ЦИКЛ ОБСЛУЖИВАНИЯ В ГРАЖДАНСКОЙ АВИАЦИИ ---
+  function updateCivilCycle(dt) {
+    if (submode !== "civil") return;
+
+    if (civilState === "boarding") {
+      civilTimer += dt;
+      if (civilTimer > 4.5) {
+        civilState = "flight";
+        civilTimer = 0;
+        speakVoice("Уважаемые пассажиры, говорит командир корабля. Наш рейс начинает взлёт. Приятного полёта!");
+      }
+    } else if (civilState === "flight") {
+      distanceToNextAirport = Math.max(0, distanceToNextAirport - (flight.speed / 3.6) * dt);
+      if (distanceToNextAirport <= 0) {
+        civilState = "service_fuel";
+        civilTimer = 0;
+        speakVoice("Борт успешно прибыл в пункт назначения. Начинаем обслуживание и заправку топливом.");
+      }
+    } else if (civilState === "service_fuel") {
+      civilTimer += dt;
+      if (civilTimer > 4.0) {
+        civilState = "service_wash";
+        civilTimer = 0;
+      }
+    } else if (civilState === "service_wash") {
+      civilTimer += dt;
+      if (civilTimer > 4.0) {
+        civilState = "service_boarding";
+        civilTimer = 0;
+      }
+    } else if (civilState === "service_boarding") {
+      civilTimer += dt;
+      if (civilTimer > 4.5) {
+        civilState = "flight";
+        civilTimer = 0;
+        distanceToNextAirport = 6000;
+        speakVoice("Посадка новых пассажиров завершена. Взлетаем к следующему аэропорту!");
+      }
+    }
+  }
+
+  function updateHUD() {
+    const spdEl = document.getElementById("real-flight-spd");
+    if (spdEl) spdEl.textContent = `${Math.round(flight.speed)} КМ/Ч`;
+
+    const altEl = document.getElementById("real-flight-alt");
+    if (altEl) altEl.textContent = `ВЫСОТА: ${Math.max(0, flight.altitude)} М`;
+
+    const thrEl = document.getElementById("real-flight-throttle-fill");
+    if (thrEl) thrEl.style.width = `${Math.round(flight.throttle * 100)}%`;
+
+    const statusEl = document.getElementById("real-flight-status-text");
+    if (statusEl) {
+      if (submode === "civil") {
+        if (civilState === "boarding") statusEl.textContent = "👥 ПОСАДКА ПАССАЖИРОВ...";
+        else if (civilState === "flight") statusEl.textContent = `✈️ В ПОЛЁТЕ · ДО ПРИБЫТИЯ: ${Math.round(distanceToNextAirport)} М`;
+        else if (civilState === "service_fuel") statusEl.textContent = "⛽ ЗАПРАВКА ТОПЛИВОМ...";
+        else if (civilState === "service_wash") statusEl.textContent = "🚿 МОЙКА И ОБСЛУЖИВАНИЕ САМОЛЕТА...";
+        else if (civilState === "service_boarding") statusEl.textContent = "👥 ПОСАДКА НОВЫХ ПАССАЖИРОВ...";
+      } else {
+        if (militaryTarget && !militaryTarget.isDead) {
+          const dist = Math.round(flight.pos.distanceTo(militaryTarget.pos));
+          statusEl.textContent = `🎯 ЦЕЛЬ ЗАХВАЧЕНА · ДИСТАНЦИЯ: ${dist} М [ПРОБЕЛ - РАКЕТА]`;
+        } else {
+          statusEl.textContent = "🎯 ПОИСК СЛЕДУЮЩЕЙ ЦЕЛИ...";
+        }
+      }
+    }
+  }
+
+  // --- ИГРОВОЙ ЦИКЛ ---
+  let lastTime = 0;
+  function animate(now = 0) {
+    if (!running) return;
+    const dt = Math.min(0.04, (now - (lastTime || now)) / 1000);
+    lastTime = now;
+
+    if (!isPaused) {
+      updateFlightPhysics(dt);
+      updateTerrain(flight.pos.x, flight.pos.z);
+      updateCivilCycle(dt);
+      if (submode === "military") updateMissiles(dt);
+      updateCamera();
+      updateHUD();
+    }
+
+    renderer.render(scene, camera);
+    frame = requestAnimationFrame(animate);
+  }
+
+  function resetCanvas() {
+    const old = document.getElementById("real-flight-canvas");
+    if (!old) return;
+    const canvas = old.cloneNode(false);
+    old.replaceWith(canvas);
+
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(1100, 700, false);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.12;
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x38bdf8); // Ясное голубое небо
+    scene.fog = new THREE.FogExp2(0x7dd3fc, 0.00035);
+
+    camera = new THREE.PerspectiveCamera(62, 1100 / 700, 0.2, 9000);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 1.25);
+    scene.add(hemiLight);
+
+    const sun = new THREE.DirectionalLight(0xfffaed, 2.5);
+    sun.position.set(800, 2000, 500);
+    sun.castShadow = true;
+    scene.add(sun);
+
+    // Слушатель движения мыши для СВОБОДНОГО ОБЗОРА (Freelook)
+    canvas.addEventListener("click", () => {
+      if (!isPointerLocked) {
+        canvas.requestPointerLock?.();
+      }
+    });
+
+    document.addEventListener("pointerlockchange", () => {
+      isPointerLocked = document.pointerLockElement === canvas;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (isPointerLocked && running) {
+        lookYaw -= e.movementX * 0.0024;
+        lookPitch -= e.movementY * 0.0024;
+        lookPitch = Math.max(-1.2, Math.min(1.2, lookPitch));
+      }
+    });
+  }
+
+  window.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+    if (running && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+      e.preventDefault();
+    }
+    if (running && e.code === "KeyV") {
+      cameraMode = cameraMode === 0 ? 1 : 0;
+      const btn = document.getElementById("real-flight-cam-btn");
+      if (btn) btn.textContent = cameraMode === 1 ? "Камера [V]: Кабина" : "Камера [V]: Сзади";
+    }
+  });
+
+  window.addEventListener("keyup", (e) => {
+    keys[e.code] = false;
+  });
+
+  // --- ПУБЛИЧНЫЙ API ---
+  window.RealFlight3D = {
+    start(selectedSubmode = "civil") {
+      this.stop();
+      submode = selectedSubmode;
+      initFlightAudio();
+      resetCanvas();
+
+      cameraMode = 1;
+      lookYaw = 0;
+      lookPitch = 0;
+      civilState = "boarding";
+      civilTimer = 0;
+      distanceToNextAirport = 5000;
+      isPaused = false;
+
+      flight.pos.set(0, 42, 0);
+      flight.rot.set(0, 0, 0);
+      flight.pitch = 0;
+      flight.roll = 0;
+      flight.yaw = 0;
+      flight.throttle = 0.7;
+      flight.speed = 220;
+
+      // Создаем стартовый аэропорт
+      const apt = createAirport(0, 0, 0);
+      scene.add(apt);
+      airports.push(apt);
+
+      // Генерируем террейн и облака
+      updateTerrain(0, 0);
+      initClouds();
+
+      // Создаем самолет
+      aircraft = createAircraftModel(submode === "military");
+      scene.add(aircraft);
+
+      if (submode === "military") {
+        spawnMilitaryTargets();
+      } else {
+        speakVoice("Добро пожаловать на борт. Идёт посадка пассажиров перед рейсом.");
+      }
+
+      updateHUD();
+      running = true;
+      lastTime = performance.now();
+      frame = requestAnimationFrame(animate);
+    },
+
+    nextMilitaryMission() {
+      const modal = document.getElementById("real-flight-victory");
+      if (modal) modal.classList.add("hidden");
+      isPaused = false;
+      spawnMilitaryTargets();
+    },
+
+    toggleCamera() {
+      cameraMode = cameraMode === 0 ? 1 : 0;
+      const btn = document.getElementById("real-flight-cam-btn");
+      if (btn) btn.textContent = cameraMode === 1 ? "Камера [V]: Кабина" : "Камера [V]: Сзади";
+    },
+
+    stop() {
+      running = false;
+      if (frame) cancelAnimationFrame(frame);
+      if (turbineGain) turbineGain.gain.setValueAtTime(0, audioCtx?.currentTime || 0);
+      if (jetGain) jetGain.gain.setValueAtTime(0, audioCtx?.currentTime || 0);
+      if (renderer) renderer.dispose();
+      try { window.speechSynthesis?.cancel(); } catch (e) {}
+    }
+  };
+})();

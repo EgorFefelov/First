@@ -1149,6 +1149,190 @@
       transform: translateY(-2px);
     }
 
+  
+    /* --- СТИЛИ ДЛЯ РЕЖИМА «НАСТОЯЩИЙ АВИАСИМУЛЯТОР» --- */
+    #real-flight-mode {
+      position: relative;
+      width: min(1100px, 94vw);
+      height: min(700px, 88vh);
+      overflow: hidden;
+      border-radius: 24px;
+      color: white;
+      background: #0284c7;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.7);
+    }
+    #real-flight-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .real-flight-hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-family: inherit;
+    }
+    .real-flight-top-bar {
+      position: absolute;
+      top: 18px;
+      left: 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      z-index: 30;
+    }
+    #real-flight-badge {
+      padding: 7px 15px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.9), rgba(3, 105, 161, 0.95));
+      font-size: 14px;
+      font-weight: 950;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      box-shadow: 0 4px 18px rgba(2, 132, 199, 0.5);
+      border: 1px solid rgba(125, 211, 252, 0.4);
+    }
+    #real-flight-status-text {
+      padding: 7px 16px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      font-size: 14px;
+      font-weight: 900;
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+    #real-flight-cam-btn {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      z-index: 35;
+      pointer-events: auto;
+      padding: 10px 18px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #7dd3fc;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.2s;
+    }
+    #real-flight-cam-btn:hover {
+      border-color: #38bdf8;
+      background: rgba(2, 132, 199, 0.95);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+    .real-flight-gauge-panel {
+      position: absolute;
+      right: 24px;
+      bottom: 22px;
+      padding: 14px 20px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 30;
+      min-width: 140px;
+    }
+    #real-flight-spd, #real-flight-alt {
+      font-size: 16px;
+      font-weight: 950;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    .real-flight-thr-wrap {
+      width: 100%;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      margin-top: 4px;
+    }
+    #real-flight-throttle-fill {
+      width: 70%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #0284c7);
+    }
+    .real-flight-controls-bar {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e2e8f0;
+      font-size: 13px;
+      font-weight: 800;
+      z-index: 30;
+      white-space: nowrap;
+      text-shadow: 0 2px 4px #000;
+    }
+    #real-flight-back {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      pointer-events: auto;
+      padding: 11px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      z-index: 30;
+      transition: all 0.2s;
+    }
+    #real-flight-back:hover {
+      background: rgba(2, 132, 199, 0.9);
+      border-color: #38bdf8;
+      transform: scale(1.05);
+    }
+    #real-flight-choice-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 15, 28, 0.94);
+      backdrop-filter: blur(16px);
+      display: grid;
+      place-content: center;
+      z-index: 60;
+      padding: 24px;
+    }
+    #real-flight-victory {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(15, 23, 42, 0.95), rgba(3, 7, 18, 0.98));
+      backdrop-filter: blur(16px);
+      display: grid;
+      place-content: center;
+      gap: 18px;
+      text-align: center;
+      z-index: 60;
+      pointer-events: auto;
+      padding: 30px;
+    }
+    #real-flight-victory h2 {
+      margin: 0;
+      font-size: clamp(28px, 4.5vw, 44px);
+      color: #38bdf8;
+      text-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+      font-weight: 950;
+    }
+
   </style>
   
     
@@ -1169,6 +1353,7 @@
           <button class="menu-button mode-button" data-mode="Перевозка оружия">Перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Воздушная перевозка оружия">Воздушная перевозка оружия</button>
           <button class="menu-button mode-button" data-mode="Погоня в городе (3D NFS)">Погоня в городе (3D NFS)</button>
+          <button class="menu-button mode-button" data-mode="Настоящий авиасимулятор">Настоящий авиасимулятор</button>
           <button class="menu-button mode-button" data-mode="В заложниках">В заложниках</button>
         </div>
         <button class="menu-button" id="character-button">Выбор персонажа: не выбран</button>
@@ -1455,6 +1640,73 @@
         <div class="city3d-result-actions">
           <button id="city3d-next-btn" class="city3d-btn-primary">Следующий уровень ▸</button>
           <button id="city3d-menu-btn" class="city3d-btn-secondary">В главное меню</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <!-- СЕКЦИЯ РЕЖИМА «НАСТОЯЩИЙ АВИАСИМУЛЯТОР» -->
+  <section id="real-flight-mode" class="hidden" aria-label="Настоящий авиасимулятор">
+    <canvas id="real-flight-canvas" width="1100" height="700"></canvas>
+
+    <!-- Экран выбора подрежима: Гражданский или Военный -->
+    <div id="real-flight-choice-overlay">
+      <div class="air-choice-container">
+        <h2>✈️ Настоящий авиасимулятор</h2>
+        <p class="subtitle">Выберите желаемый формат полёта:</p>
+        <div class="air-choice-cards">
+          <div class="air-card card-3d" id="btn-select-flight-civil">
+            <span class="air-card-badge">Гражданский рейс</span>
+            <h3>🛫 Гражданская авиация</h3>
+            <p>Посадка пассажиров, приветствие командира корабля, взлёт с полосы аэропорта, полёт сквозь облака над горами и реками, посадка, заправка и мойка лайнера.</p>
+            <button class="air-card-btn" type="button">Начать рейс ▸</button>
+          </div>
+
+          <div class="air-card card-2d" id="btn-select-flight-military">
+            <span class="air-card-badge">Боевая миссия</span>
+            <h3>🚀 Военная миссия</h3>
+            <p>Боевой сверхзвуковой истребитель, ракетный радарный прицел, уничтожение вражеских бункеров и баз, полная свобода в небе открытого мира.</p>
+            <button class="air-card-btn" type="button">На боевой вылет ▸</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="real-flight-hud">
+      <div class="real-flight-top-bar">
+        <span id="real-flight-badge">✈️ НАСТОЯЩИЙ АВИАСИМУЛЯТОР</span>
+        <span id="real-flight-status-text">ПОДГОТОВКА К ПОЛЕТУ...</span>
+      </div>
+
+      <button id="real-flight-cam-btn">Камера [V]: Кабина</button>
+
+      <div class="real-flight-gauge-panel">
+        <div id="real-flight-spd">220 КМ/Ч</div>
+        <div id="real-flight-alt">ВЫСОТА: 450 М</div>
+        <div class="real-flight-thr-wrap">
+          <div id="real-flight-throttle-fill"></div>
+        </div>
+      </div>
+
+      <div class="real-flight-controls-bar">
+        <span><span class="key-pill">W</span> пикирование</span> ·
+        <span><span class="key-pill">S</span> кабрирование (вверх)</span> ·
+        <span><span class="key-pill">A D</span> крен/поворот</span> ·
+        <span><span class="key-pill">Shift / Ctrl</span> тяга</span> ·
+        <span><span class="key-pill">Мышь</span> свободный обзор</span> ·
+        <span><span class="key-pill">V</span> камера</span>
+      </div>
+
+      <button id="real-flight-back">← В меню</button>
+
+      <!-- Окно победы военной миссии -->
+      <div id="real-flight-victory" class="hidden">
+        <h2>🎯 ЦЕЛЬ УНИЧТОЖЕНА!</h2>
+        <p style="font-size:18px;font-weight:800;color:#38bdf8;">Вражеская база поражена точным ракетным ударом.</p>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;">
+          <button id="real-flight-next-mission-btn" class="city3d-btn-primary">Следующая цель ▸</button>
+          <button id="real-flight-menu-btn" class="city3d-btn-secondary">В главное меню</button>
         </div>
       </div>
     </div>
@@ -1878,6 +2130,58 @@
     
     
     const city3dMode = document.getElementById("city3d-mode");
+
+    
+    const realFlightMode = document.getElementById("real-flight-mode");
+    const realFlightChoiceOverlay = document.getElementById("real-flight-choice-overlay");
+
+    function openRealFlightMode() {
+      mainMenu.classList.add("hidden");
+      if (airMode) airMode.classList.add("hidden");
+      if (transportMode) transportMode.classList.add("hidden");
+      if (offroadMode) offroadMode.classList.add("hidden");
+      if (supplyMazeMode) supplyMazeMode.classList.add("hidden");
+      if (saleMode) saleMode.classList.add("hidden");
+      if (city3dMode) city3dMode.classList.add("hidden");
+
+      if (realFlightMode) realFlightMode.classList.remove("hidden");
+      if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.remove("hidden");
+      document.getElementById("real-flight-victory")?.classList.add("hidden");
+    }
+
+    document.getElementById("btn-select-flight-civil")?.addEventListener("click", () => {
+      if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
+      playModeIntro(video, () => {
+        if (window.RealFlight3D) window.RealFlight3D.start("civil");
+      });
+    });
+
+    document.getElementById("btn-select-flight-military")?.addEventListener("click", () => {
+      if (realFlightChoiceOverlay) realFlightChoiceOverlay.classList.add("hidden");
+      const video = selectedCharacter === "Рэй" ? "ray-air-transport-intro.mp4" : "david-air-transport-intro.mp4";
+      playModeIntro(video, () => {
+        if (window.RealFlight3D) window.RealFlight3D.start("military");
+      });
+    });
+
+    document.getElementById("real-flight-cam-btn")?.addEventListener("click", () => {
+      if (window.RealFlight3D) window.RealFlight3D.toggleCamera();
+    });
+
+    document.getElementById("real-flight-back")?.addEventListener("click", () => {
+      if (window.RealFlight3D) window.RealFlight3D.stop();
+      if (realFlightMode) realFlightMode.classList.add("hidden");
+      mainMenu.classList.remove("hidden");
+    });
+
+    document.getElementById("real-flight-menu-btn")?.addEventListener("click", () => {
+      document.getElementById("real-flight-back").click();
+    });
+
+    document.getElementById("real-flight-next-mission-btn")?.addEventListener("click", () => {
+      if (window.RealFlight3D) window.RealFlight3D.nextMilitaryMission();
+    });
 
     function openCity3DMode() {
       mainMenu.classList.add("hidden");
@@ -2500,6 +2804,8 @@
           else openHostageMode();
         } else if (selectedMode === "Воздушная перевозка оружия") {
           openAirMode();
+        } else if (selectedMode === "Настоящий авиасимулятор") {
+          openRealFlightMode();
         } else if (selectedMode === "Погоня в городе (3D NFS)") {
           const video = selectedCharacter === "Рэй" ? "ray-ground-transport-intro.mp4" : "david-ground-transport-intro.mp4";
           playModeIntro(video, openCity3DMode);
