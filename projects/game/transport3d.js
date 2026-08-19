@@ -3,7 +3,7 @@ const THREE = window.THREE;
 
 let renderer, scene, camera, truck, enemy, frame;
 let cameraMode = 0; // 0 = 3-е лицо, 1 = 1-е лицо (кабина)
-let steeringWheel = null, truckRoof = null, truckCanvasRoof = null, truckCanvasBody = null;
+let steeringWheel = null, truckRoof = null, truckCanvasRoof = null, truckCanvasBody = null, truckCab = null, truckWindshield = null;
 let running = false, speed = 15, playerX = 0, lives = 3, shotClock = 0, bonusClock = 0, damageCooldown = 0, speedBoostCount = 0, speedBoostUntil = 0, fuel = 1, activeRoute = "russia", crateCounts = {ammo:0,weapon:0,grenade:0};
 const keys = Object.create(null), roadParts = [], trees = [], bullets = [], bonuses = [];
 
@@ -82,10 +82,10 @@ function makeCanvasTruck() {
   const chassis=box(2.25,.28,7.55,dark,.82,.25);chassis.position.set(0,.72,-.25);g.add(chassis);
   const bed=box(2.45,.72,4.65,olive,.82);bed.position.set(0,1.2,1.15);g.add(bed);
   truckCanvasBody=new THREE.Mesh(new THREE.BoxGeometry(2.38,1.55,4.5),canvasMaterial());truckCanvasBody.position.set(0,2.3,1.12);g.add(truckCanvasBody);
-  const cab=box(2.22,1.8,1.92,olive,.72);cab.position.set(0,1.65,-2.35);g.add(cab);
+  truckCab=box(2.22,1.8,1.92,olive,.72);truckCab.position.set(0,1.65,-2.35);g.add(truckCab);
   const hood=box(2.05,.72,1.55,olive,.72);hood.position.set(0,1.3,-4.02);g.add(hood);
   truckRoof=box(2.3,.18,2.05,0x303b24,.9);truckRoof.position.set(0,2.62,-2.34);g.add(truckRoof);
-  const windshield=box(1.82,.68,.06,0x7fa5ad,.3,.05);windshield.position.set(0,2.06,-3.33);g.add(windshield);
+  truckWindshield=box(1.82,.68,.06,0x7fa5ad,.3,.05);truckWindshield.position.set(0,2.06,-3.33);g.add(truckWindshield);
   const grille=box(1.48,.62,.08,0x242a24,.55,.5);grille.position.set(0,1.35,-4.82);g.add(grille);
   const bumper=box(2.42,.22,.22,0x202326,.48,.65);bumper.position.set(0,.86,-4.92);g.add(bumper);
   truckCanvasRoof=new THREE.Mesh(new THREE.BoxGeometry(2.4,.12,4.52),canvasMaterial());truckCanvasRoof.position.set(0,3.09,1.12);g.add(truckCanvasRoof);
@@ -290,19 +290,25 @@ function animate(now=0) {
     steeringWheel.rotation.z = THREE.MathUtils.lerp(steeringWheel.rotation.z, -steer * 1.5, .25);
   }
   if (cameraMode === 1) {
-    // 1-е ЛИЦО: ИЗ КАБИНЫ С РУЛЕМ И СПИДОМЕТРОМ
+    // 1-е ЛИЦО: ИЗ КАБИНЫ С РУЛЕМ И СПИДОМЕТРОМ (полностью открытый обзор дороги)
     if (truckRoof) truckRoof.visible = false;
     if (truckCanvasRoof) truckCanvasRoof.visible = false;
     if (truckCanvasBody) truckCanvasBody.visible = false;
+    if (truckCab) truckCab.visible = false; // скрываем глухую стенку кабины
+    if (truckWindshield) truckWindshield.visible = false; // скрываем непрозрачное стекло
+
     const camX = truck.position.x - 0.46;
-    camera.position.set(camX, 2.12, -2.25);
-    camera.lookAt(camX + steer * 0.35, 1.55, -30);
+    camera.position.set(camX, 2.05, -2.62);
+    camera.lookAt(camX + steer * 0.45, 1.48, -32);
     camera.fov = 72;
   } else {
     // 3-е ЛИЦО: СЗАДИ ГРУЗОВИКА
     if (truckRoof) truckRoof.visible = true;
     if (truckCanvasRoof) truckCanvasRoof.visible = true;
     if (truckCanvasBody) truckCanvasBody.visible = true;
+    if (truckCab) truckCab.visible = true;
+    if (truckWindshield) truckWindshield.visible = true;
+
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, playerX * .48, .06);
     camera.position.y = 6.2;
     camera.position.z = 12;
