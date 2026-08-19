@@ -999,27 +999,33 @@
     renderer.toneMappingExposure = 1.08;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x101318);
-    scene.fog = new THREE.FogExp2(0x12151c, 0.0028);
+    // Красивое вечернее неоновое небо города (в стиле NFS Underground / Most Wanted)
+    scene.background = new THREE.Color(0x1a2233);
+    scene.fog = new THREE.FogExp2(0x161d2b, 0.0018);
 
-    camera = new THREE.PerspectiveCamera(64, 1100 / 700, 0.2, 900);
+    camera = new THREE.PerspectiveCamera(64, 1100 / 700, 0.2, 1000);
+    camera.position.set(0, 3.6, 9.5);
+    camera.lookAt(0, 1.15, -18);
 
-    // Ночное городское освещение
-    const hemiLight = new THREE.HemisphereLight(0x7da8ff, 0x181a20, 1.1);
+    // Яркое сбалансированное освещение сцены
+    const ambientLight = new THREE.AmbientLight(0xb0c8e8, 1.2);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0x90b8ff, 0x221828, 1.3);
     scene.add(hemiLight);
 
-    const moon = new THREE.DirectionalLight(0xaad4ff, 1.8);
-    moon.position.set(-90, 140, -60);
-    moon.castShadow = true;
-    moon.shadow.mapSize.set(2048, 2048);
-    moon.shadow.camera.near = 10;
-    moon.shadow.camera.far = 380;
-    const d = 160;
-    moon.shadow.camera.left = -d;
-    moon.shadow.camera.right = d;
-    moon.shadow.camera.top = d;
-    moon.shadow.camera.bottom = -d;
-    scene.add(moon);
+    const mainLight = new THREE.DirectionalLight(0xffeedd, 2.2);
+    mainLight.position.set(-80, 150, -60);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.set(2048, 2048);
+    mainLight.shadow.camera.near = 10;
+    mainLight.shadow.camera.far = 400;
+    const d = 180;
+    mainLight.shadow.camera.left = -d;
+    mainLight.shadow.camera.right = d;
+    mainLight.shadow.camera.top = d;
+    mainLight.shadow.camera.bottom = -d;
+    scene.add(mainLight);
   }
 
   // --- СЛУШАТЕЛИ КЛАВИАТУРЫ ---
@@ -1064,6 +1070,13 @@
 
       playerCar = createPlayerCar();
       scene.add(playerCar);
+
+      // Мгновенная инициализация камеры перед первым кадром
+      camera.position.set(0, 3.6, 9.5);
+      camera.lookAt(0, 1.15, -18);
+      updateCamera(0.016);
+      updateHUD();
+      renderer.render(scene, camera);
 
       running = true;
       isPaused = false;
