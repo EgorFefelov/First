@@ -432,27 +432,27 @@
     scene.add(airplaneGroup);
   }
 
-  function buildCockpitInterior() {
+    function buildCockpitInterior() {
     cockpitInterior = new THREE.Group();
 
-    // Приборная панель перед пилотом
-    const dashGeo = new THREE.BoxGeometry(1.2, 0.6, 0.8);
+    // Приборная панель перед пилотом (аккуратная, снизу)
+    const dashGeo = new THREE.BoxGeometry(1.3, 0.65, 0.85);
     const dash = new THREE.Mesh(dashGeo, matLib.darkMetal);
-    dash.position.set(0, 0.35, -2.6);
-    dash.rotation.x = -0.35;
+    dash.position.set(0, 0.55, -2.9);
+    dash.rotation.x = -0.32;
     cockpitInterior.add(dash);
 
     // Штурвал / РУС
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), matLib.chrome);
-    stick.position.set(0, 0.25, -2.1);
-    stick.rotation.x = 0.2;
+    stick.position.set(0, 0.45, -2.4);
+    stick.rotation.x = 0.18;
     cockpitInterior.add(stick);
     const handle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.08), matLib.rubber);
-    handle.position.set(0, 0.45, -2.05);
+    handle.position.set(0, 0.65, -2.35);
     cockpitInterior.add(handle);
 
-    // Голографическое стекло HUD
-    const hudGlassGeo = new THREE.PlaneGeometry(0.85, 0.65);
+    // Голографическое стекло HUD (расположено по центру обзора пилота)
+    const hudGlassGeo = new THREE.PlaneGeometry(0.9, 0.7);
     hudCanvas = document.createElement("canvas");
     hudCanvas.width = 512;
     hudCanvas.height = 512;
@@ -470,8 +470,8 @@
       side: THREE.DoubleSide
     });
     hudMesh = new THREE.Mesh(hudGlassGeo, hudGlassMat);
-    hudMesh.position.set(0, 0.72, -2.55);
-    hudMesh.rotation.x = -0.12;
+    hudMesh.position.set(0, 1.15, -2.85);
+    hudMesh.rotation.x = -0.08;
     cockpitInterior.add(hudMesh);
 
     airplaneGroup.add(cockpitInterior);
@@ -1093,28 +1093,27 @@
       return;
     }
 
-    if (cameraMode === 1) {
-      // 1-е лицо: ВИД ИЗ КАБИНЫ (КОКПИТ) ПРЯМО НА ПУТЬ И ГОРИЗОНТ
+        if (cameraMode === 1) {
+      // 1-е лицо: ВИД ИЗ КАБИНЫ (КОКПИТ) — нос занимает ~15% снизу, 85% экран чистый
       cockpitInterior.visible = true;
-      canopyMesh.visible = false; // убираем внешнее стекло фонаря, чтобы не бликовало
-      if (pilotHead) pilotHead.visible = false; // скрываем голову пилота
+      canopyMesh.visible = false;
+      if (pilotHead) pilotHead.visible = false;
       if (pilotVisor) pilotVisor.visible = false;
 
-      // Позиция глаз пилота над креслом перед приборной панелью (в локальных координатах)
-      const eyeLocal = new THREE.Vector3(0, 0.88, -2.25);
+      // Позиция глаз пилота приподнята для великолепного обзора неба и ящиков
+      const eyeLocal = new THREE.Vector3(0, 1.34, -2.35);
       const eyeWorld = airplaneGroup.localToWorld(eyeLocal.clone());
       camera.position.copy(eyeWorld);
 
-      // Направление взгляда: строго вперед по курсу истребителя + свободный обзор головой
+      // Направление взгляда: прямо по курсу + свободный обзор головой
       const lookLocal = new THREE.Vector3(
         Math.sin(freeLook.yaw) * 60,
-        Math.sin(freeLook.pitch) * 60 + 0.88,
+        Math.sin(freeLook.pitch) * 60 + 0.95,
         -60
       );
       const lookTargetWorld = airplaneGroup.localToWorld(lookLocal);
       camera.lookAt(lookTargetWorld);
 
-      // Вектор "вверх" наклоняется вместе с креном самолёта
       const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(s.quat);
       camera.up.copy(upVec);
     } else {
