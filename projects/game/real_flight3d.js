@@ -1,6 +1,4 @@
 // projects/game/real_flight3d.js — «Настоящий авиасимулятор» (Three.js Flight Simulator)
-// Чистый рендеринг: горы, реки, озера, облака, детализированная кабина с приборами и кнопочками,
-// свободный обзор мышью (Freelook) и четкое управление WASD.
 (() => {
   const THREE = window.THREE;
   if (!THREE) return;
@@ -11,12 +9,12 @@
   let submode = "civil"; // "civil" | "military"
   let cameraMode = 0; // 0 = Сзади (3-е лицо), 1 = Кокпит (1-е лицо)
 
-  // Обзор мышью (Freelook) — НЕ меняет траекторию полета!
+  // Свободный обзор мышью (Freelook)
   let lookYaw = 0, lookPitch = 0;
   let isPointerLocked = false;
 
-  // Объекты мира
-  let aircraft = null, cockpitGroup = null, exteriorParts = [];
+  // Объекты сцены
+  let aircraft = null, cockpitGroup = null, exteriorGroup = null;
   let terrainChunks = [];
   let clouds = [];
   let airports = [];
@@ -38,13 +36,13 @@
 
   // Физика полета
   const flight = {
-    pos: new THREE.Vector3(0, 320, 0),
+    pos: new THREE.Vector3(0, 180, 0),
     vel: new THREE.Vector3(0, 0, -80),
     rot: new THREE.Euler(0, 0, 0, "YXZ"),
     quat: new THREE.Quaternion(),
     throttle: 0.75,
     speed: 240,
-    altitude: 320,
+    altitude: 170,
     pitch: 0,
     roll: 0,
     yaw: 0,
@@ -150,21 +148,21 @@
 
   // --- ПРОЦЕДУРНЫЙ ЛАНДШАФТ (ГОРЫ, РЕКИ, ОЗЕРА) ---
   function getTerrainHeight(x, z) {
-    const mountain = Math.sin(x * 0.0012) * Math.cos(z * 0.0012) * 220;
-    const hills = Math.sin(x * 0.004 + 1.2) * Math.cos(z * 0.004 + 0.8) * 65;
-    const detail = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 15;
-    const riverBed = Math.sin(x * 0.002 + z * 0.001) * 35;
+    const mountain = Math.sin(x * 0.0012) * Math.cos(z * 0.0012) * 180;
+    const hills = Math.sin(x * 0.004 + 1.2) * Math.cos(z * 0.004 + 0.8) * 55;
+    const detail = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 12;
+    const riverBed = Math.sin(x * 0.002 + z * 0.001) * 28;
 
     let h = mountain + hills + detail - riverBed;
     if (Math.hypot(x, z) < 450) {
-      h = Math.min(h, 10);
+      h = Math.min(h, 8);
     }
     return Math.max(0, h);
   }
 
   function createTerrainChunk(cx, cz) {
-    const size = 1400;
-    const segs = 42;
+    const size = 1600;
+    const segs = 36;
     const geo = new THREE.PlaneGeometry(size, size, segs, segs);
     geo.rotateX(-Math.PI / 2);
 
@@ -178,14 +176,14 @@
       const vy = getTerrainHeight(vx, vz);
       pos.setY(i, vy);
 
-      if (vy < 25) {
-        color.setHex(0x2d6a4f); // Долины
-      } else if (vy < 90) {
-        color.setHex(0x52796f); // Холмы
-      } else if (vy < 180) {
-        color.setHex(0x6c757d); // Скалы
+      if (vy < 20) {
+        color.setHex(0x387042); // Зеленые леса
+      } else if (vy < 75) {
+        color.setHex(0x5c6b5e); // Холмы
+      } else if (vy < 140) {
+        color.setHex(0x78716c); // Скалы
       } else {
-        color.setHex(0xf8f9fa); // Снег
+        color.setHex(0xf1f5f9); // Снег
       }
       colors.push(color.r, color.g, color.b);
     }
@@ -195,25 +193,24 @@
 
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.85,
-      metalness: 0.15,
+      roughness: 0.8,
+      metalness: 0.1,
       flatShading: true
     });
 
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(cx, 0, cz);
-    mesh.receiveShadow = true;
 
     // Водная гладь рек и озер
     const waterGeo = new THREE.PlaneGeometry(size, size);
     waterGeo.rotateX(-Math.PI / 2);
     const waterMat = new THREE.MeshStandardMaterial({
-      color: 0x0077b6,
-      roughness: 0.1,
-      metalness: 0.8
+      color: 0x0284c7,
+      roughness: 0.15,
+      metalness: 0.75
     });
     const water = new THREE.Mesh(waterGeo, waterMat);
-    water.position.set(cx, 18, cz);
+    water.position.set(cx, 14, cz);
 
     const group = new THREE.Group();
     group.add(mesh, water);
@@ -222,7 +219,7 @@
   }
 
   function updateTerrain(playerX, playerZ) {
-    const chunkSize = 1400;
+    const chunkSize = 1600;
     const centerChunkX = Math.floor(playerX / chunkSize) * chunkSize;
     const centerChunkZ = Math.floor(playerZ / chunkSize) * chunkSize;
 
@@ -265,7 +262,7 @@
       opacity: 0.85
     });
 
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 35; i++) {
       const cloudGroup = new THREE.Group();
       for (let p = 0; p < 5; p++) {
         const puff = new THREE.Mesh(cloudGeo, cloudMat);
@@ -273,7 +270,7 @@
         puff.scale.set(Math.random() * 0.8 + 0.6, Math.random() * 0.5 + 0.4, Math.random() * 0.8 + 0.6);
         cloudGroup.add(puff);
       }
-      cloudGroup.position.set((Math.random() - 0.5) * 6000, 350 + Math.random() * 300, (Math.random() - 0.5) * 6000);
+      cloudGroup.position.set((Math.random() - 0.5) * 5000, 250 + Math.random() * 250, (Math.random() - 0.5) * 5000);
       scene.add(cloudGroup);
       clouds.push(cloudGroup);
     }
@@ -284,27 +281,27 @@
     const group = new THREE.Group();
 
     const runwayGeo = new THREE.BoxGeometry(60, 0.4, 600);
-    const runwayMat = new THREE.MeshStandardMaterial({ color: 0x1f2421, roughness: 0.8 });
+    const runwayMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.8 });
     const runway = new THREE.Mesh(runwayGeo, runwayMat);
-    runway.position.set(0, 10.2, 0);
+    runway.position.set(0, 8.2, 0);
     group.add(runway);
 
     const lightMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
     for (let rz = -280; rz <= 280; rz += 30) {
       [-28, 28].forEach(rx => {
         const l = new THREE.Mesh(new THREE.SphereGeometry(0.5, 6, 6), lightMat);
-        l.position.set(rx, 10.6, rz);
+        l.position.set(rx, 8.6, rz);
         group.add(l);
       });
     }
 
-    const termMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+    const termMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7 });
     const terminal = new THREE.Mesh(new THREE.BoxGeometry(120, 24, 60), termMat);
-    terminal.position.set(80, 22, -80);
+    terminal.position.set(80, 20, -80);
     group.add(terminal);
 
     const tower = new THREE.Mesh(new THREE.CylinderGeometry(6, 8, 55, 12), termMat);
-    tower.position.set(80, 37.5, -130);
+    tower.position.set(80, 35.5, -130);
     group.add(tower);
 
     group.position.set(x, 0, z);
@@ -312,7 +309,7 @@
     return group;
   }
 
-  // --- ДЕТАЛИЗИРОВАННАЯ КАБИНА ПИЛОТА С ПРИБОРАМИ И КНОПОЧКАМИ ---
+  // --- ДЕТАЛИЗИРОВАННАЯ КАБИНА ---
   function createCockpitInterior() {
     const group = new THREE.Group();
 
@@ -322,13 +319,11 @@
     const buttonMatR = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 1.5 });
     const buttonMatY = new THREE.MeshStandardMaterial({ color: 0xeab308, emissive: 0xca8a04, emissiveIntensity: 1.5 });
 
-    // Главная приборная панель (Main Panel)
     const mainPanel = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.4), panelMat);
     mainPanel.position.set(0, -0.22, -0.9);
     mainPanel.rotation.x = -0.35;
     group.add(mainPanel);
 
-    // MFD Дисплеи
     [-0.45, 0.45, 0].forEach((sx, idx) => {
       const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.22), idx === 0 ? screenMat : new THREE.MeshBasicMaterial({ color: 0x059669 }));
       scr.position.set(sx, -0.15, -0.72);
@@ -336,7 +331,6 @@
       group.add(scr);
     });
 
-    // Интерактивные кнопочки
     for (let bx = -0.7; bx <= 0.7; bx += 0.08) {
       for (let by = -0.4; by <= -0.25; by += 0.06) {
         const mat = Math.random() > 0.6 ? buttonMatG : (Math.random() > 0.3 ? buttonMatY : buttonMatR);
@@ -347,7 +341,6 @@
       }
     }
 
-    // Штурвал
     const stickMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8 });
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.45, 10), stickMat);
     stick.position.set(-0.35, -0.4, -0.55);
@@ -360,7 +353,6 @@
     group.add(stick);
     group.userData.flightStick = stick;
 
-    // Стойки остекления кабины (A-Pillars frame)
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8 });
     const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.06), pillarMat);
     pillarL.position.set(-0.75, 0.2, -0.85);
@@ -380,10 +372,10 @@
   // --- ВНЕШНЯЯ МОДЕЛЬ САМОЛЕТА ---
   function createAircraftModel(isMilitary = false) {
     const group = new THREE.Group();
-    exteriorParts = [];
+    exteriorGroup = new THREE.Group();
 
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: isMilitary ? 0x334155 : 0xf8fafc,
+      color: isMilitary ? 0x475569 : 0xf8fafc,
       metalness: 0.7,
       roughness: 0.25
     });
@@ -395,40 +387,34 @@
 
     const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.8, 14, 18), bodyMat);
     fuselage.rotation.x = Math.PI / 2;
-    fuselage.castShadow = true;
-    group.add(fuselage);
-    exteriorParts.push(fuselage);
+    exteriorGroup.add(fuselage);
 
     const nose = new THREE.Mesh(new THREE.ConeGeometry(0.9, 3.2, 18), bodyMat);
     nose.rotation.x = -Math.PI / 2;
     nose.position.set(0, 0, -8.6);
-    group.add(nose);
-    exteriorParts.push(nose);
+    exteriorGroup.add(nose);
 
     const wings = new THREE.Mesh(new THREE.BoxGeometry(16, 0.18, 3.2), wingMat);
     wings.position.set(0, 0, -1);
-    wings.castShadow = true;
-    group.add(wings);
-    exteriorParts.push(wings);
+    exteriorGroup.add(wings);
 
     const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3.2, 2.4), wingMat);
     tailV.position.set(0, 1.8, 5.8);
     tailV.rotation.x = -0.4;
-    group.add(tailV);
-    exteriorParts.push(tailV);
+    exteriorGroup.add(tailV);
 
     const tailH = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.14, 1.8), wingMat);
     tailH.position.set(0, 0.4, 6.2);
-    group.add(tailH);
-    exteriorParts.push(tailH);
+    exteriorGroup.add(tailH);
 
     [-3.8, 3.8].forEach(wx => {
       const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 3.2, 16), bodyMat);
       eng.rotation.x = Math.PI / 2;
       eng.position.set(wx, -0.6, 0);
-      group.add(eng);
-      exteriorParts.push(eng);
+      exteriorGroup.add(eng);
     });
+
+    group.add(exteriorGroup);
 
     cockpitGroup = createCockpitInterior();
     cockpitGroup.position.set(0, 0.4, -2.8);
@@ -437,7 +423,7 @@
     return group;
   }
 
-  // --- ВОЕННАЯ МИССИЯ: ЦЕЛИ И РАКЕТЫ ---
+  // --- ВОЕННЫЕ ЦЕЛИ И РАКЕТЫ ---
   function spawnMilitaryTargets() {
     militaryTargets.forEach(t => scene.remove(t.mesh));
     militaryTargets.length = 0;
@@ -451,7 +437,6 @@
     const ty = getTerrainHeight(tx, tz) + 12.5;
 
     targetMesh.position.set(tx, ty, tz);
-    targetMesh.castShadow = true;
     scene.add(targetMesh);
 
     militaryTarget = {
@@ -580,8 +565,7 @@
       aircraft.position.copy(flight.pos);
       aircraft.quaternion.copy(flight.quat);
 
-      // Скрываем внешний фюзеляж при виде из кабины
-      exteriorParts.forEach(p => p.visible = (cameraMode === 0));
+      if (exteriorGroup) exteriorGroup.visible = (cameraMode === 0);
       if (cockpitGroup) cockpitGroup.visible = true;
     }
 
@@ -722,8 +706,6 @@
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(1100, 700, false);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
@@ -733,15 +715,17 @@
     scene.fog = new THREE.FogExp2(0x7dd3fc, 0.0003);
 
     camera = new THREE.PerspectiveCamera(62, 1100 / 700, 0.2, 9000);
-    camera.position.set(0, 326, 26);
-    camera.lookAt(0, 320, -20);
+    camera.position.set(0, 186, 26);
+    camera.lookAt(0, 180, -20);
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 1.3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x475569, 1.2);
     scene.add(hemiLight);
 
-    const sun = new THREE.DirectionalLight(0xfffaed, 2.5);
-    sun.position.set(800, 2000, 500);
-    sun.castShadow = true;
+    const sun = new THREE.DirectionalLight(0xfffaed, 2.2);
+    sun.position.set(500, 1200, 400);
     scene.add(sun);
 
     canvas.addEventListener("click", () => {
@@ -787,7 +771,7 @@
       initFlightAudio();
       resetCanvas();
 
-      cameraMode = 0; // По умолчанию вид сзади
+      cameraMode = 0;
       lookYaw = 0;
       lookPitch = 0;
       civilState = "boarding";
@@ -798,7 +782,7 @@
       const btn = document.getElementById("real-flight-cam-btn");
       if (btn) btn.textContent = "Камера [V]: Сзади";
 
-      flight.pos.set(0, 320, 0);
+      flight.pos.set(0, 180, 0);
       flight.rot.set(0, 0, 0);
       flight.pitch = 0;
       flight.roll = 0;
@@ -822,8 +806,8 @@
         speakVoice("Добро пожаловать на борт. Идёт посадка пассажиров перед рейсом.");
       }
 
-      camera.position.set(0, 326, 26);
-      camera.lookAt(0, 320, -20);
+      camera.position.set(0, 186, 26);
+      camera.lookAt(0, 180, -20);
       updateCamera();
       updateHUD();
       renderer.render(scene, camera);
