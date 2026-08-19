@@ -1,6 +1,7 @@
 // projects/game/city3d.js — 3D Автосимулятор в открытом городе (Need for Speed style)
-// Погоня, таран броневика террориста (Craig Reynolds Steering AI), дрифт, прыжки с трамплинов,
-// процедурные PBR-текстуры и мощный басовый рев нитро без писка.
+// Реалистичный город: чёткая дорожная сеть с перекрёстками и разметкой, тротуары,
+// 4 стиля современных стеклянных небоскрёбов, массивные каскадерские трамплины на открытых проспектах,
+// аркадный дрифт, ИИ противника и басовое нитро.
 (() => {
   const THREE = window.THREE;
   if (!THREE) return;
@@ -13,22 +14,22 @@
   
   // Объекты мира
   let playerCar = null, enemyCar = null;
-  let cityColliders = []; // Массив физических боксов зданий
-  let ramps = []; // Массив математических рамп
+  let cityColliders = [];
+  let ramps = [];
   let sparkParticles = null, smokeParticles = null, nitroParticles = null;
   let screenShake = { intensity: 0, duration: 0 };
   let slowMoTimer = 0;
 
   const keys = Object.create(null);
 
-  // Параметры физики игрока (Raycast + Incline + Drift)
+  // Физика игрока
   const carState = {
     pos: new THREE.Vector3(0, 0.4, 0),
     vel: new THREE.Vector3(0, 0, 0),
     rot: new THREE.Euler(0, 0, 0, "YXZ"),
     quat: new THREE.Quaternion(),
-    speed: 0, // км/ч
-    verticalSpeed: 0, // м/с для прыжков и гравитации
+    speed: 0,
+    verticalSpeed: 0,
     isGrounded: true,
     currentGroundY: 0.38,
     steering: 0,
@@ -39,9 +40,9 @@
     pitchAngle: 0
   };
 
-  // Параметры ИИ противника-террориста (Craig Reynolds Steering Behaviors)
+  // ИИ террориста
   const enemyState = {
-    pos: new THREE.Vector3(0, 0.4, -65),
+    pos: new THREE.Vector3(0, 0.4, -75),
     vel: new THREE.Vector3(0, 0, 0),
     rot: new THREE.Euler(0, Math.PI, 0, "YXZ"),
     quat: new THREE.Quaternion(),
@@ -55,60 +56,196 @@
     engineForce: 45
   };
 
-  // --- ПРОЦЕДУРНАЯ ГЕНЕРАЦИЯ PBR ТЕКСТУР НА CANVAS ---
+  // --- ВЫСОКОКАЧЕСТВЕННАЯ ПРОЦЕДУРНАЯ ГЕНЕРАЦИЯ ТЕКСТУР ---
   const textures = {};
 
-  function generateAsphaltTexture() {
+  // 1. Текстура дорожной сети (Асфальт, двойная сплошная, прерывистые линии, зебры, обочины)
+  function generateRoadNetworkTexture() {
     const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024;
+    canvas.height = 1024;
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "#26292d";
-    ctx.fillRect(0, 0, 512, 512);
+    // Тёмный зернистый асфальт
+    ctx.fillStyle = "#1e2126";
+    ctx.fillRect(0, 0, 1024, 1024);
 
-    const imgData = ctx.getImageData(0, 0, 512, 512);
+    const imgData = ctx.getImageData(0, 0, 1024, 1024);
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * 32;
-      data[i] = Math.min(255, Math.max(0, data[i] + noise));
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+      const n = (Math.random() - 0.5) * 22;
+      data[i] = Math.min(255, Math.max(0, data[i] + n));
+      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + n));
+      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + n));
     }
     ctx.putImageData(imgData, 0, 0);
 
-    ctx.fillStyle = "#f0e68c";
-    ctx.fillRect(250, 0, 4, 512);
-    ctx.fillRect(258, 0, 4, 512);
+    // Бетонные тротуары по краям тайла
+    ctx.fillStyle = "#3a3f47";
+    ctx.fillRect(0, 0, 1024, 64);
+    ctx.fillRect(0, 960, 1024, 64);
+    ctx.fillRect(0, 0, 64, 1024);
+    ctx.fillRect(960, 0, 64, 1024);
 
+    // Бордюры (Curbs) с красно-белыми спортивными насечками
     ctx.fillStyle = "#ffffff";
-    for (let y = 0; y < 512; y += 64) {
-      ctx.fillRect(128, y, 6, 36);
-      ctx.fillRect(384, y, 6, 36);
+    for (let x = 0; x < 1024; x += 32) {
+      ctx.fillStyle = (x / 32) % 2 === 0 ? "#ffffff" : "#d90429";
+      ctx.fillRect(x, 60, 32, 6);
+      ctx.fillRect(x, 958, 32, 6);
+      ctx.fillRect(60, x, 6, 32);
+      ctx.fillRect(958, x, 6, 32);
     }
+
+    // Двойная сплошная желтая линия по центру проспекта
+    ctx.fillStyle = "#ffb703";
+    ctx.fillRect(506, 64, 4, 896);
+    ctx.fillRect(514, 64, 4, 896);
+
+    ctx.fillRect(64, 506, 896, 4);
+    ctx.fillRect(64, 514, 896, 4);
+
+    // Прерывистые белые полосы движения
+    ctx.fillStyle = "#ffffff";
+    for (let y = 100; y < 920; y += 72) {
+      if (Math.abs(y - 512) > 90) {
+        ctx.fillRect(280, y, 6, 42);
+        ctx.fillRect(738, y, 6, 42);
+      }
+    }
+    for (let x = 100; x < 920; x += 72) {
+      if (Math.abs(x - 512) > 90) {
+        ctx.fillRect(x, 280, 42, 6);
+        ctx.fillRect(x, 738, 42, 6);
+      }
+    }
+
+    // Пешеходные переходы (Зебры) на перекрестке
+    ctx.fillStyle = "#ffffff";
+    for (let i = -60; i <= 60; i += 18) {
+      // Северный переход
+      ctx.fillRect(512 + i - 6, 390, 12, 40);
+      // Южный переход
+      ctx.fillRect(512 + i - 6, 594, 12, 40);
+      // Западный переход
+      ctx.fillRect(390, 512 + i - 6, 40, 12);
+      // Восточный переход
+      ctx.fillRect(594, 512 + i - 6, 40, 12);
+    }
+
+    // Следы жженой резины (Skid marks) на поворотах
+    ctx.fillStyle = "rgba(10, 10, 12, 0.4)";
+    ctx.beginPath();
+    ctx.arc(430, 430, 45, 0, Math.PI / 2);
+    ctx.lineWidth = 14;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(594, 594, 50, Math.PI, Math.PI * 1.5);
+    ctx.lineWidth = 14;
+    ctx.stroke();
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(1, 40);
+    tex.repeat.set(6, 6);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.needsUpdate = true;
     return tex;
   }
 
-  function generateBuildingTexture() {
+  // 2. Стеклянные фасады небоскрёбов (4 разных реалистичных архитектурных стиля)
+  function generateSkyscraperTexture(style = 0) {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 1024;
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "#16181d";
-    ctx.fillRect(0, 0, 512, 1024);
+    if (style === 0) {
+      // СТИЛЬ 1: Ультрасовременный стеклянный лазурный небоскреб (Glass Curtain Tower)
+      ctx.fillStyle = "#0c1524";
+      ctx.fillRect(0, 0, 512, 1024);
 
-    const windowColors = ["#ffd27d", "#7dc5ff", "#ff9e54", "#ffffff", "#0e1014", "#0e1014", "#0e1014"];
-    for (let y = 20; y < 1000; y += 28) {
-      for (let x = 16; x < 490; x += 22) {
-        ctx.fillStyle = windowColors[Math.floor(Math.random() * windowColors.length)];
-        ctx.fillRect(x, y, 14, 18);
+      // Вертикальные алюминиевые пилоны
+      ctx.fillStyle = "#1e293b";
+      for (let x = 0; x <= 512; x += 64) {
+        ctx.fillRect(x, 0, 6, 1024);
+      }
+
+      // Горизонтальные межэтажные перекрытия
+      for (let y = 0; y <= 1024; y += 48) {
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, y, 512, 8);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(0, y + 6, 512, 2); // Светодиодная подсветка карнизов
+      }
+
+      // Окна с реалистичными зеркальными отражениями и вечерним светом
+      for (let y = 12; y < 1000; y += 48) {
+        for (let x = 8; x < 500; x += 64) {
+          const isLit = Math.random() > 0.45;
+          if (isLit) {
+            ctx.fillStyle = Math.random() > 0.3 ? "rgba(56, 189, 248, 0.85)" : "rgba(254, 240, 138, 0.9)";
+          } else {
+            ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
+          }
+          ctx.fillRect(x, y, 50, 32);
+
+          // Блик на стекле
+          ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + 20, y);
+          ctx.lineTo(x + 5, y + 32);
+          ctx.lineTo(x, y + 32);
+          ctx.fill();
+        }
+      }
+    } else if (style === 1) {
+      // СТИЛЬ 2: Деловой центр из темного титана и золотого света (Executive Titanium)
+      ctx.fillStyle = "#18181b";
+      ctx.fillRect(0, 0, 512, 1024);
+
+      ctx.fillStyle = "#27272a";
+      for (let x = 0; x <= 512; x += 42) {
+        ctx.fillRect(x, 0, 4, 1024);
+      }
+
+      for (let y = 0; y <= 1024; y += 56) {
+        ctx.fillStyle = "#09090b";
+        ctx.fillRect(0, y, 512, 10);
+      }
+
+      for (let y = 14; y < 1000; y += 56) {
+        for (let x = 6; x < 500; x += 42) {
+          const isLit = Math.random() > 0.4;
+          ctx.fillStyle = isLit ? "rgba(251, 191, 36, 0.92)" : "rgba(24, 24, 27, 0.95)";
+          ctx.fillRect(x, y, 32, 38);
+        }
+      }
+    } else {
+      // СТИЛЬ 3: Неоновый киберпанк небоскреб (Neon Cyan & Purple Matrix)
+      ctx.fillStyle = "#090912";
+      ctx.fillRect(0, 0, 512, 1024);
+
+      // Неоновые вертикальные полосы
+      ctx.fillStyle = "#06b6d4";
+      ctx.fillRect(16, 0, 4, 1024);
+      ctx.fillRect(492, 0, 4, 1024);
+      ctx.fillStyle = "#ec4899";
+      ctx.fillRect(254, 0, 4, 1024);
+
+      for (let y = 0; y <= 1024; y += 64) {
+        ctx.fillStyle = "#1e1b4b";
+        ctx.fillRect(0, y, 512, 12);
+      }
+
+      for (let y = 16; y < 1000; y += 64) {
+        for (let x = 24; x < 480; x += 48) {
+          const r = Math.random();
+          if (r > 0.65) ctx.fillStyle = "rgba(6, 182, 212, 0.85)";
+          else if (r > 0.4) ctx.fillStyle = "rgba(236, 72, 153, 0.85)";
+          else ctx.fillStyle = "rgba(15, 12, 30, 0.95)";
+          ctx.fillRect(x, y, 38, 42);
+        }
       }
     }
 
@@ -120,22 +257,39 @@
     return tex;
   }
 
-  function generateRampTexture() {
+  // 3. Текстура трамплина (Спортивная рифленая сталь и желто-черные шевроны)
+  function generateStuntRampTexture() {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "#2c2e35";
+    // Металлическая основа
+    ctx.fillStyle = "#272a30";
     ctx.fillRect(0, 0, 512, 512);
 
-    ctx.lineWidth = 24;
-    ctx.strokeStyle = "#ffb703";
-    for (let i = -512; i < 1024; i += 48) {
+    // Рифление
+    ctx.strokeStyle = "#383d47";
+    ctx.lineWidth = 3;
+    for (let y = 0; y < 512; y += 12) {
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + 512, 512);
+      ctx.moveTo(0, y);
+      ctx.lineTo(512, y);
       ctx.stroke();
+    }
+
+    // Крупные направляющие шевроны (Стрелки разгона)
+    ctx.fillStyle = "#ffb703";
+    for (let y = 60; y < 500; y += 120) {
+      ctx.beginPath();
+      ctx.moveTo(256, y);
+      ctx.lineTo(360, y + 50);
+      ctx.lineTo(330, y + 50);
+      ctx.lineTo(256, y + 16);
+      ctx.lineTo(182, y + 50);
+      ctx.lineTo(152, y + 50);
+      ctx.closePath();
+      ctx.fill();
     }
 
     const tex = new THREE.CanvasTexture(canvas);
@@ -146,7 +300,7 @@
     return tex;
   }
 
-  // --- АУДИО СИНТЕЗАТОР (МОЩНЫЙ РЕВ V8 И ГЛУБОКИЙ БАС НИТРО) ---
+  // --- АУДИО (V8 РЕВ + ГЛУБОКИЙ БАС НИТРО БЕЗ ПИСКА) ---
   let audioCtx = null;
   let engineGain = null, engineOsc = null, engineSub = null, engineFilter = null;
   let driftGain = null, driftNoise = null;
@@ -158,7 +312,6 @@
       if (!AudioContext) return;
       audioCtx = new AudioContext();
 
-      // 1. Осцилляторы двигателя (V8 агрессивный рокот)
       engineOsc = audioCtx.createOscillator();
       engineOsc.type = "sawtooth";
       engineOsc.frequency.setValueAtTime(42, audioCtx.currentTime);
@@ -181,7 +334,6 @@
       engineOsc.start();
       engineSub.start();
 
-      // 2. Визг шин при дрифте
       const bufferSize = audioCtx.sampleRate * 2;
       const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
@@ -229,20 +381,22 @@
     } catch (e) {}
   }
 
-  // --- ПОСТРОЕНИЕ ГОРОДА С РАМПАМИ ---
+  // --- ПОСТРОЕНИЕ ГОРОДСКОЙ АРХИТЕКТУРЫ, ДОРОГ И ТРАМПЛИНОВ ---
   function buildOpenCity() {
     cityColliders.length = 0;
     ramps.length = 0;
 
-    textures.asphalt = generateAsphaltTexture();
-    textures.building = generateBuildingTexture();
-    textures.ramp = generateRampTexture();
+    textures.road = generateRoadNetworkTexture();
+    textures.glassTower = generateSkyscraperTexture(0);
+    textures.titaniumTower = generateSkyscraperTexture(1);
+    textures.cyberTower = generateSkyscraperTexture(2);
+    textures.ramp = generateStuntRampTexture();
 
+    // 1. Дорожная сеть города (1000м x 1000м)
     const groundMat = new THREE.MeshStandardMaterial({
-      map: textures.asphalt,
-      color: 0x32353a,
-      roughness: 0.85,
-      metalness: 0.15
+      map: textures.road,
+      roughness: 0.82,
+      metalness: 0.18
     });
 
     const groundGeo = new THREE.PlaneGeometry(1000, 1000);
@@ -251,91 +405,101 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const bldgMat = new THREE.MeshStandardMaterial({
-      map: textures.building,
-      roughness: 0.6,
-      metalness: 0.4
-    });
+    // 2. Строительство кварталов с красивыми небоскрёбами
+    const towerMats = [
+      new THREE.MeshStandardMaterial({ map: textures.glassTower, roughness: 0.3, metalness: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: textures.titaniumTower, roughness: 0.45, metalness: 0.6 }),
+      new THREE.MeshStandardMaterial({ map: textures.cyberTower, roughness: 0.35, metalness: 0.75 })
+    ];
 
-    const bldgGeo = new THREE.BoxGeometry(1, 1, 1);
-    const instBldgs = new THREE.InstancedMesh(bldgGeo, bldgMat, 300);
-    instBldgs.castShadow = true;
-    instBldgs.receiveShadow = true;
+    const blockCenters = [];
+    // Сетка кварталов между широкими проспектами (проспекты шириной 38м)
+    const coords = [-375, -225, -75, 75, 225, 375];
 
-    let bldgCount = 0;
-    const dummy = new THREE.Object3D();
+    coords.forEach((bX) => {
+      coords.forEach((bZ) => {
+        // Оставляем центральную площадь и перекрестки абсолютно свободными
+        if (Math.abs(bX) < 40 && Math.abs(bZ) < 40) return;
 
-    for (let qX = -400; qX <= 400; qX += 90) {
-      for (let qZ = -400; qZ <= 400; qZ += 90) {
-        if (Math.abs(qX) < 45 && Math.abs(qZ) < 45) continue;
+        // В каждом квартале строим 2-3 красивых высотных здания
+        const buildingStyles = [
+          { offsetX: -22, offsetZ: -22, w: 42, d: 42, h: 65 + Math.random() * 85, mat: towerMats[0] },
+          { offsetX: 22, offsetZ: 22, w: 38, d: 38, h: 50 + Math.random() * 65, mat: towerMats[1] },
+          { offsetX: 22, offsetZ: -22, w: 34, d: 34, h: 80 + Math.random() * 110, mat: towerMats[2] }
+        ];
 
-        const cX = qX + 45;
-        const cZ = qZ + 45;
+        buildingStyles.forEach((b) => {
+          const posX = bX + b.offsetX;
+          const posZ = bZ + b.offsetZ;
 
-        for (let b = 0; b < 2; b++) {
-          const w = 24 + Math.random() * 12;
-          const d = 24 + Math.random() * 12;
-          const h = 35 + Math.random() * 65;
-          const posX = cX + (b === 0 ? -14 : 14);
-          const posZ = cZ + (b === 0 ? -14 : 14);
+          const geo = new THREE.BoxGeometry(b.w, b.h, b.d);
+          const mesh = new THREE.Mesh(geo, b.mat);
+          mesh.position.set(posX, b.h / 2, posZ);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          scene.add(mesh);
 
-          dummy.position.set(posX, h / 2, posZ);
-          dummy.scale.set(w, h, d);
-          dummy.rotation.set(0, 0, 0);
-          dummy.updateMatrix();
-
-          if (bldgCount < 300) {
-            instBldgs.setMatrixAt(bldgCount++, dummy.matrix);
-          }
+          // Декоративная крыша / неоновый шпиль
+          const roofMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.9, roughness: 0.2 });
+          const roof = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.75, 4, b.d * 0.75), roofMat);
+          roof.position.set(posX, b.h + 2, posZ);
+          scene.add(roof);
 
           cityColliders.push({
-            minX: posX - w / 2 - 1.2,
-            maxX: posX + w / 2 + 1.2,
-            minZ: posZ - d / 2 - 1.2,
-            maxZ: posZ + d / 2 + 1.2,
-            height: h
+            minX: posX - b.w / 2 - 1.2,
+            maxX: posX + b.w / 2 + 1.2,
+            minZ: posZ - b.d / 2 - 1.2,
+            maxZ: posZ + b.d / 2 + 1.2,
+            height: b.h
           });
-        }
-      }
-    }
-    instBldgs.instanceMatrix.needsUpdate = true;
-    scene.add(instBldgs);
-
-    // Рампы для прыжков (Box-примитивы)
-    const rampMat = new THREE.MeshStandardMaterial({
-      map: textures.ramp,
-      roughness: 0.7,
-      metalness: 0.3
+        });
+      });
     });
 
+    // 3. МАССИВНЫЕ КАСКАДЕРСКИЕ ТРАМПЛИНЫ (РАЗМЕЩЕНЫ СТРОГО НА ШИРОКИХ ПРОСПЕКТАХ)
+    // Трамплины имеют цельный сплошной корпус (без пустот и просветов)
+    const rampBodyMat = new THREE.MeshStandardMaterial({ color: 0x1e2229, metalness: 0.85, roughness: 0.25 });
+    const rampSurfMat = new THREE.MeshStandardMaterial({ map: textures.ramp, roughness: 0.6, metalness: 0.4 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xff0033, emissive: 0xaa0022, emissiveIntensity: 1.5 });
+
     const rampConfigs = [
-      { x: 0, z: -120, width: 14, length: 22, height: 5.5, rotY: 0 },
-      { x: 0, z: 120, width: 14, length: 22, height: 5.5, rotY: Math.PI },
-      { x: -180, z: -60, width: 12, length: 18, height: 4.8, rotY: 0 },
-      { x: 180, z: 60, width: 12, length: 18, height: 4.8, rotY: Math.PI },
-      { x: -90, z: 200, width: 12, length: 20, height: 5.2, rotY: -Math.PI / 2 },
-      { x: 90, z: -200, width: 12, length: 20, height: 5.2, rotY: Math.PI / 2 },
-      { x: -90, z: 0, width: 16, length: 26, height: 7.2, rotY: Math.PI / 2 },
-      { x: 90, z: 0, width: 16, length: 26, height: 7.2, rotY: -Math.PI / 2 }
+      // Центральный скоростной проспект (Север и Юг)
+      { x: 0, z: -150, width: 15, length: 24, height: 6.2, rotY: 0 },
+      { x: 0, z: 150, width: 15, length: 24, height: 6.2, rotY: Math.PI },
+      // Центральный скоростной проспект (Запад и Восток)
+      { x: -150, z: 0, width: 15, length: 24, height: 6.2, rotY: Math.PI / 2 },
+      { x: 150, z: 0, width: 15, length: 24, height: 6.2, rotY: -Math.PI / 2 },
+      // Внешние скоростные кольца
+      { x: -300, z: -150, width: 14, length: 22, height: 5.5, rotY: 0 },
+      { x: 300, z: 150, width: 14, length: 22, height: 5.5, rotY: Math.PI },
+      { x: -150, z: 300, width: 14, length: 22, height: 5.5, rotY: -Math.PI / 2 },
+      { x: 150, z: -300, width: 14, length: 22, height: 5.5, rotY: Math.PI / 2 }
     ];
 
     rampConfigs.forEach((cfg) => {
       const angle = Math.atan2(cfg.height, cfg.length);
-      const rampGeo = new THREE.BoxGeometry(cfg.width, 0.6, cfg.length);
-      const mesh = new THREE.Mesh(rampGeo, rampMat);
-      mesh.rotation.x = -angle;
-      mesh.position.set(0, cfg.height / 2, 0);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-
       const group = new THREE.Group();
-      group.add(mesh);
 
-      const railMat = new THREE.MeshStandardMaterial({ color: 0xff3b30, metalness: 0.8, roughness: 0.2 });
+      // Наклонная поверхность трамплина
+      const surfGeo = new THREE.BoxGeometry(cfg.width, 0.5, cfg.length);
+      const surfMesh = new THREE.Mesh(surfGeo, rampSurfMat);
+      surfMesh.rotation.x = -angle;
+      surfMesh.position.set(0, cfg.height / 2, 0);
+      surfMesh.castShadow = true;
+      surfMesh.receiveShadow = true;
+      group.add(surfMesh);
+
+      // Цельное клиновидное стальное основание трамплина
+      const baseGeo = new THREE.BoxGeometry(cfg.width - 0.2, cfg.height * 0.7, cfg.length * 0.65);
+      const baseMesh = new THREE.Mesh(baseGeo, rampBodyMat);
+      baseMesh.position.set(0, (cfg.height * 0.7) / 2, -cfg.length * 0.15);
+      group.add(baseMesh);
+
+      // Боковые светящиеся бортики безопасности (LED Rails)
       [-cfg.width / 2, cfg.width / 2].forEach((rx) => {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.2, cfg.length), railMat);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.4, cfg.length), railMat);
         rail.rotation.x = -angle;
-        rail.position.set(rx, cfg.height / 2 + 0.4, 0);
+        rail.position.set(rx, cfg.height / 2 + 0.5, 0);
         group.add(rail);
       });
 
@@ -354,32 +518,44 @@
       });
     });
 
-    // Уличные фонари
-    const lightPoleMat = new THREE.MeshStandardMaterial({ color: 0x4a4d52, metalness: 0.9 });
-    const lampGlowMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+    // 4. Уличные фонари вдоль тротуаров (Никогда не попадают на трамплины или дорогу!)
+    const lightPoleMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9 });
+    const lampGlowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
-    for (let pZ = -360; pZ <= 360; pZ += 45) {
-      [-18, 18].forEach((pX) => {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 7.5, 8), lightPoleMat);
-        pole.position.set(pX, 3.75, pZ);
-        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), lampGlowMat);
-        lamp.position.set(pX > 0 ? -1.2 : 1.2, 7.2, 0);
+    for (let pZ = -420; pZ <= 420; pZ += 60) {
+      [-24, 24, -174, -126, 126, 174].forEach((pX) => {
+        // Проверяем, чтобы фонарь не стоял рядом с трамплином
+        let tooCloseToRamp = false;
+        for (let r = 0; r < rampConfigs.length; r++) {
+          const rc = rampConfigs[r];
+          const dist = Math.hypot(pX - rc.x, pZ - rc.z);
+          if (dist < 22) {
+            tooCloseToRamp = true;
+            break;
+          }
+        }
+        if (tooCloseToRamp) return;
+
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 8.5, 8), lightPoleMat);
+        pole.position.set(pX, 4.25, pZ);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 8), lampGlowMat);
+        lamp.position.set(pX > 0 ? -1.4 : 1.4, 8.2, 0);
         pole.add(lamp);
         scene.add(pole);
       });
     }
   }
 
-  // --- МАШИНА ИГРОКА (PBR RUBY METALLIC) ---
+  // --- СПОРТКАР ИГРОКА (PBR RUBY METALLIC) ---
   function createPlayerCar() {
     const group = new THREE.Group();
 
     const bodyMat = new THREE.MeshPhysicalMaterial({
       color: 0xcc1122,
-      metalness: 0.9,
-      roughness: 0.14,
+      metalness: 0.92,
+      roughness: 0.12,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.04
+      clearcoatRoughness: 0.03
     });
 
     const carbonMat = new THREE.MeshStandardMaterial({ color: 0x111315, roughness: 0.35, metalness: 0.85 });
@@ -411,20 +587,20 @@
     postR.position.x = 0.7;
     group.add(wing, postL, postR);
 
-    // Передние LED фары
+    // Передние фары
     const headMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x99e5ff, emissiveIntensity: 4.5 });
     [-0.75, 0.75].forEach((x) => {
       const head = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.14, 0.08), headMat);
       head.position.set(x, 0.55, -2.24);
       group.add(head);
 
-      const spot = new THREE.SpotLight(0xaae8ff, 4.2, 65, Math.PI / 5, 0.35);
+      const spot = new THREE.SpotLight(0xaae8ff, 4.2, 70, Math.PI / 5, 0.35);
       spot.position.set(x, 0.55, -2.24);
-      spot.target.position.set(x, 0.1, -35);
+      spot.target.position.set(x, 0.1, -40);
       group.add(spot, spot.target);
     });
 
-    // Задние стоп-сигналы
+    // Задние фары
     const tailMat = new THREE.MeshStandardMaterial({ color: 0xff1a1a, emissive: 0xff0022, emissiveIntensity: 3.5 });
     [-0.75, 0.75].forEach((x) => {
       const tail = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.14, 0.08), tailMat);
@@ -432,7 +608,7 @@
       group.add(tail);
     });
 
-    // Колеса
+    // Колёса
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111113, roughness: 0.92 });
     const rimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.15 });
     const wheelGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.32, 22);
@@ -450,7 +626,7 @@
       });
     });
 
-    // Кабина для 1-го лица
+    // Кокпит
     const cockpit = new THREE.Group();
     const dash = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.35, 0.5), carbonMat);
     dash.position.set(0, 0.8, -0.45);
@@ -466,31 +642,27 @@
     return group;
   }
 
-  // --- БРОНЕВИК ТЕРРОРИСТА (ВРАЖЕСКАЯ МАШИНА) ---
+  // --- БРОНЕВИК ТЕРРОРИСТА ---
   function createEnemyCar() {
     const group = new THREE.Group();
 
-    const armorMat = new THREE.MeshStandardMaterial({ color: 0x24282e, metalness: 0.85, roughness: 0.35 });
-    const bullBarMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.95, roughness: 0.1 });
-    const camoMat = new THREE.MeshStandardMaterial({ color: 0x3d4338, roughness: 0.7 });
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0x1f242b, metalness: 0.85, roughness: 0.35 });
+    const bullBarMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.95, roughness: 0.1 });
+    const camoMat = new THREE.MeshStandardMaterial({ color: 0x333b2f, roughness: 0.7 });
 
-    // Тяжелый корпус
     const body = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.85, 4.8), armorMat);
     body.position.set(0, 0.65, 0);
     body.castShadow = true;
     group.add(body);
 
-    // Кабина
     const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.7, 2.4), camoMat);
     cabin.position.set(0, 1.35, 0.1);
     group.add(cabin);
 
-    // Кенгурятник (Bull-Bar)
     const bullBar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 0.3), bullBarMat);
     bullBar.position.set(0, 0.65, -2.48);
     group.add(bullBar);
 
-    // Красные вражеские фары
     const evilLightMat = new THREE.MeshStandardMaterial({ color: 0xff0022, emissive: 0xff0022, emissiveIntensity: 4.0 });
     [-0.85, 0.85].forEach((x) => {
       const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.1), evilLightMat);
@@ -498,7 +670,6 @@
       group.add(lamp);
     });
 
-    // Маркер-маячок над машиной террориста
     const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
     const beacon = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.9, 4), beaconMat);
     beacon.rotation.x = Math.PI;
@@ -506,7 +677,6 @@
     group.add(beacon);
     group.userData.beacon = beacon;
 
-    // Внедорожные колеса
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.95 });
     const wheelGeo = new THREE.CylinderGeometry(0.48, 0.48, 0.42, 16);
     wheelGeo.rotateZ(Math.PI / 2);
@@ -700,13 +870,12 @@
     return null;
   }
 
-  // --- ИИ ТЕРРОРИСТА (CRAIG REYNOLDS STEERING BEHAVIORS) ---
+  // --- ИИ ТЕРРОРИСТА ---
   function checkRayObstacle(origin, dir, maxDist) {
     for (let i = 0; i < cityColliders.length; i++) {
       const b = cityColliders[i];
       const minX = b.minX, maxX = b.maxX, minZ = b.minZ, maxZ = b.maxZ;
 
-      // Тест луча против AABB бокса
       let tmin = (minX - origin.x) / (dir.x || 0.0001);
       let tmax = (maxX - origin.x) / (dir.x || 0.0001);
       if (tmin > tmax) [tmin, tmax] = [tmax, tmin];
@@ -730,14 +899,10 @@
     if (enemyState.isDead || !enemyCar) return;
     const e = enemyState;
 
-    // 1. Вектор побега (Flee Vector) от игрока
     const toPlayer = carState.pos.clone().sub(e.pos);
-    const distToPlayer = toPlayer.length();
-
     let desiredDir = toPlayer.clone().negate().normalize();
     desiredDir.y = 0;
 
-    // 2. 3-Raycast сканирование препятствий (Уклонение от зданий)
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(e.quat);
     const leftRay = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.55);
     const rightRay = forward.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.55);
@@ -763,7 +928,6 @@
     const currentAngle = e.rot.y;
     const targetAngle = Math.atan2(-steerForce.x, -steerForce.z);
 
-    // Плавный поворот ИИ
     let angleDiff = targetAngle - currentAngle;
     while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
     while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -771,7 +935,6 @@
     e.rot.y += Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), e.steerAgility * dt);
     e.quat.setFromEuler(e.rot);
 
-    // Разгон противника
     e.speed = Math.min(e.maxSpeed, e.speed + e.engineForce * dt);
     const moveDir = new THREE.Vector3(0, 0, -1).applyQuaternion(e.quat);
     e.vel.copy(moveDir).multiplyScalar((e.speed / 3.6) * dt);
@@ -789,7 +952,7 @@
     }
   }
 
-  // --- ФИЗИКА ИГРОКА И ДЕТЕКЦИЯ ТАРАНА ---
+  // --- ФИЗИКА ИГРОКА И ТАРАН ---
   function updateCarPhysics(dt) {
     const c = carState;
 
@@ -800,7 +963,6 @@
     const keyDrift = keys.Space || keys.ShiftLeft || keys.ShiftRight;
     const keyNitro = (keys.KeyN || keyDrift) && keyGas;
 
-    // Нитро-ускорение (Мощный басовый рев без писка)
     let maxSpeed = 220;
     let accel = 48;
     if (keyNitro && c.nitro > 0 && c.isGrounded) {
@@ -821,7 +983,6 @@
       if (engineGain) engineGain.gain.setTargetAtTime(0.09, audioCtx?.currentTime || 0, 0.05);
     }
 
-    // Разгон и торможение
     if (c.isGrounded) {
       if (keyGas) {
         c.speed = Math.min(maxSpeed, c.speed + accel * dt);
@@ -836,12 +997,10 @@
       }
     }
 
-    // Руление
     const steerInput = (keyRight ? 1 : 0) - (keyLeft ? 1 : 0);
     const steerRate = Math.min(2.6, (Math.abs(c.speed) / 55) * 2.2);
     c.steering = THREE.MathUtils.lerp(c.steering, steerInput * 0.68, dt * 12);
 
-    // Дрифт
     c.isDrifting = keyDrift && Math.abs(c.speed) > 45 && Math.abs(steerInput) > 0.15 && c.isGrounded;
     if (c.isDrifting) {
       c.driftAngle = THREE.MathUtils.lerp(c.driftAngle, -steerInput * 0.52, dt * 7.5);
@@ -857,13 +1016,11 @@
       if (driftGain) driftGain.gain.setTargetAtTime(0.0, audioCtx?.currentTime || 0, 0.05);
     }
 
-    // Поворот
     if (Math.abs(c.speed) > 2 && c.isGrounded) {
       const dirSign = c.speed >= 0 ? 1 : -1;
       c.rot.y -= c.steering * steerRate * dirSign * dt * 2.2;
     }
 
-    // Проверка рамп
     const rampData = getRampHeightAt(c.pos.x, c.pos.z);
     if (rampData) {
       c.currentGroundY = rampData.height;
@@ -881,7 +1038,6 @@
       }
     }
 
-    // Полет и стабилизация в воздухе
     if (!c.isGrounded) {
       c.airTime += dt;
       c.pos.y += c.verticalSpeed * dt;
@@ -944,7 +1100,6 @@
       c.pos.z = nextPos.z;
     }
 
-    // --- ДЕТЕКЦИЯ ТАРАНА ТЕРРОРИСТА (TAKEDOWN) ---
     if (!enemyState.isDead && enemyCar) {
       const distToEnemy = c.pos.distanceTo(enemyState.pos);
       if (distToEnemy < 3.8) {
@@ -960,13 +1115,11 @@
           screenShake.intensity = 0.8;
           screenShake.duration = 0.3;
 
-          // Отскок
           const pushDir = enemyState.pos.clone().sub(c.pos).normalize();
           enemyState.pos.add(pushDir.clone().multiplyScalar(4.5));
           c.speed *= 0.55;
 
           if (enemyState.hp <= 0) {
-            // ПОБЕДА: ТАРАН ЗАВЕРШЕН (SLOW-MO)
             enemyState.isDead = true;
             slowMoTimer = 1.6;
             setTimeout(() => onLevelComplete(), 900);
@@ -1013,7 +1166,7 @@
     localStorage.setItem("notWeaponStock", JSON.stringify(stock));
   }
 
-  // --- ОБНОВЛЕНИЕ КАМЕРЫ И ИНТЕРФЕЙСА ---
+  // --- КАМЕРА И ИНТЕРФЕЙС ---
   function updateCamera(dt) {
     if (!camera || !playerCar) return;
 
@@ -1098,7 +1251,7 @@
 
     if (slowMoTimer > 0) {
       slowMoTimer -= dt;
-      dt *= 0.25; // Замедление времени
+      dt *= 0.25;
     }
 
     if (!isPaused) {
@@ -1126,29 +1279,29 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMappingExposure = 1.15;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a2233);
-    scene.fog = new THREE.FogExp2(0x161d2b, 0.0018);
+    scene.background = new THREE.Color(0x0f172a);
+    scene.fog = new THREE.FogExp2(0x0f172a, 0.0016);
 
     camera = new THREE.PerspectiveCamera(64, 1100 / 700, 0.2, 1000);
     camera.position.set(0, 3.6, 9.5);
     camera.lookAt(0, 1.15, -18);
 
-    const ambientLight = new THREE.AmbientLight(0xb0c8e8, 1.2);
+    const ambientLight = new THREE.AmbientLight(0xcfdcf5, 1.35);
     scene.add(ambientLight);
 
-    const hemiLight = new THREE.HemisphereLight(0x90b8ff, 0x221828, 1.3);
+    const hemiLight = new THREE.HemisphereLight(0x60a5fa, 0x1e293b, 1.4);
     scene.add(hemiLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffeedd, 2.2);
-    mainLight.position.set(-80, 150, -60);
+    const mainLight = new THREE.DirectionalLight(0xffedd5, 2.4);
+    mainLight.position.set(-90, 160, -70);
     mainLight.castShadow = true;
     mainLight.shadow.mapSize.set(2048, 2048);
     mainLight.shadow.camera.near = 10;
-    mainLight.shadow.camera.far = 400;
-    const d = 180;
+    mainLight.shadow.camera.far = 420;
+    const d = 190;
     mainLight.shadow.camera.left = -d;
     mainLight.shadow.camera.right = d;
     mainLight.shadow.camera.top = d;
@@ -1193,8 +1346,7 @@
       carState.nitro = 1.0;
       carState.pitchAngle = 0;
 
-      // Настройка противника в зависимости от уровня
-      enemyState.pos.set(0, 0.4, -65);
+      enemyState.pos.set(0, 0.4, -75);
       enemyState.rot.set(0, Math.PI, 0);
       enemyState.speed = 0;
       enemyState.maxHp = 100 + (level - 1) * 35;
