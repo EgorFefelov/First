@@ -1072,7 +1072,7 @@
     if (resultOverlay) resultOverlay.classList.remove("hidden");
   }
 
-  function updateCameras() {
+    function updateCameras() {
     const s = planeState;
 
     // Плавная интерполяция свободного обзора мышью
@@ -1094,25 +1094,29 @@
     }
 
     if (cameraMode === 1) {
-      // 1-е лицо: КОКПИТ (вид прямо вперёд через стекло и HUD на дорогу/небо)
+      // 1-е лицо: ВИД ИЗ КАБИНЫ (КОКПИТ) ПРЯМО НА ПУТЬ И ГОРИЗОНТ
       cockpitInterior.visible = true;
-      canopyMesh.visible = false;
-      // Скрываем голову пилота, чтобы она не перекрывала обзор
-      if (pilotHead) pilotHead.visible = false;
+      canopyMesh.visible = false; // убираем внешнее стекло фонаря, чтобы не бликовало
+      if (pilotHead) pilotHead.visible = false; // скрываем голову пилота
       if (pilotVisor) pilotVisor.visible = false;
 
-      // Камера на уровне глаз пилота перед приборной панелью
-      const eyePos = s.pos.clone().add(new THREE.Vector3(0, 0.95, -2.2).applyQuaternion(s.quat));
-      camera.position.copy(eyePos);
+      // Позиция глаз пилота над креслом перед приборной панелью (в локальных координатах)
+      const eyeLocal = new THREE.Vector3(0, 0.88, -2.25);
+      const eyeWorld = airplaneGroup.localToWorld(eyeLocal.clone());
+      camera.position.copy(eyeWorld);
 
-      // Вращение камеры строго вперёд по курсу самолёта + свободный обзор головой
-      const lookEuler = new THREE.Euler(
-        s.rot.x + freeLook.pitch,
-        s.rot.y + freeLook.yaw,
-        s.rot.z * 0.6,
-        "YXZ"
+      // Направление взгляда: строго вперед по курсу истребителя + свободный обзор головой
+      const lookLocal = new THREE.Vector3(
+        Math.sin(freeLook.yaw) * 60,
+        Math.sin(freeLook.pitch) * 60 + 0.88,
+        -60
       );
-      camera.quaternion.setFromEuler(lookEuler);
+      const lookTargetWorld = airplaneGroup.localToWorld(lookLocal);
+      camera.lookAt(lookTargetWorld);
+
+      // Вектор "вверх" наклоняется вместе с креном самолёта
+      const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(s.quat);
+      camera.up.copy(upVec);
     } else {
       // 3-е лицо: ВИД СЗАДИ САМОЛЁТА
       cockpitInterior.visible = false;
@@ -1120,24 +1124,23 @@
       if (pilotHead) pilotHead.visible = true;
       if (pilotVisor) pilotVisor.visible = true;
 
-      const offsetDist = 15 + (s.speed / 400) * 6;
-      const offsetHeight = 4.0 + (s.speed / 400) * 1.5;
+      const offsetDist = 16 + (s.speed / 400) * 6;
+      const offsetHeight = 4.2 + (s.speed / 400) * 1.5;
 
-      // Позиция камеры позади самолета с учётом свободного обзора
-      const offset = new THREE.Vector3(
+      const offsetLocal = new THREE.Vector3(
         Math.sin(freeLook.yaw) * offsetDist * 0.6,
         offsetHeight - freeLook.pitch * 6,
         Math.cos(freeLook.yaw) * offsetDist
-      ).applyQuaternion(s.quat);
+      );
+      const desiredPos = airplaneGroup.localToWorld(offsetLocal);
+      camera.position.lerp(desiredPos, 0.22);
 
-      const desiredPos = s.pos.clone().add(offset);
-      camera.position.lerp(desiredPos, 0.2);
-
-      const lookTarget = s.pos.clone().add(new THREE.Vector3(0, 0.8, -30).applyQuaternion(s.quat));
+      const lookTarget = airplaneGroup.localToWorld(new THREE.Vector3(0, 0.8, -35));
       camera.lookAt(lookTarget);
+      camera.up.set(0, 1, 0);
     }
 
-    const targetFov = s.afterburner ? 82 : (cameraMode === 1 ? 75 : 68);
+    const targetFov = s.afterburner ? 82 : (cameraMode === 1 ? 78 : 68);
     camera.fov += (targetFov - camera.fov) * 0.1;
     camera.updateProjectionMatrix();
   }
