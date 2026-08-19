@@ -1868,10 +1868,14 @@
       if (supplyMazeMode) supplyMazeMode.classList.add("hidden");
       if (saleMode) saleMode.classList.add("hidden");
 
-      city3dMode.classList.remove("hidden");
-      document.getElementById("city3d-result").classList.add("hidden");
+      if (city3dMode) city3dMode.classList.remove("hidden");
+      document.getElementById("city3d-result")?.classList.add("hidden");
       window.GameAudio?.playMode("transport");
-      if (window.City3D) window.City3D.start();
+      if (window.City3D) {
+        window.City3D.start();
+      } else {
+        console.error("window.City3D is not defined!");
+      }
     }
 
     document.getElementById("city3d-cam-btn")?.addEventListener("click", () => {
