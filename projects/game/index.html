@@ -1151,30 +1151,21 @@
 
   </style>
   
-  <!-- СЕКЦИЯ 3D ПОГОНИ В РАЗРУШЕННОМ ГОРОДЕ (NFS OPEN WORLD) -->
-  <section id="city3d-mode" class="hidden" aria-label="3D Погоня в разрушенном городе">
+    <!-- СЕКЦИЯ 3D АВТОСИМУЛЯТОРА В ОТКРЫТОМ ГОРОДЕ (NEED FOR SPEED FREE ROAM) -->
+  <section id="city3d-mode" class="hidden" aria-label="3D Автосимулятор в открытом городе">
     <canvas id="city3d-canvas" width="1100" height="700"></canvas>
 
     <div class="city3d-hud">
-      <!-- Верхний левый угол: Уровень и дистанция -->
+      <!-- Верхний левый угол: Бейдж открытого мира -->
       <div class="city3d-top-bar">
-        <span id="city3d-level-badge">УРОВЕНЬ 1</span>
-        <span id="city3d-enemy-dist">🎯 ЦЕЛЬ: 75м</span>
-      </div>
-
-      <!-- Верхний центр: Прочность брони террориста -->
-      <div class="city3d-enemy-hp-container">
-        <span class="city3d-enemy-hp-title">БРОНЯ ТЕРРОРИСТА</span>
-        <div class="city3d-enemy-hp-track">
-          <div id="city3d-enemy-hp-fill" style="width: 100%;"></div>
-        </div>
+        <span id="city3d-level-badge">🔥 СВОБОДНЫЙ ГОРОД (NFS)</span>
       </div>
 
       <!-- Верхний правый угол: Переключение камеры -->
       <button id="city3d-cam-btn">Камера [V]: Сзади</button>
 
-      <!-- Центр экрана: Очки дрифта -->
-      <div id="city3d-drift-score" class="hidden">🔥 DRIFT +0</div>
+      <!-- Центр экрана: Очки за дрифт -->
+      <div id="city3d-drift-score" class="hidden">🔥 DRIFT +0 (x1)</div>
 
       <!-- Правый нижний угол: Спидометр и нитро -->
       <div class="city3d-gauge-panel">
@@ -1190,23 +1181,13 @@
         <span><span class="key-pill">W</span> газ</span> ·
         <span><span class="key-pill">S</span> тормоз</span> ·
         <span><span class="key-pill">A D</span> руль</span> ·
-        <span><span class="key-pill">Shift / Пробел</span> дрифт</span> ·
+        <span><span class="key-pill">Пробел / Shift</span> дрифт</span> ·
         <span><span class="key-pill">N / Shift+W</span> нитро</span> ·
         <span><span class="key-pill">V</span> камера</span>
       </div>
 
       <!-- Нижний левый угол: Выход в меню -->
       <button id="city3d-back">← В меню</button>
-
-      <!-- Модальное окно победы (Таран выполнен) -->
-      <div id="city3d-result" class="hidden">
-        <h2 id="city3d-result-title">🎯 ТАРАН УСПЕШЕН! УРОВЕНЬ 1 ПРОЙДЕН</h2>
-        <p id="city3d-result-sub">Награда: +$45,000 | Трофеи зачислены на склад</p>
-        <div class="city3d-result-actions">
-          <button id="city3d-next-btn" class="city3d-btn-primary">Следующий уровень ▸</button>
-          <button id="city3d-menu-btn" class="city3d-btn-secondary">В главное меню</button>
-        </div>
-      </div>
     </div>
   </section>
 
