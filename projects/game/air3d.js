@@ -1,6 +1,7 @@
-// projects/game/air3d.js — Полноценный 3D Авиасимулятор «Воздушная перевозка оружия».
-// Three.js: Мгновенный рендеринг, взлёт с военной полосы, физика 6-DOF,
-// сбор ящиков в воздухе, смена видов (V), военное небо, HUD и звуки.
+// projects/game/air3d.js — 3D Авиасимулятор «Воздушная перевозка оружия».
+// Управление ТОЛЬКО на WASD (легко и приятно).
+// Мышь — только свободный обзор вокруг (не влияет на полёт).
+// Вид от 1-го лица (кокпит) смотрит строго вперёд на путь и HUD без помех.
 
 (() => {
   const THREE = window.THREE;
@@ -12,15 +13,23 @@
   let canvas, renderer, scene, camera;
   let animId = null;
   let isRunning = false;
-  let isPreviewMode = true; // true = самолёт ждёт взлёта на полосе
+  let isPreviewMode = true;
   let isPaused = false;
   let cameraMode = 0; // 0 = 3-е лицо (сзади), 1 = 1-е лицо (кокпит)
 
+  // Свободный обзор мышью
+  const freeLook = {
+    yaw: 0,
+    pitch: 0,
+    targetYaw: 0,
+    targetPitch: 0
+  };
+
   // Состояние самолета и физика
   const planeState = {
-    pos: new THREE.Vector3(0, 1.8, 550), // старт в начале ВПП (ВПП от +600 до -600, полет в сторону -Z)
+    pos: new THREE.Vector3(0, 1.8, 550),
     vel: new THREE.Vector3(0, 0, 0),
-    rot: new THREE.Euler(0, 0, 0, "YXZ"), // rot.y = 0 (направлен строго вперед в сторону -Z)
+    rot: new THREE.Euler(0, 0, 0, "YXZ"),
     quat: new THREE.Quaternion(),
     speed: 0,
     throttle: 0.0,
@@ -46,15 +55,8 @@
   };
 
   const keys = Object.create(null);
-  const mouse = {
-    x: 0,
-    y: 0,
-    targetPitch: 0,
-    targetRoll: 0,
-    targetYaw: 0
-  };
 
-  let airplaneGroup, airplaneBody, canopyMesh;
+  let airplaneGroup, airplaneBody, canopyMesh, pilotHead, pilotVisor;
   let landingGears = [];
   let afterburnerFlames = [];
   let cockpitInterior, hudCanvas, hudCtx, hudTexture, hudMesh;
@@ -253,7 +255,7 @@
     matLib.chrome = new THREE.MeshStandardMaterial({ color: 0xd8dde0, roughness: 0.18, metalness: 0.95 });
     matLib.rubber = new THREE.MeshStandardMaterial({ color: 0x151618, roughness: 0.92, metalness: 0.08 });
     matLib.canopy = new THREE.MeshPhysicalMaterial({
-      color: 0x7ab5cc, transparent: true, opacity: 0.45, roughness: 0.1, metalness: 0.2, transmission: 0.8, ior: 1.45
+      color: 0x7ab5cc, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.2, transmission: 0.85, ior: 1.45
     });
     matLib.glowOrange = new THREE.MeshBasicMaterial({ color: 0xff7700 });
     matLib.glowCyan = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
@@ -266,7 +268,7 @@
   function buildAirplane() {
     airplaneGroup = new THREE.Group();
 
-    // 1. Нос (направлен в сторону -Z)
+    // 1. Нос (направлен вперед в -Z)
     const noseGeo = new THREE.ConeGeometry(0.75, 4.4, 8);
     noseGeo.rotateX(-Math.PI / 2);
     const nose = new THREE.Mesh(noseGeo, matLib.camoDark);
@@ -303,12 +305,13 @@
     airplaneGroup.add(canopyMesh);
 
     // Пилот
-    const pilotHead = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), new THREE.MeshStandardMaterial({ color: 0x223525, roughness: 0.8 }));
+    pilotHead = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 10), new THREE.MeshStandardMaterial({ color: 0x223525, roughness: 0.8 }));
     pilotHead.position.set(0, 0.68, -2.1);
     airplaneGroup.add(pilotHead);
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.15), new THREE.MeshStandardMaterial({ color: 0x111612, metalness: 0.95, roughness: 0.05 }));
-    visor.position.set(0, 0.7, -2.25);
-    airplaneGroup.add(visor);
+
+    pilotVisor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.15), new THREE.MeshStandardMaterial({ color: 0x111612, metalness: 0.95, roughness: 0.05 }));
+    pilotVisor.position.set(0, 0.7, -2.25);
+    airplaneGroup.add(pilotVisor);
 
     // Стреловидные крылья
     const wingShape = new THREE.Shape();
@@ -332,7 +335,7 @@
     rightWing.position.set(-0.7, -0.05, -2.2);
     airplaneGroup.add(rightWing);
 
-    // Навигационные огни на законцовках крыльев
+    // Огни крыльев
     const leftNavLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), matLib.glowGreen);
     leftNavLight.position.set(7.3, 0, 0.6);
     airplaneGroup.add(leftNavLight);
@@ -341,7 +344,7 @@
     rightNavLight.position.set(-7.3, 0, 0.6);
     airplaneGroup.add(rightNavLight);
 
-    // Ракетные пилоны
+    // Пилоны с ракетами
     [-3.8, 3.8, -2.2, 2.2].forEach(x => {
       const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 1.4), matLib.darkMetal);
       pylon.position.set(x, -0.25, -0.2);
@@ -369,7 +372,7 @@
       airplaneGroup.add(elev);
     });
 
-    // Сопла и пламя форсажа
+    // Сопла
     [-0.52, 0.52].forEach(x => {
       const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.5, 0.85, 16), matLib.darkMetal);
       nozzle.rotation.x = Math.PI / 2;
@@ -432,12 +435,14 @@
   function buildCockpitInterior() {
     cockpitInterior = new THREE.Group();
 
+    // Приборная панель перед пилотом
     const dashGeo = new THREE.BoxGeometry(1.2, 0.6, 0.8);
     const dash = new THREE.Mesh(dashGeo, matLib.darkMetal);
     dash.position.set(0, 0.35, -2.6);
     dash.rotation.x = -0.35;
     cockpitInterior.add(dash);
 
+    // Штурвал / РУС
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 8), matLib.chrome);
     stick.position.set(0, 0.25, -2.1);
     stick.rotation.x = 0.2;
@@ -446,7 +451,8 @@
     handle.position.set(0, 0.45, -2.05);
     cockpitInterior.add(handle);
 
-    const hudGlassGeo = new THREE.PlaneGeometry(0.7, 0.55);
+    // Голографическое стекло HUD
+    const hudGlassGeo = new THREE.PlaneGeometry(0.85, 0.65);
     hudCanvas = document.createElement("canvas");
     hudCanvas.width = 512;
     hudCanvas.height = 512;
@@ -464,8 +470,8 @@
       side: THREE.DoubleSide
     });
     hudMesh = new THREE.Mesh(hudGlassGeo, hudGlassMat);
-    hudMesh.position.set(0, 0.72, -2.48);
-    hudMesh.rotation.x = -0.15;
+    hudMesh.position.set(0, 0.72, -2.55);
+    hudMesh.rotation.x = -0.12;
     cockpitInterior.add(hudMesh);
 
     airplaneGroup.add(cockpitInterior);
@@ -554,16 +560,13 @@
     ctx.font = "bold 18px 'Courier New', monospace";
     if (planeState.isGrounded) {
       ctx.fillStyle = yellow;
-      ctx.fillText("RUNWAY TAKEOFF · PRESS [W] FOR THRUST", 256, 420);
+      ctx.fillText("ВЗЛЁТ С ПОЛОСЫ · ЖМИ [W] ДЛЯ РАЗГОНА", 256, 420);
     } else if (planeState.altitude < 15 && planeState.speed > 100) {
       ctx.fillStyle = red;
-      ctx.fillText("⚠️ PULL UP · TERRAIN WARNING", 256, 420);
-    } else if (planeState.speed < 110 && !planeState.isGrounded) {
-      ctx.fillStyle = red;
-      ctx.fillText("⚠️ STALL WARNING · ADD THROTTLE", 256, 420);
+      ctx.fillText("⚠️ ОПАСНАЯ ВЫСОТА · ЖМИ [S] ДЛЯ ПОДЪЁМА", 256, 420);
     } else {
       ctx.fillStyle = brightGreen;
-      ctx.fillText(`GEAR: ${planeState.gearExtended > 0.5 ? "DOWN" : "UP"} | FLARES: ${planeState.flares}`, 256, 420);
+      ctx.fillText(`ШАССИ: ${planeState.gearExtended > 0.5 ? "ВЫПУЩЕНЫ" : "УБРАНЫ"} | ЛОВУШКИ: ${planeState.flares}`, 256, 420);
     }
 
     if (planeState.nearestCrate) {
@@ -571,14 +574,13 @@
       ctx.fillStyle = yellow;
       ctx.strokeRect(216, 100, 80, 28);
       ctx.font = "bold 15px 'Courier New', monospace";
-      ctx.fillText(`BOX: ${Math.round(planeState.distanceToTarget)}M`, 256, 120);
+      ctx.fillText(`ЯЩИК: ${Math.round(planeState.distanceToTarget)}M`, 256, 120);
     }
 
     hudTexture.needsUpdate = true;
   }
 
   function buildWorld() {
-    // Небо и атмосфера
     const skyGeo = new THREE.SphereGeometry(6000, 32, 20);
     const canvasSky = document.createElement("canvas");
     canvasSky.width = 512;
@@ -608,7 +610,6 @@
     hemiLight = new THREE.HemisphereLight(0x759ac0, 0x483626, 0.95);
     scene.add(hemiLight);
 
-    // Ландшафт
     const terrainGeo = new THREE.PlaneGeometry(12000, 12000, 80, 80);
     terrainGeo.rotateX(-Math.PI / 2);
 
@@ -641,14 +642,12 @@
     terrainMesh.position.y = -0.5;
     scene.add(terrainMesh);
 
-    // Взлётно-посадочная полоса (ВПП) вдоль оси Z от +650 до -650
     runwayGroup = new THREE.Group();
     const runwayMesh = new THREE.Mesh(new THREE.PlaneGeometry(55, 1400), matLib.runway);
     runwayMesh.rotation.x = -Math.PI / 2;
     runwayMesh.position.set(0, 0.05, 0);
     runwayGroup.add(runwayMesh);
 
-    // Разметка осевой линии
     for (let z = -650; z <= 650; z += 35) {
       const line = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 20), matLib.runwayLine);
       line.rotation.x = -Math.PI / 2;
@@ -656,7 +655,6 @@
       runwayGroup.add(line);
     }
 
-    // Боковые полосы
     [-24, 24].forEach(x => {
       const edge = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1400), matLib.runwayLine);
       edge.rotation.x = -Math.PI / 2;
@@ -664,19 +662,17 @@
       runwayGroup.add(edge);
     });
 
-    // Огни ВПП
     for (let z = -680; z <= 680; z += 40) {
       [-26, 26].forEach(x => {
         let col = matLib.glowCyan;
-        if (z > 580) col = matLib.glowGreen; // Торец старта
-        if (z < -580) col = matLib.glowRed;   // Торец конца
+        if (z > 580) col = matLib.glowGreen;
+        if (z < -580) col = matLib.glowRed;
         const light = new THREE.Mesh(new THREE.SphereGeometry(0.38, 6, 6), col);
         light.position.set(x, 0.4, z);
         runwayGroup.add(light);
       });
     }
 
-    // Ангары
     [-65, 65].forEach(x => {
       for (let z = 100; z <= 500; z += 120) {
         const hangar = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 45, 16, 1, false, 0, Math.PI), matLib.camoGrey);
@@ -687,7 +683,6 @@
       }
     });
 
-    // Вышка КДП
     const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(4, 6, 35, 8), matLib.camoDark);
     towerBase.position.set(-85, 17.5, 350);
     runwayGroup.add(towerBase);
@@ -697,7 +692,6 @@
 
     scene.add(runwayGroup);
 
-    // Зона доставки груза на финише (Drop Zone) на z = -4500
     targetDropZone = new THREE.Group();
     const zoneRing = new THREE.Mesh(new THREE.RingGeometry(25, 32, 32), matLib.glowGreen);
     zoneRing.rotation.x = -Math.PI / 2;
@@ -858,15 +852,15 @@
       keys[e.code] = false;
     });
 
+    // Мышь используется ТОЛЬКО для свободного обзора (не влияет на полет)
     window.addEventListener("mousemove", e => {
       if (!isRunning || isPreviewMode) return;
       const w = window.innerWidth, h = window.innerHeight;
-      mouse.x = (e.clientX / w) * 2 - 1;
-      mouse.y = -(e.clientY / h) * 2 + 1;
+      const mx = (e.clientX / w) * 2 - 1;
+      const my = -(e.clientY / h) * 2 + 1;
 
-      mouse.targetPitch = mouse.y * 1.4;
-      mouse.targetRoll = -mouse.x * 1.8;
-      mouse.targetYaw = -mouse.x * 0.6;
+      freeLook.targetYaw = -mx * 1.1; // обзор влево/вправо
+      freeLook.targetPitch = my * 0.7; // обзор вверх/вниз
     });
   }
 
@@ -877,54 +871,75 @@
     s.afterburner = !!(keys["ShiftLeft"] || keys["ShiftRight"] || keys["Space"]);
     s.airbrake = !!keys["KeyB"];
 
-    if (keys["KeyW"]) s.throttle = Math.min(1.0, s.throttle + dt * 0.45);
-    if (keys["KeyS"] && s.isGrounded) s.throttle = Math.max(0.0, s.throttle - dt * 0.45);
-    if (keys["KeyS"] && !s.isGrounded) mouse.targetPitch = -1.0;
-
-    const maxSpeed = s.afterburner ? 680 : 420;
-    const baseAccel = s.throttle * 95 + (s.afterburner ? 180 : 0);
-    const drag = (s.speed / 400) * (s.speed / 400) * 45 + (s.airbrake ? 80 : 0);
-
-    s.speed = Math.max(0, Math.min(maxSpeed, s.speed + (baseAccel - drag) * dt));
+    // Базовое управление ТОЛЬКО клавиатурой WASD
+    const keyGas = !!(keys["KeyW"] || keys["ArrowUp"]);
+    const keyPull = !!(keys["KeyS"] || keys["ArrowDown"]);
+    const keyLeft = !!(keys["KeyA"] || keys["ArrowLeft"]);
+    const keyRight = !!(keys["KeyD"] || keys["ArrowRight"]);
+    const keyYawL = !!keys["KeyQ"];
+    const keyYawR = !!keys["KeyE"];
 
     if (s.isGrounded) {
+      // НА ПОЛОСЕ: W разгоняет тягу, S тормозит
+      if (keyGas) s.throttle = Math.min(1.0, s.throttle + dt * 0.8);
+      else s.throttle = Math.max(0.4, s.throttle);
+
+      if (keyPull) s.throttle = Math.max(0.0, s.throttle - dt * 0.8);
+
+      const baseAccel = s.throttle * 140 + (s.afterburner ? 180 : 0);
+      const drag = (s.speed / 300) * 25;
+      s.speed = Math.max(0, s.speed + (baseAccel - drag) * dt);
+
       s.altitude = 1.8;
       s.pos.y = 1.8;
       s.rot.x = 0;
       s.rot.z = 0;
 
-      if (keys["KeyA"]) s.rot.y += dt * 0.45;
-      if (keys["KeyD"]) s.rot.y -= dt * 0.45;
+      // Руление по полосе влево/вправо
+      if (keyLeft) s.rot.y += dt * 0.55;
+      if (keyRight) s.rot.y -= dt * 0.55;
 
-      if (s.speed > 115 && (mouse.y > 0.15 || keys["KeyS"] || keys["ArrowDown"])) {
+      // Взлёт / Отрыв при достижении 110+ км/ч при нажатии S или наборе скорости
+      if (s.speed > 110 && (keyPull || s.speed > 180)) {
         s.isGrounded = false;
         s.gearTarget = 0.0;
         playSfx("takeoff");
         const msg = document.getElementById("air3d-takeoff-banner");
         if (msg) {
           msg.classList.remove("hidden");
-          setTimeout(() => msg.classList.add("hidden"), 3000);
+          setTimeout(() => msg.classList.add("hidden"), 2000); // ровно 2 секунды
         }
       }
     } else {
-      const liftFactor = Math.min(1.2, (s.speed / 160) * (s.speed / 160));
-      const gravity = 9.81 * (1.0 - liftFactor);
+      // В ВОЗДУХЕ: управление исключительно на WASD
+      // W — пикирование (нос вниз), S — кабрирование (нос вверх / подъём)
+      // A / D — крен и плавный поворот влево / вправо
+      s.throttle = Math.max(0.7, Math.min(1.0, s.throttle + (keyGas ? 0.3 : 0) * dt));
 
-      let pitchInput = mouse.targetPitch;
-      let rollInput = mouse.targetRoll;
-      let yawInput = mouse.targetYaw;
+      const maxSpeed = s.afterburner ? 680 : 440;
+      const baseAccel = s.throttle * 80 + (s.afterburner ? 180 : 0);
+      const drag = (s.speed / 400) * (s.speed / 400) * 40;
+      s.speed = Math.max(120, Math.min(maxSpeed, s.speed + (baseAccel - drag) * dt));
 
-      if (keys["ArrowUp"]) pitchInput = 1.0;
-      if (keys["ArrowDown"]) pitchInput = -1.0;
-      if (keys["KeyA"] || keys["ArrowLeft"]) rollInput = 1.2;
-      if (keys["KeyD"] || keys["ArrowRight"]) rollInput = -1.2;
-      if (keys["KeyQ"]) yawInput = 1.0;
-      if (keys["KeyE"]) yawInput = -1.0;
+      let pitchInput = 0;
+      let rollInput = 0;
+      let yawInput = 0;
 
-      const controlResponsiveness = Math.min(1.0, s.speed / 80);
-      s.rot.x += pitchInput * dt * 1.4 * controlResponsiveness;
-      s.rot.z += rollInput * dt * 2.2 * controlResponsiveness;
-      s.rot.y += (yawInput * 0.7 - Math.sin(s.rot.z) * 0.85) * dt * controlResponsiveness;
+      if (keyGas) pitchInput = 1.0;   // W = нос вниз (пикирование)
+      if (keyPull) pitchInput = -1.2; // S = нос вверх (кабрирование/подъём)
+      if (keyLeft) rollInput = 1.5;   // A = крен влево
+      if (keyRight) rollInput = -1.5; // D = крен вправо
+      if (keyYawL) yawInput = 1.0;    // Q = рыскание влево
+      if (keyYawR) yawInput = -1.0;   // E = рыскание вправо
+
+      // Плавное автовыравнивание крыльев, если A/D не зажаты
+      if (!keyLeft && !keyRight) {
+        s.rot.z *= Math.pow(0.04, dt);
+      }
+
+      s.rot.x += pitchInput * dt * 1.5;
+      s.rot.z += rollInput * dt * 2.4;
+      s.rot.y += (yawInput * 0.8 - Math.sin(s.rot.z) * 1.2) * dt;
 
       s.rot.x = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, s.rot.x));
       s.quat.setFromEuler(s.rot);
@@ -932,17 +947,15 @@
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(s.quat);
       const velocity = forward.clone().multiplyScalar((s.speed / 3.6) * dt);
 
-      velocity.y -= gravity * dt;
-
       s.pos.add(velocity);
-      s.altitude = Math.max(0.5, s.pos.y);
+      s.altitude = Math.max(1.8, s.pos.y);
 
-      s.gForce = 1.0 + Math.abs(pitchInput) * (s.speed / 180) * 3.5;
+      s.gForce = 1.0 + Math.abs(pitchInput) * 2.5;
 
       if (s.pos.y <= 1.8) {
         s.pos.y = 1.8;
         s.altitude = 1.8;
-        if (s.speed < 150) {
+        if (s.speed < 160) {
           s.isGrounded = true;
           s.gearTarget = 1.0;
         } else {
@@ -1048,9 +1061,16 @@
   function updateCameras() {
     const s = planeState;
 
+    // Плавная интерполяция свободного обзора мышью
+    freeLook.yaw += (freeLook.targetYaw - freeLook.yaw) * 0.15;
+    freeLook.pitch += (freeLook.targetPitch - freeLook.pitch) * 0.15;
+
     if (isPreviewMode) {
       cockpitInterior.visible = false;
       canopyMesh.visible = true;
+      if (pilotHead) pilotHead.visible = true;
+      if (pilotVisor) pilotVisor.visible = true;
+
       const angle = Date.now() * 0.0004;
       const camX = Math.sin(angle) * 22;
       const camZ = s.pos.z + Math.cos(angle) * 22;
@@ -1060,27 +1080,50 @@
     }
 
     if (cameraMode === 1) {
+      // 1-е лицо: КОКПИТ (вид прямо вперёд через стекло и HUD на дорогу/небо)
       cockpitInterior.visible = true;
       canopyMesh.visible = false;
+      // Скрываем голову пилота, чтобы она не перекрывала обзор
+      if (pilotHead) pilotHead.visible = false;
+      if (pilotVisor) pilotVisor.visible = false;
 
-      const headPos = s.pos.clone().add(new THREE.Vector3(0, 0.72, -2.1).applyQuaternion(s.quat));
-      camera.position.copy(headPos);
-      camera.quaternion.copy(s.quat);
+      // Камера на уровне глаз пилота перед приборной панелью
+      const eyePos = s.pos.clone().add(new THREE.Vector3(0, 0.95, -2.2).applyQuaternion(s.quat));
+      camera.position.copy(eyePos);
+
+      // Вращение камеры строго вперёд по курсу самолёта + свободный обзор головой
+      const lookEuler = new THREE.Euler(
+        s.rot.x + freeLook.pitch,
+        s.rot.y + freeLook.yaw,
+        s.rot.z * 0.6,
+        "YXZ"
+      );
+      camera.quaternion.setFromEuler(lookEuler);
     } else {
+      // 3-е лицо: ВИД СЗАДИ САМОЛЁТА
       cockpitInterior.visible = false;
       canopyMesh.visible = true;
+      if (pilotHead) pilotHead.visible = true;
+      if (pilotVisor) pilotVisor.visible = true;
 
-      // 3-е лицо сзади самолёта (направлен в сторону -Z)
       const offsetDist = 15 + (s.speed / 400) * 6;
       const offsetHeight = 4.0 + (s.speed / 400) * 1.5;
-      const desiredPos = s.pos.clone().add(new THREE.Vector3(0, offsetHeight, offsetDist).applyQuaternion(s.quat));
 
+      // Позиция камеры позади самолета с учётом свободного обзора
+      const offset = new THREE.Vector3(
+        Math.sin(freeLook.yaw) * offsetDist * 0.6,
+        offsetHeight - freeLook.pitch * 6,
+        Math.cos(freeLook.yaw) * offsetDist
+      ).applyQuaternion(s.quat);
+
+      const desiredPos = s.pos.clone().add(offset);
       camera.position.lerp(desiredPos, 0.2);
+
       const lookTarget = s.pos.clone().add(new THREE.Vector3(0, 0.8, -30).applyQuaternion(s.quat));
       camera.lookAt(lookTarget);
     }
 
-    const targetFov = s.afterburner ? 82 : 68;
+    const targetFov = s.afterburner ? 82 : (cameraMode === 1 ? 75 : 68);
     camera.fov += (targetFov - camera.fov) * 0.1;
     camera.updateProjectionMatrix();
   }
@@ -1175,6 +1218,11 @@
       planeState.totalCollected = 0;
       planeState.isDelivered = false;
 
+      freeLook.yaw = 0;
+      freeLook.pitch = 0;
+      freeLook.targetYaw = 0;
+      freeLook.targetPitch = 0;
+
       isPreviewMode = true;
       isRunning = true;
       isPaused = false;
@@ -1188,7 +1236,7 @@
       initAudio();
 
       isPreviewMode = false;
-      planeState.throttle = 0.6;
+      planeState.throttle = 0.7;
       playSfx("takeoff");
     },
 
